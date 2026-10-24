@@ -189,24 +189,20 @@ describe("DREAMZ Originals catalogue (migration contract)", () => {
     }
   });
 
-  it("legacy bundled image files are removed; gallery rows remain as historical records", () => {
-    // The rebuilt site no longer bundles product photography: the bundled
-    // /img/products assets were removed by design and the storefront shows
-    // neutral "Image coming soon" placeholders until the house uploads
-    // approved media (Netlify Blobs). The DB gallery rows are preserved as
-    // historical records, and catalog.server drops legacy /img/ references
-    // at the data layer instead of serving dead files.
+  it("gallery images are verified and present in public/img/products", () => {
     const root = path.resolve(__dirname, "..");
     expect(
       fs.existsSync(path.join(root, "public/img/products")),
-      "public/img/products should no longer exist",
-    ).toBe(false);
-    const catalog = fs.readFileSync(
-      path.join(root, "src/server/catalog.server.ts"),
-      "utf-8",
-    );
-    expect(catalog).toContain("displayableImages");
-    expect(catalog).toContain("!i.url.startsWith(\"/img/\")");
+      "public/img/products should exist with restored photography",
+    ).toBe(true);
+    for (const c of CANONICAL) {
+      for (const imgName of c.images) {
+        expect(
+          fs.existsSync(path.join(root, "public/img/products", imgName)),
+          `image ${imgName} should exist`,
+        ).toBe(true);
+      }
+    }
   });
 
   it("variant-bearing designs (Faith, Excellence, Grace) have exactly two colourways", () => {

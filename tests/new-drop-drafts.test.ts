@@ -75,8 +75,6 @@ describe("New-drop drafts (DFK-DFT-150 … DFK-DFT-166)", () => {
   });
 
   it("bundles no imagery for the new drop", () => {
-    const root = path.resolve(__dirname, "..");
-    expect(fs.existsSync(path.join(root, "public/img/products"))).toBe(false);
     const sql = fs.readFileSync(MIGRATION_PATH, "utf-8");
     expect(sql).not.toContain("/img/");
     expect(sql).not.toContain("/api/media/");

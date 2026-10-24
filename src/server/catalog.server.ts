@@ -8,6 +8,7 @@ import {
   type Product,
 } from "../../db/schema";
 import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { isDisplayableImageUrl } from "../lib/img";
 
 export type ProductWithMedia = Product & {
   images: Array<{ url: string; altText: string | null }>;
@@ -17,17 +18,49 @@ export type ProductWithMedia = Product & {
 export type { Product } from "../../db/schema";
 
 /**
- * Legacy bundled imagery (/img/…) is no longer part of the rebuilt site —
- * those references are dropped at the data layer so every surface falls back
- * to the neutral "Image coming soon" placeholder. Uploaded media (Netlify
- * Blobs via /api/media/…) and external CDN URLs still display.
+ * Gallery rows are filtered through isDisplayableImageUrl: uploaded media
+ * (Netlify Blobs via /api/media/…), the house's bundled product photography
+ * (/img/products/…) and external https URLs display. Legacy root-level
+ * /img/*.jpg placeholders are dropped so those surfaces fall back to the
+ * neutral "Image coming soon" placeholder.
  */
 function displayableImages(
   rows: Array<{ url: string; altText: string | null }>,
 ): Array<{ url: string; altText: string | null }> {
   return rows
-    .filter((i) => i.url && !i.url.startsWith("/img/"))
+    .filter((i) => isDisplayableImageUrl(i.url))
     .map((i) => ({ url: i.url, altText: i.altText }));
+}
+
+/**
+ * Apply the house collection rules:
+ * - One or two design colours: Essentials
+ * - More than two design colours (or explicit multicolour/rainbow): Essentials Pro
+ * Each `colors` entry is a separate colourway ("Black / Brown" = one colourway
+ * with two design colours), so colours are counted per colourway — a bag
+ * offered in Brown, Black or Grey is still a one-colour Essentials design.
+ * Explicit collections (e.g. DREAMZ Originals, DREAMZ Exeutez Collection) are preserved.
+ */
+export function resolveCollection(p: {
+  collection?: string | null;
+  colors?: string[] | null;
+  name?: string;
+}): string {
+  if (p.collection && p.collection.trim().length > 0) return p.collection;
+  const colourways = p.colors ?? [];
+  const maxDesignColours = Math.max(
+    0,
+    ...colourways.map(
+      (c) => new Set(c.split(/[\/,+&]/).map((part) => part.trim().toLowerCase()).filter(Boolean)).size,
+    ),
+  );
+  const hasMulticolour =
+    colourways.some((c) => /multi|rainbow/i.test(c)) ||
+    Boolean(p.name && /multi|rainbow/i.test(p.name));
+  if (maxDesignColours >= 3 || hasMulticolour) {
+    return "Essentials Pro";
+  }
+  return "Essentials";
 }
 
 async function attachMedia(rows: Product[]): Promise<ProductWithMedia[]> {
@@ -44,6 +77,7 @@ async function attachMedia(rows: Product[]): Promise<ProductWithMedia[]> {
     .where(inArray(productVariants.productId, ids));
   return rows.map((p) => ({
     ...p,
+    collection: resolveCollection(p),
     images: displayableImages(imgs.filter((i) => i.productId === p.id)),
     variants: vars
       .filter((v) => v.productId === p.id)
@@ -67,6 +101,7 @@ export function isPurchasable(p: Pick<Product, "price" | "checkoutReady">): bool
 export async function getPublishedProducts(opts?: {
   categorySlug?: string;
   tier?: string;
+  collection?: string;
   featured?: boolean;
   customizable?: boolean;
   limit?: number;
@@ -82,7 +117,12 @@ export async function getPublishedProducts(opts?: {
     .where(and(...conds))
     .orderBy(asc(products.id))
     .limit(opts?.limit ?? 100);
-  return attachMedia(rows);
+  const media = await attachMedia(rows);
+  if (opts?.collection) {
+    const coll = opts.collection.toLowerCase();
+    return media.filter((p) => (p.collection ?? "").toLowerCase() === coll);
+  }
+  return media;
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductWithMedia | null> {
@@ -145,6 +185,8 @@ export async function searchProducts(query: string): Promise<ProductWithMedia[]>
         eq(products.status, "published"),
         or(
           sql`lower(${products.name}) like ${q}`,
+          sql`lower(${products.sku}) like ${q}`,
+          sql`lower(coalesce(${products.collection}, '')) like ${q}`,
           sql`lower(${products.shortDescription}) like ${q}`,
           sql`lower(${products.fullDescription}) like ${q}`,
           sql`lower(coalesce(${products.subcategory}, '')) like ${q}`,
@@ -153,7 +195,20 @@ export async function searchProducts(query: string): Promise<ProductWithMedia[]>
       ),
     )
     .limit(24);
-  return attachMedia(rows);
+  const media = await attachMedia(rows);
+  // Also include products whose resolved collection matches the query
+  const queryLower = query.toLowerCase();
+  if (queryLower.includes("pro") || queryLower.includes("essential") || queryLower.includes("original")) {
+    const allPublished = await db.select().from(products).where(eq(products.status, "published")).limit(100);
+    const allMedia = await attachMedia(allPublished);
+    const matched = allMedia.filter(
+      (p) =>
+        (p.collection ?? "").toLowerCase().includes(queryLower) &&
+        !media.some((m) => m.id === p.id),
+    );
+    return [...media, ...matched].slice(0, 24);
+  }
+  return media;
 }
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {

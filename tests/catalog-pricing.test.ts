@@ -155,3 +155,43 @@ describe("Availability states gate purchasing", () => {
     expect(info.purchasable).toBe(true);
   });
 });
+
+describe("Collection classification rules", () => {
+  it("assigns Essentials to 1 or 2 colour designs", async () => {
+    const { resolveCollection } = await import("../src/server/catalog.server");
+    expect(resolveCollection({ name: "Single Tone", colors: ["Brown"] })).toBe("Essentials");
+    expect(resolveCollection({ name: "Dual Tone", colors: ["Black / Brown"] })).toBe("Essentials");
+  });
+
+  it("counts design colours per colourway, not across colourway options", async () => {
+    const { resolveCollection } = await import("../src/server/catalog.server");
+    // Exotic Elegance: one bag offered in three single-colour colourways.
+    expect(
+      resolveCollection({ name: "Exotic Elegance", colors: ["Brown", "Black", "Grey"] }),
+    ).toBe("Essentials");
+  });
+
+  it("assigns Essentials Pro to 3+ colour designs or multicolour", async () => {
+    const { resolveCollection } = await import("../src/server/catalog.server");
+    expect(
+      resolveCollection({ name: "Trio Tone", colors: ["Brown / Black / Grey"] }),
+    ).toBe("Essentials Pro");
+    expect(
+      resolveCollection({ name: "Boot of Many Colours", colors: ["Multicolour"] }),
+    ).toBe("Essentials Pro");
+    expect(
+      resolveCollection({ name: "Rainbow Belt", colors: ["Black / Rainbow"] }),
+    ).toBe("Essentials Pro");
+  });
+
+  it("preserves explicit collection metadata", async () => {
+    const { resolveCollection } = await import("../src/server/catalog.server");
+    expect(
+      resolveCollection({
+        collection: "DREAMZ Originals",
+        name: "Dreamz Faith",
+        colors: ["Tan / Forest Green", "Taupe / Navy"],
+      }),
+    ).toBe("DREAMZ Originals");
+  });
+});

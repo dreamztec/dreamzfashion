@@ -1,4 +1,4 @@
-import { img } from "@/lib/img";
+import { img, isDisplayableImageUrl } from "@/lib/img";
 
 /**
  * Brand presentation built from type, not image files. The house uploads
@@ -106,9 +106,7 @@ export function ProductMedia({
   eager?: boolean;
   fit?: "cover" | "contain";
 }) {
-  const usable =
-    !!url && (url.startsWith("/api/media/") || url.startsWith("https://"));
-  if (!usable) {
+  if (!isDisplayableImageUrl(url)) {
     return <ImageComingSoon aspect={aspect} className={className} />;
   }
   return (

@@ -8,6 +8,7 @@ import {
 } from "@/server/admin.functions";
 import { adminCall } from "@/lib/admin-client";
 import { formatNaira } from "@/lib/format";
+import { isDisplayableImageUrl } from "@/lib/img";
 
 export const Route = createFileRoute("/admin/products")({
   component: AdminProducts,
@@ -652,7 +653,7 @@ function AdminProducts() {
               <tr key={p.id}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    {p.image && !p.image.startsWith("/img/") ? (
+                    {isDisplayableImageUrl(p.image) ? (
                       <img
                         src={`/.netlify/images?url=${encodeURIComponent(p.image)}&w=80`}
                         alt=""

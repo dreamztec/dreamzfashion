@@ -6,10 +6,23 @@ import { BRAND } from "@/lib/config";
 import { PRODUCT_TIERS, TIER_LABELS, formatNaira } from "@/lib/format";
 
 /** Every filter lives in the URL so results are shareable and back-safe. */
+export type ShopSearch = {
+  q?: string;
+  tier?: string;
+  collection?: string;
+  min?: string;
+  max?: string;
+  size?: string;
+  colour?: string;
+  availability?: string;
+  sort?: string;
+};
+
 export const Route = createFileRoute("/shop/")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): ShopSearch => ({
     q: typeof search.q === "string" ? search.q : undefined,
     tier: typeof search.tier === "string" ? search.tier : undefined,
+    collection: typeof search.collection === "string" ? search.collection : undefined,
     min: typeof search.min === "string" ? search.min : undefined,
     max: typeof search.max === "string" ? search.max : undefined,
     size: typeof search.size === "string" ? search.size : undefined,
@@ -88,10 +101,20 @@ function ShopIndex() {
     return [...set].sort((a, b) => a.localeCompare(b));
   }, [products]);
 
+  const availableCollections = useMemo(() => {
+    const set = new Set<string>();
+    for (const p of products) if (p.collection) set.add(p.collection);
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
   const filtered = useMemo(() => {
     let out = products;
     if (search.tier && PRODUCT_TIERS.includes(search.tier as never)) {
       out = out.filter((p) => p.tier === search.tier);
+    }
+    if (search.collection) {
+      const coll = (search.collection as string).toLowerCase();
+      out = out.filter((p) => (p.collection ?? "").toLowerCase() === coll);
     }
     if (search.size) out = out.filter((p) => (p.sizes ?? []).includes(search.size as string));
     if (search.colour) {
@@ -124,10 +147,10 @@ function ShopIndex() {
         );
     }
     return out;
-  }, [products, search.tier, search.size, search.colour, search.availability, search.min, search.max, search.sort]);
+  }, [products, search.tier, search.collection, search.size, search.colour, search.availability, search.min, search.max, search.sort]);
 
   const hasFilters =
-    search.tier || search.min || search.max || search.size || search.colour || search.availability === "1" || search.sort;
+    search.tier || search.collection || search.min || search.max || search.size || search.colour || search.availability === "1" || search.sort;
 
   const update = (patch: Record<string, string | undefined>) => {
     const next: Record<string, string | undefined> = { ...search, ...patch };
@@ -296,22 +319,40 @@ function ShopIndex() {
             </button>
           ) : null}
         </div>
-        {availableColours.length > 1 && (
-          <div className="sm:col-span-5">
-            <label htmlFor="f-colour" className="input-lux-label">Colour</label>
-            <select
-              id="f-colour"
-              className="input-lux max-w-xs"
-              value={search.colour ?? ""}
-              onChange={(e) => update({ colour: e.target.value || undefined })}
-            >
-              <option value="">Any colour</option>
-              {availableColours.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-        )}
+        <div className="flex flex-wrap gap-4 sm:col-span-5">
+          {availableCollections.length > 1 && (
+            <div>
+              <label htmlFor="f-collection" className="input-lux-label">Collection</label>
+              <select
+                id="f-collection"
+                className="input-lux min-w-[180px]"
+                value={search.collection ?? ""}
+                onChange={(e) => update({ collection: e.target.value || undefined })}
+              >
+                <option value="">All Collections</option>
+                {availableCollections.map((col) => (
+                  <option key={col} value={col}>{col}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {availableColours.length > 1 && (
+            <div>
+              <label htmlFor="f-colour" className="input-lux-label">Colour</label>
+              <select
+                id="f-colour"
+                className="input-lux min-w-[180px]"
+                value={search.colour ?? ""}
+                onChange={(e) => update({ colour: e.target.value || undefined })}
+              >
+                <option value="">Any colour</option>
+                {availableColours.map((c) => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </div>
       </form>
 
       {/* Active price filter feedback */}
