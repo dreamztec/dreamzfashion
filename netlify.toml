@@ -1,0 +1,14 @@
+[build]
+  command = "vite build"
+  publish = "dist/client"
+
+[dev]
+  command = "npm run dev"
+  targetPort = 3000
+  port = 8888
+
+# Long-cache the immutable generated route tree assets
+[[headers]]
+  for = "/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

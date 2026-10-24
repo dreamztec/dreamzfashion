@@ -1,0 +1,2 @@
+ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "complete_package_price" integer;--> statement-breakpoint
+ALTER TABLE "products" ADD COLUMN IF NOT EXISTS "package_contents" jsonb DEFAULT '[]' NOT NULL;
