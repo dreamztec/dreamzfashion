@@ -52,6 +52,12 @@ export function ProductCard({
       <div className="pt-4 pb-2 text-center flex flex-col">
         <p className="tier-badge mb-1 justify-center">
           {TIER_LABELS[normalizeTier(product.tier)]}
+          {product.collection && (
+            <span className="text-stone/75 font-normal lowercase tracking-normal">
+              {" "}
+              · {product.collection}
+            </span>
+          )}
         </p>
         <h3 className="font-editorial text-lg leading-snug">{product.name}</h3>
         {product.subcategory && (

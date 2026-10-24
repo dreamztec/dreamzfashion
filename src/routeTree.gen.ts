@@ -16,6 +16,7 @@ import { Route as BespokeRouteImport } from './routes/bespoke'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CorporateRouteImport } from './routes/corporate'
 import { Route as CustomRouteImport } from './routes/custom'
+import { Route as D5exRouteImport } from './routes/d5ex'
 import { Route as Dreamz5RouteImport } from './routes/dreamz-5'
 import { Route as EarnRouteImport } from './routes/earn'
 import { Route as FeedbackRouteImport } from './routes/feedback'
@@ -103,6 +104,11 @@ const CorporateRoute = CorporateRouteImport.update({
 const CustomRoute = CustomRouteImport.update({
   id: '/custom',
   path: '/custom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const D5exRoute = D5exRouteImport.update({
+  id: '/d5ex',
+  path: '/d5ex',
   getParentRoute: () => rootRouteImport,
 } as any)
 const Dreamz5Route = Dreamz5RouteImport.update({
@@ -380,6 +386,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
   '/custom': typeof CustomRoute
+  '/d5ex': typeof D5exRoute
   '/dreamz-5': typeof Dreamz5Route
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
@@ -441,6 +448,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
   '/custom': typeof CustomRoute
+  '/d5ex': typeof D5exRoute
   '/dreamz-5': typeof Dreamz5Route
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
@@ -504,6 +512,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
   '/custom': typeof CustomRoute
+  '/d5ex': typeof D5exRoute
   '/dreamz-5': typeof Dreamz5Route
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
@@ -568,6 +577,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/corporate'
     | '/custom'
+    | '/d5ex'
     | '/dreamz-5'
     | '/earn'
     | '/feedback'
@@ -629,6 +639,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/corporate'
     | '/custom'
+    | '/d5ex'
     | '/dreamz-5'
     | '/earn'
     | '/feedback'
@@ -691,6 +702,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/corporate'
     | '/custom'
+    | '/d5ex'
     | '/dreamz-5'
     | '/earn'
     | '/feedback'
@@ -754,6 +766,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   CorporateRoute: typeof CorporateRouteWithChildren
   CustomRoute: typeof CustomRoute
+  D5exRoute: typeof D5exRoute
   Dreamz5Route: typeof Dreamz5Route
   EarnRoute: typeof EarnRoute
   FeedbackRoute: typeof FeedbackRoute
@@ -845,6 +858,13 @@ declare module '@tanstack/react-router' {
       path: '/custom'
       fullPath: '/custom'
       preLoaderRoute: typeof CustomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/d5ex': {
+      id: '/d5ex'
+      path: '/d5ex'
+      fullPath: '/d5ex'
+      preLoaderRoute: typeof D5exRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dreamz-5': {
@@ -1283,6 +1303,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   CorporateRoute: CorporateRouteWithChildren,
   CustomRoute: CustomRoute,
+  D5exRoute: D5exRoute,
   Dreamz5Route: Dreamz5Route,
   EarnRoute: EarnRoute,
   FeedbackRoute: FeedbackRoute,

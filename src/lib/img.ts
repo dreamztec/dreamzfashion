@@ -29,3 +29,16 @@ export function imgSrcSet(
     .map((w) => `${img(url, { ...opts, w })} ${w}w`)
     .join(", ");
 }
+/**
+ * Image URLs the storefront may render. Admin uploads (Netlify Blobs, served
+ * from /api/media/), the house's own product photography bundled under
+ * /img/products/, and absolute https URLs. Anything else — notably the
+ * legacy root-level /img/*.jpg placeholders — renders the neutral
+ * "Image coming soon" state instead of a broken or unapproved image.
+ */
+export function isDisplayableImageUrl(url: string | null | undefined): url is string {
+  return (
+    !!url &&
+    (url.startsWith("/api/media/") || url.startsWith("/img/products/") || url.startsWith("https://"))
+  );
+}

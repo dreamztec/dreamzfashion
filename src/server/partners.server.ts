@@ -7,6 +7,7 @@ import {
   referrers,
 } from "../../db/schema";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { isDisplayableImageUrl } from "../lib/img";
 
 /**
  * Earn-with-DREAMZ partner engine.
@@ -166,7 +167,7 @@ export async function getCreatorStorefront(slug: string) {
     : [];
   const coverByProduct = new Map<number, string>();
   for (const img of images.sort((a, b) => a.position - b.position)) {
-    if (!img.url || img.url.startsWith("/img/")) continue;
+    if (!isDisplayableImageUrl(img.url)) continue;
     if (!coverByProduct.has(img.productId)) coverByProduct.set(img.productId, img.url);
   }
 

@@ -49,6 +49,7 @@ export const getCatalog = createServerFn({ method: "GET" })
       .object({
         categorySlug: z.string().optional(),
         tier: z.string().optional(),
+        collection: z.string().optional(),
         featured: z.boolean().optional(),
         customizable: z.boolean().optional(),
         limit: z.number().optional(),

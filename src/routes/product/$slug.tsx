@@ -263,7 +263,14 @@ function ProductPage() {
 
         {/* Details */}
         <div className="lg:sticky lg:top-28 lg:self-start">
-          <p className="tier-badge mb-3">{TIER_LABELS[tier]}</p>
+          <p className="tier-badge mb-3">
+            {TIER_LABELS[tier]}
+            {product.collection && (
+              <span className="text-stone/75 font-normal tracking-normal ml-2">
+                · {product.collection}
+              </span>
+            )}
+          </p>
           <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl leading-tight">
             {product.name}
           </h1>
