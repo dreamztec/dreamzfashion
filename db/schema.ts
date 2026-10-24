@@ -161,6 +161,19 @@ export const orders = pgTable("orders", {
     .notNull()
     .default([]),
   adminNotes: text("admin_notes"),
+  // Browser-generated submission key: a retried or double-clicked submit
+  // returns the existing order instead of creating a duplicate.
+  clientRequestId: text("client_request_id").unique(),
+  // Partner attribution, resolved server-side and saved on the order so it
+  // survives an unpaid request through to later verified payment.
+  // source: checkout_code (explicit code wins) | referral_link
+  // outcome: commission | self_purchase | self_purchase_benefit | not_eligible
+  referrerId: integer("referrer_id"),
+  referralCode: text("referral_code"),
+  attributionSource: text("attribution_source"),
+  attributionOutcome: text("attribution_outcome"),
+  // Owner-configured creator self-purchase benefit applied (kobo).
+  selfPurchaseBenefitKobo: integer("self_purchase_benefit_kobo").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -275,6 +288,51 @@ export const designRequests = pgTable(
   },
   (t) => [index("design_requests_status_idx").on(t.status)],
 );
+
+// ── Custom designs (Design Your Dream workspace) ─────────────────────
+// A versioned, server-validated specification the artisan builds from.
+// Reopened with designId + editToken; carried into cart and order lines.
+
+export const customDesigns = pgTable(
+  "custom_designs",
+  {
+    id: serial("id").primaryKey(),
+    designId: text("design_id").notNull().unique(), // DZD-XXXXXXXX
+    editToken: text("edit_token").notNull(),
+    productId: integer("product_id").notNull(),
+    // Model/version of the design template (brief template until an
+    // authored 3D model exists — see src/lib/design-templates.ts).
+    modelId: text("model_id").notNull(),
+    modelVersion: text("model_version").notNull(),
+    configVersion: integer("config_version").notNull().default(1),
+    parts: jsonb("parts").$type<Record<string, string>>().notNull().default({}),
+    materials: jsonb("materials").$type<Record<string, string>>().notNull().default({}),
+    geometry: jsonb("geometry").$type<Record<string, string>>().notNull().default({}),
+    size: text("size"),
+    referenceIds: jsonb("reference_ids").$type<string[]>().notNull().default([]),
+    previewKey: text("preview_key"),
+    notes: text("notes"),
+    // quote_required until the house prices the design.
+    priceStatus: text("price_status").notNull().default("quote_required"),
+    quotedPriceKobo: integer("quoted_price_kobo"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [index("custom_designs_product_idx").on(t.productId)],
+);
+
+// Customer inspiration uploads (Netlify Blobs key design-refs/<id>).
+// Private: served only to holders of the random reference id.
+export const designReferences = pgTable("design_references", {
+  id: serial("id").primaryKey(),
+  refId: text("ref_id").notNull().unique(),
+  blobKey: text("blob_key").notNull(),
+  contentType: text("content_type").notNull(),
+  sizeBytes: integer("size_bytes").notNull(),
+  originalName: text("original_name"),
+  designId: text("design_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 // ── Product reviews (architecture now; moderation before display) ────
 

@@ -1,291 +1,216 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { getCatalog, getSiteSettings } from "@/server/catalog.functions";
 import { ProductGrid } from "@/components/ProductCard";
-import { RainbowRule, Wordmark } from "@/components/brand";
+import { ProductMedia, RainbowRule } from "@/components/brand";
 import { Reveal } from "@/components/Reveal";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
-import { PRODUCT_TIERS, TIER_DESCRIPTIONS, TIER_LABELS, TIER_TAGLINES } from "@/lib/format";
+import { formatNaira } from "@/lib/format";
+import { isPosterArtwork } from "@/lib/img";
 import { WaitlistSignup } from "@/components/WaitlistSignup";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const [settings, featured, all] = await Promise.all([
-      getSiteSettings(),
-      getCatalog({ data: { featured: true, limit: 8 } }),
-      getCatalog({ data: { limit: 200 } }),
-    ]);
-    const tierCounts = {
-      essentials: all.filter((p) => p.tier === "essentials").length,
-      signature: all.filter((p) => p.tier === "signature").length,
-      bespoke: all.filter((p) => p.tier === "bespoke").length,
-    };
-    return { settings, featured, tierCounts };
+    const [settings, all] = await Promise.all([getSiteSettings(), getCatalog({ data: { limit: 200 } })]);
+    const hero = all.find((p) => p.sku === "DFK-FTW-001") ?? null;
+    const rest = all.filter((p) => p.id !== hero?.id);
+    // Clean product photography first; poster artwork goes to Inspiration.
+    const photographed = rest.filter((p) => p.images[0] && !isPosterArtwork(p.images[0].url));
+    const posters = rest.filter((p) => p.images[0] && isPosterArtwork(p.images[0].url));
+    const samples = [...photographed.filter((p) => p.featured), ...photographed.filter((p) => !p.featured)].slice(0, 6);
+    return { settings, hero, samples, posters: posters.slice(0, 6), total: all.length };
   },
   head: () => ({
     meta: [
-      { title: `${BRAND.name} — Your dream. Your style. Made to wear.` },
-      { name: "description", content: BRAND.description },
+      { title: `Design Your Dream Outfit — ${BRAND.name}` },
+      { name: "description", content: HERO_BODY },
     ],
   }),
   component: Home,
 });
 
+const HERO_BODY = "Custom-made and ready-to-wear leather footwear, bags and accessories, crafted around you.";
+const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined };
+
 function Home() {
-  const { settings, featured, tierCounts } = Route.useLoaderData() as {
+  const { settings, hero, samples, posters, total } = Route.useLoaderData() as {
     settings: Record<string, unknown>;
-    featured: Awaited<ReturnType<typeof getCatalog>>;
-    tierCounts: Record<string, number>;
+    hero: Awaited<ReturnType<typeof getCatalog>>[number] | null;
+    samples: Awaited<ReturnType<typeof getCatalog>>;
+    posters: Awaited<ReturnType<typeof getCatalog>>;
+    total: number;
   };
   const whatsappNumber =
     (settings.whatsappNumber as string) || process.env.DFK_WHATSAPP_NUMBER || "";
-
-  const tiers = PRODUCT_TIERS.map((tier) => ({
-    tier,
-    label: TIER_LABELS[tier],
-    tagline: TIER_TAGLINES[tier],
-    description: TIER_DESCRIPTIONS[tier],
-    count: tierCounts[tier] ?? 0,
-  }));
+  const heroPhoto = hero?.images.find((i) => !isPosterArtwork(i.url)) ?? hero?.images[0] ?? null;
 
   return (
     <div>
-      {/* ── Brand presentation — text wordmark ─────────────── */}
-      <section className="bg-ivory pt-28 sm:pt-32 pb-6 sm:pb-10">
-        <div className="mx-auto max-w-2xl px-5 text-center">
-          <Wordmark size="xl" tagline />
-          <RainbowRule className="mx-auto mt-7 fade-up fade-up-1" />
-        </div>
-      </section>
-
-      {/* ── Typographic hero — the offer in plain words ────── */}
-      <section className="bg-ivory">
-        <div className="mx-auto max-w-4xl px-5 sm:px-8 pt-10 pb-16 sm:pt-14 sm:pb-24 text-center">
-          <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.05] fade-up">
-            {(settings.heroTitle as string) || "Your dream. Your style. Made to wear."}
-          </h1>
-          <p className="mt-6 max-w-xl mx-auto text-stone leading-relaxed sm:text-lg fade-up fade-up-1">
-            {(settings.heroBody as string) ||
-              "Handcrafted leather footwear, bags and accessories — designed in Nigeria, made to be remembered. Shop the collection or commission a piece that is entirely yours."}
-          </p>
-          <div className="mt-9 flex flex-wrap justify-center gap-4 fade-up fade-up-2">
-            <Link
-              to="/shop"
-              search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }}
-              className="btn-lux btn-lux-primary"
-            >
-              Shop DREAMZ
-            </Link>
-            <Link to="/custom" className="btn-lux btn-lux-outline">
-              Design Yours
-            </Link>
+      {/* ── Hero: the offer first ──────────────────────────── */}
+      <section className="bg-ivory pt-36 sm:pt-32">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 pb-14 sm:pb-20 grid gap-10 lg:grid-cols-[1.05fr_1fr] lg:items-center">
+          <div className="text-center lg:text-left">
+            <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.02] uppercase tracking-tight fade-up">
+              Design Your Dream Outfit
+            </h1>
+            <p className="mt-6 max-w-xl mx-auto lg:mx-0 text-stone leading-relaxed sm:text-lg fade-up fade-up-1">
+              {HERO_BODY}
+            </p>
+            <div className="mt-9 flex flex-col sm:flex-row justify-center lg:justify-start gap-3 sm:gap-4 fade-up fade-up-2">
+              <Link to="/custom" className="btn-lux btn-lux-primary">
+                Design Your Dream Outfit
+              </Link>
+              <Link to="/shop" search={SHOP_SEARCH} className="btn-lux btn-lux-outline">
+                Or See Samples
+              </Link>
+            </div>
+            <p className="mt-7 text-xs text-stone tracking-wide fade-up fade-up-3">
+              Handmade in Nigeria · Made to order or ready to wear · Delivery nationwide
+            </p>
           </div>
-          <p className="mt-8 text-xs text-stone tracking-wide fade-up fade-up-3">
-            Delivery across Nigeria · Paystack secured payments · Deposits available on made-to-order pieces
-          </p>
+
+          {hero && (
+            <figure className="fade-up fade-up-1">
+              <Link to="/product/$slug" params={{ slug: hero.slug }} className="block group" aria-label={`View ${hero.name}`}>
+                <ProductMedia
+                  url={heroPhoto?.url ?? null}
+                  alt={heroPhoto?.altText ?? `${hero.name} — multicolour leather lace-up boots`}
+                  aspect="aspect-square"
+                  width={1000}
+                  eager
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                />
+                <figcaption className="mt-4 flex flex-wrap items-baseline justify-between gap-2 text-sm">
+                  <span>
+                    <span className="font-editorial text-xl">{hero.name}</span>
+                    {hero.collection && <span className="text-stone"> · {hero.collection}</span>}
+                  </span>
+                  <span className="nav-link text-[0.68rem] uppercase tracking-btn">
+                    {hero.price > 0 && hero.checkoutReady ? `From ${formatNaira(hero.price)}` : "Request a quote"} →
+                  </span>
+                </figcaption>
+              </Link>
+            </figure>
+          )}
         </div>
       </section>
 
-      {/* ── What we sell — before any partnership talk ─────── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
+      {/* ── Samples — clean product photography ────────────── */}
+      {samples.length > 0 && (
+        <section className="mx-auto max-w-7xl px-5 sm:px-8 pt-16 lg:pt-24">
           <Reveal>
             <div className="text-center mb-12">
-              <p className="overline-label mb-3">What We Make</p>
-              <h2 className="font-editorial text-3xl sm:text-4xl">Leather, crafted to carry your story</h2>
+              <p className="overline-label mb-3">Samples</p>
+              <h2 className="font-editorial text-3xl sm:text-4xl">Pieces from the workshop</h2>
               <p className="text-stone mt-4 max-w-xl mx-auto">
-                Shoes and loafers. Slides, sandals and mules. Bags, belts,
-                wallets and purses — every piece finished by hand.
+                Order a sample as shown, or use it as the starting point for your own design.
               </p>
               <RainbowRule className="mx-auto mt-6" />
             </div>
           </Reveal>
-          <div className="grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto">
+          <ProductGrid products={samples} />
+          <div className="text-center mt-10">
+            <Link to="/shop" search={SHOP_SEARCH} className="btn-lux btn-lux-outline">
+              See all {total} samples
+            </Link>
+          </div>
+        </section>
+      )}
+
+      {/* ── What we make ───────────────────────────────────── */}
+      <section className="bg-ivory-deep mt-20 lg:mt-28">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
+          <div className="text-center mb-12">
+            <p className="overline-label mb-3">What We Make</p>
+            <h2 className="font-editorial text-3xl sm:text-4xl">Leather, crafted around you</h2>
+            <RainbowRule className="mx-auto mt-6" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3 max-w-4xl mx-auto">
             {[
-              { label: "Footwear", to: "/shop/footwear", note: "Loafers, brogues, slides, sandals & boots" },
-              { label: "Bags", to: "/shop/bags", note: "Totes, satchels & executive handbags" },
-              { label: "Accessories", to: "/shop/accessories", note: "Belts, wallets, purses & gift sets" },
-            ].map(({ label, to, note }, i) => (
-              <Reveal key={to} delay={(i + 1) as 1 | 2 | 3}>
-                <Link
-                  to={to as "/shop"}
-                  search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }}
-                  className="block border border-ink/10 bg-ivory px-7 py-9 text-center transition-colors hover:border-ink/40 h-full"
-                  aria-label={`Shop ${label}`}
-                >
-                  <h3 className="font-editorial text-2xl mb-2">{label}</h3>
-                  <p className="text-sm text-stone leading-relaxed">{note}</p>
-                  <span className="nav-link inline-block mt-5 text-[0.68rem] uppercase tracking-btn">Explore</span>
-                </Link>
-              </Reveal>
+              { label: "Footwear", to: "/shop/footwear", note: "Shoes · Loafers · Boots · Slides" },
+              { label: "Bags", to: "/shop/bags", note: "Briefcases · Wrist pouches · Handbags" },
+              { label: "Accessories", to: "/shop/accessories", note: "Belts · Gift sets" },
+            ].map(({ label, to, note }) => (
+              <Link
+                key={to}
+                to={to as "/shop"}
+                search={SHOP_SEARCH}
+                className="block border border-ink/10 bg-ivory px-7 py-9 text-center transition-colors hover:border-ink/40 h-full"
+                aria-label={`See ${label}`}
+              >
+                <h3 className="font-editorial text-2xl mb-2">{label}</h3>
+                <p className="text-sm text-stone leading-relaxed">{note}</p>
+                <span className="nav-link inline-block mt-5 text-[0.68rem] uppercase tracking-btn">Explore</span>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Featured ───────────────────────────────────────── */}
-      {featured.length > 0 && (
-        <section className="mx-auto max-w-7xl px-5 sm:px-8 pt-20 lg:pt-28">
-          <Reveal>
+      {/* ── Creators & Partners ────────────────────────────── */}
+      <section className="mx-auto max-w-4xl px-5 sm:px-8 py-16 lg:py-24 text-center">
+        <p className="overline-label mb-3">Creators &amp; Partners</p>
+        <h2 className="font-editorial text-3xl sm:text-4xl">Share DREAMZ, earn on qualifying sales</h2>
+        <p className="text-stone leading-relaxed max-w-xl mx-auto mt-5">
+          Approved creators get a personal code and link. Commission is earned
+          from verified, fulfilled sales — not from sharing or entering a code.
+        </p>
+        <Link to="/creators" className="btn-lux btn-lux-primary mt-8">
+          How it works
+        </Link>
+      </section>
+
+      {/* ── Inspiration — house posters, clearly labelled ──── */}
+      {posters.length > 0 && (
+        <section className="bg-ivory-deep">
+          <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
             <div className="text-center mb-12">
-              <p className="overline-label mb-3">Featured</p>
-              <h2 className="font-editorial text-3xl sm:text-4xl">Featured DREAMZ</h2>
+              <p className="overline-label mb-3">Inspiration</p>
+              <h2 className="font-editorial text-3xl sm:text-4xl">House posters</h2>
               <p className="text-stone mt-4 max-w-xl mx-auto">
-                Selected pieces from the house. Each available Product Only or as
-                a Complete Package.
+                Our launch posters, shown in full. Prices on each product page
+                are the current prices.
               </p>
-              <RainbowRule className="mx-auto mt-6" />
             </div>
-          </Reveal>
-          <Reveal delay={1}>
-            <ProductGrid products={featured} />
-          </Reveal>
+            <ProductGrid products={posters} />
+          </div>
         </section>
       )}
 
-      {/* ── Three clear tiers ──────────────────────────────── */}
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 pt-20 lg:pt-28">
-        <Reveal>
-          <div className="text-center mb-12">
-            <p className="overline-label mb-3">Three Ways to Buy</p>
-            <h2 className="font-editorial text-3xl sm:text-4xl">Choose your tier</h2>
-            <p className="text-stone mt-4 max-w-xl mx-auto">
-              Same craft, three levels of involvement — from ready-to-ship
-              essentials to fully commissioned work.
-            </p>
-            <RainbowRule className="mx-auto mt-6" />
-          </div>
-        </Reveal>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {tiers.map(({ tier, label, tagline, description, count }, i) => (
-            <Reveal key={tier} delay={(i + 1) as 1 | 2 | 3}>
-              <Link
-                to={tier === "bespoke" ? "/custom" : "/shop"}
-                search={tier === "bespoke" ? undefined : { q: undefined, tier, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined }}
-                className="block border border-ink/10 px-7 py-10 text-center transition-colors hover:border-ink/40 h-full"
-                aria-label={`Explore ${label}`}
-              >
-                <p className="tier-badge justify-center mb-3">{label}</p>
-                <h3 className="font-editorial text-2xl mb-3">{tagline}</h3>
-                <p className="text-sm text-stone leading-relaxed mb-5">{description}</p>
-                <span className="nav-link text-[0.68rem] uppercase tracking-btn">
-                  {tier === "bespoke" ? "Start a Brief" : `Shop ${count > 0 ? `(${count})` : ""}`}
-                </span>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
       {/* ── Anniversary early access (free waitlist) ───────── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16 lg:py-24 text-center">
-          <Reveal>
-            <p className="overline-label mb-4">12 June 2027</p>
-            <h2 className="font-editorial text-3xl sm:text-5xl leading-tight">
-              The Fifth Anniversary Collection
-            </h2>
-            <div className="rule-gold mx-auto mt-6 mb-6" />
-            <p className="text-stone leading-relaxed max-w-xl mx-auto">
-              Five years of DREAMZ. One commemorative collection. Join the free
-              early-access list — waitlist members see each piece first. No
-              payment, no obligation.
-            </p>
-            <div className="mt-8 max-w-md mx-auto text-left">
-              <WaitlistSignup />
-            </div>
-          </Reveal>
+      <section className="mx-auto max-w-4xl px-5 sm:px-8 py-16 lg:py-24 text-center">
+        <p className="overline-label mb-4">12 June 2027</p>
+        <h2 className="font-editorial text-3xl sm:text-5xl leading-tight">The Fifth Anniversary Collection</h2>
+        <div className="rule-gold mx-auto mt-6 mb-6" />
+        <p className="text-stone leading-relaxed max-w-xl mx-auto">
+          Join the free early-access list — waitlist members see each piece
+          first. No payment, no obligation.
+        </p>
+        <div className="mt-8 max-w-md mx-auto text-left">
+          <WaitlistSignup />
         </div>
       </section>
 
-      {/* ── Earn with DREAMZ (partnerships, after the product) ── */}
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
-        <Reveal>
-          <div className="text-center mb-12">
-            <p className="overline-label mb-3">Earn with DREAMZ</p>
-            <h2 className="font-editorial text-3xl sm:text-4xl">Three ways to work with the house</h2>
-            <RainbowRule className="mx-auto mt-6" />
-          </div>
-        </Reveal>
-        <div className="grid gap-4 sm:grid-cols-3 max-w-5xl mx-auto">
-          {[
-            { title: "Referral Partner", body: "Recommend DREAMZ to friends and followers. Free to apply, no purchase required." },
-            { title: "Creator Partner", body: "Curate a storefront from approved pieces and co-design a named collection." },
-            { title: "Trade Partner", body: "Buy in volume for your store or organisation, with quantity-based quotations." },
-          ].map(({ title, body }, i) => (
-            <Reveal key={title} delay={(i + 1) as 1 | 2 | 3}>
-              <div className="border border-ink/10 px-7 py-9 h-full">
-                <h3 className="font-editorial text-xl mb-3">{title}</h3>
-                <p className="text-sm text-stone leading-relaxed mb-5">{body}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-        <Reveal delay={2}>
-          <div className="text-center mt-10">
-            <Link to="/earn" className="btn-lux btn-lux-primary">
-              Apply on the Partner Hub
+      {/* ── Corporate + help ───────────────────────────────── */}
+      <section className="bg-ivory-deep">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-16 grid gap-10 sm:grid-cols-2 text-center sm:text-left">
+          <div>
+            <p className="overline-label mb-3">Corporate Orders</p>
+            <h2 className="font-editorial text-2xl sm:text-3xl">Gifts, events and co-branded pieces</h2>
+            <Link to="/corporate" className="btn-lux btn-lux-outline mt-6">
+              Start a Corporate Enquiry
             </Link>
           </div>
-        </Reveal>
-      </section>
-
-      {/* ── Corporate orders ───────────────────────────────── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16 lg:py-24 text-center">
-          <Reveal>
-            <p className="overline-label mb-4">Corporate Orders</p>
-            <h2 className="font-editorial text-3xl sm:text-4xl leading-tight">
-              Gifts, events and co-branded accessories
-            </h2>
-            <p className="text-stone leading-relaxed max-w-xl mx-auto mt-6">
-              Employee and client gifts, conference pieces, association orders
-              and reseller volumes — with formal quotations and delivery you can
-              plan around.
+          <div>
+            <p className="overline-label mb-3">Help</p>
+            <h2 className="font-editorial text-2xl sm:text-3xl">Prefer to talk first?</h2>
+            <p className="text-stone mt-3 text-sm leading-relaxed">
+              Sizing, styling and custom timelines — our client team answers on WhatsApp.
             </p>
-            <div className="mt-8">
-              <Link to="/corporate" className="btn-lux btn-lux-primary">
-                Start a Corporate Enquiry
-              </Link>
+            <div className="mt-6">
+              <WhatsAppCTAButton message={GENERAL_INQUIRY} whatsappNumber={whatsappNumber} label="Chat with DREAMZ" />
             </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── The House ──────────────────────────────────────── */}
-      <section className="mx-auto max-w-3xl px-5 sm:px-8 py-20 lg:py-28 text-center">
-        <Reveal>
-          <p className="overline-label mb-6">The House</p>
-          <h2 className="font-editorial text-3xl sm:text-5xl leading-tight">
-            Crafted for your story. Made to be remembered.
-          </h2>
-          <RainbowRule className="mx-auto mt-8 mb-8" />
-          <p className="text-stone leading-relaxed max-w-2xl mx-auto">
-            {BRAND.shortName} is a contemporary African fashion house shaping
-            footwear, bags and accessories for people who express their
-            identity through what they wear. Craft. Character. Confidence.
-          </p>
-          <Link to="/about" className="btn-lux btn-lux-outline mt-10">
-            Our Story
-          </Link>
-        </Reveal>
-      </section>
-
-      {/* ── WhatsApp CTA ───────────────────────────────────── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 text-center">
-          <h2 className="font-editorial text-3xl sm:text-4xl mb-4">
-            Prefer to talk first?
-          </h2>
-          <p className="text-stone max-w-lg mx-auto mb-8 leading-relaxed">
-            Our client team answers on WhatsApp — sizing, styling, bespoke
-            timelines and everything between.
-          </p>
-          <WhatsAppCTAButton
-            message={GENERAL_INQUIRY}
-            whatsappNumber={whatsappNumber}
-            label="Chat with DREAMZ"
-          />
+          </div>
         </div>
       </section>
     </div>

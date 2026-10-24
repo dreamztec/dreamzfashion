@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { adminListOrders, adminUpdateOrder, adminExportOrdersCsv } from "@/server/admin.functions";
+import { adminListOrders, adminUpdateOrder, adminExportOrdersCsv, adminRecordRefund } from "@/server/admin.functions";
 import { adminCall } from "@/lib/admin-client";
 import { formatNaira, ORDER_STATUS_LABELS } from "@/lib/format";
 export const Route = createFileRoute("/admin/orders")({
@@ -148,6 +148,34 @@ function AdminOrders() {
                       {o.address}, {o.city}, {o.state}
                       {o.deliveryNote && <><br /><span className="text-stone">Note: {o.deliveryNote}</span></>}
                     </p>
+                    {o.referralCode && (
+                      <p className="text-xs text-stone mt-3">
+                        Partner code {o.referralCode} ({o.attributionSource === "checkout_code" ? "typed at checkout" : "creator link"}) ·{" "}
+                        {o.attributionOutcome ?? "recorded"}
+                      </p>
+                    )}
+                    {o.paymentStatus === "requested" && (
+                      <p className="text-xs text-gold mt-3">
+                        Unpaid order request — confirm details and send the customer a payment link. Nothing is charged until payment is verified.
+                      </p>
+                    )}
+                    {["paid", "deposit_paid"].includes(o.paymentStatus) && (
+                      <button
+                        type="button"
+                        className="mt-3 border border-ink/20 px-3 py-1.5 text-xs hover:border-ink"
+                        onClick={() => {
+                          const reference = window.prompt(
+                            "Refunds are made in Paystack or by bank transfer. Enter the actual refund reference to record it (this also reverses partner commissions):",
+                          );
+                          if (!reference) return;
+                          adminCall(adminRecordRefund, { orderNumber: o.orderNumber, reference })
+                            .then(load)
+                            .catch((err: unknown) => alert(err instanceof Error ? err.message : "Could not record refund"));
+                        }}
+                      >
+                        Record refund
+                      </button>
+                    )}
                   </div>
 
                   <div>

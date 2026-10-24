@@ -16,7 +16,7 @@ const PRODUCTS_DIR = path.join(ROOT, "public/img/products");
 
 /** Published SKU → gallery files, in display order (DB snapshot 2026-10-24). */
 const PUBLISHED_GALLERIES: Record<string, string[]> = {
-  "DFK-FTW-001": ["boot-of-many-colours.jpg"],
+  "DFK-FTW-001": ["boot-of-many-colours-studio.jpg", "boot-of-many-colours.jpg"],
   "DFK-FTW-002": ["asiwaju-mule-brown.jpg", "asiwaju-mule-brown-detail.jpg"],
   "DFK-FTW-003": ["asiwaju-mule-black-white.jpg"],
   "DFK-FTW-004": ["crimson-pin.jpg"],

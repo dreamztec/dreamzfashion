@@ -86,7 +86,9 @@ function AdminPartners() {
                     className="input-lux !py-2 text-xs w-40"
                     value={p.status}
                     onChange={(e) =>
-                      adminCall(adminUpdatePartner, { id: p.id, status: e.target.value }).then(load)
+                      adminCall(adminUpdatePartner, { id: p.id, status: e.target.value })
+                        .then(load)
+                        .catch((err: unknown) => alert(err instanceof Error ? err.message : "Update failed"))
                     }
                     aria-label={`Status for ${p.displayName}`}
                   >
@@ -139,11 +141,13 @@ function AdminPartners() {
                   className="input-lux !py-1.5 text-xs w-28"
                   value={c.status}
                   onChange={(e) =>
-                    adminCall(adminUpdateCommission, { id: c.id, status: e.target.value }).then(load)
+                    adminCall(adminUpdateCommission, { id: c.id, status: e.target.value })
+                      .then(load)
+                      .catch((err: unknown) => alert(err instanceof Error ? err.message : "Update failed"))
                   }
                   aria-label={`Commission status for ${c.orderNumber}`}
                 >
-                  {["pending", "eligible", "paid", "reversed"].map((s) => (
+                  {["pending", "eligible", "reversed", ...(c.status === "paid" ? ["paid"] : [])].map((s) => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
@@ -191,7 +195,9 @@ function AdminPartners() {
                           id: p.id,
                           status: s,
                           adminReference: el?.value || "",
-                        }).then(load);
+                        })
+                          .then(load)
+                          .catch((err: unknown) => alert(err instanceof Error ? err.message : "Update failed"));
                       }}
                       className="border border-ink/20 px-3 py-1.5 text-xs hover:border-ink"
                     >

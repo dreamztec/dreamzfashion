@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ProductWithMedia } from "@/server/catalog.server";
-import { formatNaira, normalizeTier, TIER_LABELS } from "@/lib/format";
+import { formatNaira } from "@/lib/format";
+import { isPosterArtwork } from "@/lib/img";
 import { ProductMedia } from "@/components/brand";
 import { availabilityOf } from "@/lib/availability";
 
@@ -32,6 +33,8 @@ export function ProductCard({
           width={720}
           eager={priority}
           sizes="(max-width: 768px) 50vw, 33vw"
+          // Posters are shown whole — never cropped to hide their text.
+          fit={isPosterArtwork(image) || product.imageFit === "contain" ? "contain" : "cover"}
         />
         {info.label !== "Available" && (
           <span className="absolute top-4 left-4 bg-ink text-ivory text-[0.6rem] uppercase tracking-btn px-3 py-1.5">
@@ -50,15 +53,8 @@ export function ProductCard({
         )}
       </div>
       <div className="pt-4 pb-2 text-center flex flex-col">
-        <p className="tier-badge mb-1 justify-center">
-          {TIER_LABELS[normalizeTier(product.tier)]}
-          {product.collection && (
-            <span className="text-stone/75 font-normal lowercase tracking-normal">
-              {" "}
-              · {product.collection}
-            </span>
-          )}
-        </p>
+        {/* Collection only — service tier and packaging are shown on the product page. */}
+        {product.collection && <p className="tier-badge mb-1 justify-center">{product.collection}</p>}
         <h3 className="font-editorial text-lg leading-snug">{product.name}</h3>
         {product.subcategory && (
           <p className="text-xs text-stone mt-0.5">{product.subcategory}</p>
@@ -82,6 +78,14 @@ export function ProductCard({
       </div>
     </Link>
   );
+}
+
+/** Clean product photography leads; poster artwork follows (stable order). */
+export function photographyFirst<T extends { images: Array<{ url: string }> }>(items: T[]): T[] {
+  return items
+    .map((p, i) => ({ p, i, poster: isPosterArtwork(p.images[0]?.url) || !p.images[0] }))
+    .sort((a, b) => Number(a.poster) - Number(b.poster) || a.i - b.i)
+    .map((x) => x.p);
 }
 
 export function ProductGrid({

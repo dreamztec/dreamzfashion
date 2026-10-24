@@ -117,9 +117,14 @@ function Policies() {
 
       <Section id="payment" title="Payment Information">
         <p>
-          All prices are in Nigerian Naira (₦). Checkout is processed securely
-          by Paystack — card, bank transfer and USSD are supported. Your card
-          details go directly to Paystack and never touch our servers.
+          All prices are in Nigerian Naira (₦). When online payment is
+          available, checkout is processed by Paystack (card, bank transfer and
+          USSD) and your card details go directly to Paystack — they never
+          touch our servers. While online payment is not connected, checkout
+          sends an unpaid order request instead: you receive an order
+          reference, nothing is charged, and the DREAMZ team sends you a
+          secure payment link after confirming your order. We never ask for
+          card details by message or form.
         </p>
         <p>
           An order is confirmed only after payment verification. If your

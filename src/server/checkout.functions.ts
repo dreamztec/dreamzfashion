@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { db } from "../../db/index";
-import { orderEvents, orderItems, orders, payments, productVariants, voucherRedemptions } from "../../db/schema";
+import { orderEvents, orderItems, orders, payments, voucherRedemptions } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { getPaymentProvider } from "./payments.server";
 import { getSetting } from "./catalog.server";
 import { getCurrentCustomer } from "./auth.server";
-import { computeVoucherDiscount, holdVoucherForOrder, categorySlugsForProductIds } from "./vouchers.server";
+import { holdVoucherForOrder } from "./vouchers.server";
+import { priceOrder, PricingError, type PricedOrder } from "./order-pricing.server";
 import { confirmOrderPaid } from "./commerce.internal";
 import {
   generateOrderNumber,
@@ -18,8 +19,19 @@ const CheckoutItemSchema = z.object({
   productId: z.number().int().positive(),
   variantLabel: z.string().max(120).nullable().optional(),
   purchaseOption: z.enum(["product_only", "complete_package"]).default("product_only"),
-  customization: z.record(z.string(), z.string()).nullable().optional(),
+  customization: z.record(z.string().max(80), z.string().max(400)).nullable().optional(),
+  designId: z.string().regex(/^DZD-[A-Z0-9]{8}$/).nullable().optional(),
   quantity: z.number().int().min(1).max(10),
+});
+
+const PreviewSchema = z.object({
+  items: z.array(CheckoutItemSchema).min(1).max(20),
+  state: z.string().max(60).optional().or(z.literal("")),
+  voucherCode: z.string().max(40).optional().or(z.literal("")),
+  partnerCode: z.string().max(40).optional().or(z.literal("")),
+  referralSessionId: z.string().max(80).optional().or(z.literal("")),
+  email: z.string().max(140).optional().or(z.literal("")),
+  phone: z.string().max(30).optional().or(z.literal("")),
 });
 
 const CheckoutSchema = z.object({
@@ -40,9 +52,18 @@ const CheckoutSchema = z.object({
   giftNote: z.string().max(300).optional().or(z.literal("")),
   items: z.array(CheckoutItemSchema).min(1).max(20),
   voucherCode: z.string().max(40).optional().or(z.literal("")),
+  // Creator / partner code typed at checkout (case-insensitive). Takes
+  // precedence over an earlier referral-link click.
+  partnerCode: z.string().max(40).optional().or(z.literal("")),
   // "deposit" is honoured only when the server confirms every line is
   // deposit-eligible and the house has deposit terms configured.
   paymentPlan: z.enum(["full", "deposit"]).default("full"),
+  // "pay" starts online payment; "request" sends an unpaid order request.
+  // The server forces "request" whenever online payment is unavailable or
+  // a line still needs a quote.
+  mode: z.enum(["pay", "request"]).default("pay"),
+  // Browser-generated key that makes a double-submit return the same order.
+  clientRequestId: z.string().regex(/^[A-Za-z0-9-]{16,64}$/),
   // Explicit marketing consent, stored with the order (never inferred).
   marketingConsent: z.boolean().default(false),
   // First-party referral attribution session issued at /r/CODE click time.
@@ -52,189 +73,137 @@ const CheckoutSchema = z.object({
 
 export type CheckoutInput = z.infer<typeof CheckoutSchema>;
 
-/** Split "Colour · Size" variant labels used across the storefront. */
-function splitVariantLabel(label: string | null | undefined): {
-  color: string | null;
-  size: string | null;
-  singlePart: boolean;
-} {
-  const parts = (label ?? "").split(" · ").filter(Boolean);
-  // A single-part label is ambiguous (size-only product vs colour-only
-  // product); the caller matches it against whichever dimension carries it.
-  if (parts.length === 1) return { color: parts[0] ?? null, size: parts[0] ?? null, singlePart: true };
-  return { color: parts[0] ?? null, size: parts[1] ?? null, singlePart: false };
+/** Whether online payment can actually be taken right now. */
+function paymentAvailable(): boolean {
+  return getPaymentProvider("paystack") !== null;
+}
+
+function publicPricing(priced: PricedOrder) {
+  return {
+    lines: priced.lines.map((l) => ({
+      productId: l.productId,
+      productName: l.productName,
+      variantLabel: l.variantLabel,
+      purchaseOption: l.purchaseOption,
+      designId: l.designId,
+      unitPrice: l.unitPrice,
+      quantity: l.quantity,
+      quoteRequired: l.quoteRequired,
+    })),
+    subtotal: priced.subtotal,
+    delivery: priced.delivery,
+    discountKobo: priced.discountKobo,
+    voucherCode: priced.voucherCode,
+    selfPurchaseBenefitKobo: priced.selfPurchaseBenefitKobo,
+    partner: priced.partner
+      ? {
+          code: priced.partner.code,
+          source: priced.partner.source,
+          outcome: priced.partner.outcome,
+          displayName: priced.partner.displayName,
+        }
+      : null,
+    partnerCodeError: priced.partnerCodeError,
+    total: priced.total,
+    hasQuoteLines: priced.hasQuoteLines,
+  };
 }
 
 /**
- * Create an order from the cart and initialize Paystack payment.
- * Prices are ALWAYS recalculated server-side from the database —
- * client-supplied prices are never trusted.
+ * Server-priced checkout summary. The page shows these figures — never its
+ * own arithmetic — so listing, cart, summary and order always agree.
+ */
+export const previewCheckout = createServerFn({ method: "POST" })
+  .inputValidator(PreviewSchema)
+  .handler(async ({ data }) => {
+    const customer = await getCurrentCustomer();
+    try {
+      const priced = await priceOrder({
+        items: data.items,
+        state: data.state || null,
+        voucherCode: data.voucherCode || null,
+        partnerCode: data.partnerCode || null,
+        referralSessionId: data.referralSessionId || null,
+        buyer: { customerId: customer?.id ?? null, email: data.email || customer?.email || null, phone: data.phone || null },
+      });
+      return { ok: true as const, paymentAvailable: paymentAvailable(), pricing: publicPricing(priced) };
+    } catch (err) {
+      if (err instanceof PricingError) return { ok: false as const, paymentAvailable: paymentAvailable(), error: err.message };
+      throw err;
+    }
+  });
+
+/**
+ * Create an order from the cart and either initialize Paystack payment or,
+ * when payment is unavailable (or a line awaits a quote), record an unpaid
+ * order request. Prices are ALWAYS recalculated server-side.
  */
 export const initializeCheckout = createServerFn({ method: "POST" })
   .inputValidator(CheckoutSchema)
-  .  handler(async ({ data }) => {
-    // Re-price every line from the database first — the voucher discount and
-    // "fully covered" decision come from the priced lines, not the client.
-    const priced: Array<{
-      productId: number;
-      sku: string | null;
-      productName: string;
-      variantLabel: string | null;
-      size: string | null;
-      purchaseOption: "product_only" | "complete_package";
-      customization: Record<string, string> | null;
-      imageUrl: string | null;
-      unitPrice: number;
-      unitCostKobo: number | null;
-      quantity: number;
-    }> = [];
-    let subtotal = 0;
+  .handler(async ({ data }) => {
+    // Idempotency: the same submission key always returns the same order.
+    const [existingOrder] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.clientRequestId, data.clientRequestId))
+      .limit(1);
+    if (existingOrder) {
+      return {
+        orderNumber: existingOrder.orderNumber,
+        requested: existingOrder.paymentStatus === "requested",
+        duplicate: true,
+        orderUrl: `/order/${existingOrder.orderNumber}`,
+      };
+    }
 
-    for (const item of data.items) {
-      const variants = await db
-        .select()
-        .from(productVariants)
-        .where(eq(productVariants.productId, item.productId));
-      const productRow = await db.execute(
-        sql`SELECT products.id, products.sku, products.name, products.slug, products.price, products.complete_package_price, products.checkout_ready, products.internal_cost_kobo, (SELECT url FROM product_images pi WHERE pi.product_id = products.id ORDER BY position LIMIT 1) AS image FROM products WHERE products.id = ${item.productId} AND products.status = 'published' LIMIT 1`,
-      );
-      const firstRow = productRow.rows.length > 0 ? productRow.rows[0] : null;
-      const p = firstRow as
-        | {
-            id: number;
-            sku: string;
-            name: string;
-            slug: string;
-            price: number;
-            complete_package_price: number | null;
-            checkout_ready: boolean;
-            internal_cost_kobo: number | null;
-            image: string | null;
-          }
-        | null;
-      if (!p) throw new Error("A piece in your cart is no longer available");
-      // Quote-only guard: an unpriced product, or one the admin has not yet
-      // approved for checkout, can never be bought online.
-      if (p.price <= 0 || !p.checkout_ready) {
-        throw new Error(
-          `${p.name} is priced after review — please request a quote instead of checking out.`,
-        );
-      }
-
-      let unitPrice = p.price;
-      if (item.purchaseOption === "complete_package") {
-        if (!p.complete_package_price) {
-          throw new Error(`${p.name} is not available as a Complete Package`);
-        }
-        unitPrice = p.complete_package_price;
-      }
-      const { color, size, singlePart } = splitVariantLabel(item.variantLabel);
-      if (item.variantLabel) {
-        // Two-part labels ("Brown · 42") must match both dimensions exactly.
-        // Single-part labels ("44" or "Multicolour") match whichever
-        // dimension the variant actually carries.
-        const variant = variants.find((v) =>
-          singlePart
-            ? v.color === color || v.size === size
-            : (!color || v.color === color) && (!size || v.size === size),
-        );
-        if (!variant) throw new Error(`Selected option for ${p.name} is unavailable`);
-        if (variant.stockQuantity < item.quantity) {
-          throw new Error(`Only ${variant.stockQuantity} left of ${p.name} (${item.variantLabel})`);
-        }
-        if (
-          item.purchaseOption === "product_only" &&
-          variant.price
-        ) {
-          unitPrice = variant.price;
-        }
-      }
-
-      subtotal += unitPrice * item.quantity;
-      priced.push({
-        productId: p.id,
-        sku: p.sku,
-        productName: p.name,
-        variantLabel: item.variantLabel ?? null,
-        size,
-        purchaseOption: item.purchaseOption,
-        customization: item.customization ?? null,
-        imageUrl: p.image,
-        unitPrice,
-        unitCostKobo: p.internal_cost_kobo,
-        quantity: item.quantity,
+    const customer = await getCurrentCustomer();
+    let priced: PricedOrder;
+    try {
+      priced = await priceOrder({
+        items: data.items,
+        state: data.state,
+        voucherCode: data.voucherCode || null,
+        partnerCode: data.partnerCode || null,
+        referralSessionId: data.referralSessionId || null,
+        buyer: { customerId: customer?.id ?? null, email: data.email || customer?.email || null, phone: data.phone },
       });
+    } catch (err) {
+      if (err instanceof PricingError) throw new Error(err.message);
+      throw err;
     }
+    if (priced.partnerCodeError) throw new Error(priced.partnerCodeError);
+    if (priced.total === null || priced.delivery.feeKobo === null) throw new Error("Select your delivery state.");
+    const subtotal = priced.subtotal;
+    const deliveryFee = priced.delivery.feeKobo;
+    const discountKobo = priced.discountKobo;
+    const total = priced.total;
 
-    const shipping = await getSetting("shipping", {
-      defaultFee: 3500,
-      freeThreshold: 150000,
-    });
-    const deliveryFee =
-      subtotal >= (shipping.freeThreshold ?? 150000) ? 0 : (shipping.defaultFee ?? 3500);
-
-    // ── Voucher (server-side validation & discount) ─────────────────
-    // The discount is computed from the database, never from the client.
-    // The code is held (not redeemed) until payment is verified.
-    let voucherId: number | null = null;
-    let discountKobo = 0;
-    let voucherCodeForOrder: string | null = null;
-    if (data.voucherCode && data.voucherCode.trim().length >= 4) {
-      const { lookupVoucher } = await import("./vouchers.server");
-      const check = await lookupVoucher(data.voucherCode);
-      if (!check.ok || !check.voucher) {
-        throw new Error(check.reason ?? "We couldn't validate this voucher.");
-      }
-      const categoryMap = await categorySlugsForProductIds(priced.map((p) => p.productId));
-      const lines = priced.map((p) => ({
-        productId: p.productId,
-        categorySlug: categoryMap.get(p.productId) ?? null,
-        unitPrice: p.unitPrice,
-        quantity: p.quantity,
-      }));
-      const calc = await computeVoucherDiscount(check.voucher.id, lines);
-      if (calc.discountKobo <= 0) {
-        throw new Error(calc.reason ?? "This voucher does not apply to your order.");
-      }
-      voucherId = check.voucher.id;
-      discountKobo = calc.discountKobo;
-      voucherCodeForOrder = check.voucher.code;
-    }
-
-    const totalBeforeDiscount = subtotal + deliveryFee;
-    // The discount applies to the merchandise + delivery; never below zero.
-    const total = Math.max(0, totalBeforeDiscount - discountKobo);
-    const fullyCovered = total === 0;
+    const provider = getPaymentProvider("paystack");
+    // Unpaid order request: payment unavailable, customer chose it, or a
+    // custom design still needs the house's quote.
+    const isRequest = data.mode === "request" || !provider || priced.hasQuoteLines;
+    const fullyCovered = !isRequest && total === 0;
 
     // ── Deposit plan (server-decided) ─────────────────────────────────
-    // The browser's request is only a preference. A deposit plan is granted
-    // when the house has deposit terms configured AND every line's product
-    // is deposit-eligible. Amounts are computed here, never from the client.
     let paymentPlan: "full" | "deposit" = "full";
     let depositKobo = 0;
     let balanceDueAt: Date | null = null;
-    if (data.paymentPlan === "deposit" && !fullyCovered) {
+    if (!isRequest && data.paymentPlan === "deposit" && !fullyCovered) {
       const depositTerms = await getSetting("deposits", {
         enabled: false,
         defaultPercent: 50,
         balanceDueDays: 14,
         termsText: "",
       });
-      const lineProductIds = priced.map((p) => p.productId);
-      const eligibleRows = lineProductIds.length
-        ? await db.execute(
-            sql`SELECT id FROM products WHERE id IN (${sql.join(
-              lineProductIds,
-              sql`, `,
-            )}) AND deposit_eligible = true`,
-          )
-        : { rows: [] as number[] };
-      const eligibleCount = (eligibleRows.rows as unknown[]).length;
-      if (depositTerms.enabled && eligibleCount === lineProductIds.length) {
+      const lineProductIds = priced.lines.map((p) => p.productId);
+      const eligibleRows = await db.execute(
+        sql`SELECT id FROM products WHERE id IN (${sql.join(lineProductIds, sql`, `)}) AND deposit_eligible = true`,
+      );
+      const eligibleIds = new Set((eligibleRows.rows as Array<{ id: number }>).map((r) => r.id));
+      if (depositTerms.enabled && lineProductIds.every((id) => eligibleIds.has(id))) {
         const percent = Math.min(90, Math.max(1, depositTerms.defaultPercent ?? 50));
-        const discountedMerch = Math.max(0, subtotal - discountKobo);
+        const discountedMerch = Math.max(0, subtotal - discountKobo - priced.selfPurchaseBenefitKobo);
         depositKobo = Math.round((discountedMerch * percent) / 100) + deliveryFee;
-        // Never exceed the total, never below ₦100.
         depositKobo = Math.min(total, Math.max(100, depositKobo));
         paymentPlan = "deposit";
         if ((depositTerms.balanceDueDays ?? 0) > 0) {
@@ -245,43 +214,58 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     const balanceKobo = paymentPlan === "deposit" ? total - depositKobo : 0;
 
     const orderNumber = generateOrderNumber();
-    const reference = `PSK-${orderNumber}`;
+    const reference = isRequest ? null : `PSK-${orderNumber}`;
+    const now = new Date().toISOString();
+    const firstStatus = isRequest ? "order_requested" : "order_received";
 
-    // Attribute the order to the signed-in customer when one exists.
-    const customer = await getCurrentCustomer();
-
-    const [order] = await db
-      .insert(orders)
-      .values({
-        orderNumber,
-        customerName: data.name,
-        phone: data.phone,
-        email: data.email || null,
-        state: data.state,
-        city: data.city,
-        address: data.address,
-        deliveryNote: data.deliveryNote || null,
-        giftNote: data.giftNote || null,
-        subtotal,
-        deliveryFee,
-        discountKobo,
-        voucherCode: voucherCodeForOrder,
-        paymentPlan,
-        depositKobo,
-        balanceKobo,
-        balanceDueAt,
-        marketingConsent: data.marketingConsent,
-        customerId: customer?.id ?? null,
-        total,
-        paymentStatus: "pending_payment",
-        paymentReference: reference,
-        status: "order_received",
-        timeline: [{ status: "order_received", at: new Date().toISOString() }],
-      })
-      .returning();
+    let order: typeof orders.$inferSelect;
+    try {
+      [order] = await db
+        .insert(orders)
+        .values({
+          orderNumber,
+          clientRequestId: data.clientRequestId,
+          customerName: data.name,
+          phone: data.phone,
+          email: data.email || null,
+          state: data.state,
+          city: data.city,
+          address: data.address,
+          deliveryNote: data.deliveryNote || null,
+          giftNote: data.giftNote || null,
+          subtotal,
+          deliveryFee,
+          discountKobo,
+          voucherCode: priced.voucherCode,
+          paymentPlan,
+          depositKobo,
+          balanceKobo,
+          balanceDueAt,
+          marketingConsent: data.marketingConsent,
+          customerId: customer?.id ?? null,
+          total,
+          paymentStatus: isRequest ? "requested" : "pending_payment",
+          paymentReference: reference,
+          status: firstStatus,
+          timeline: [{ status: firstStatus, at: now }],
+          referrerId: priced.partner?.referrerId ?? null,
+          referralCode: priced.partner?.code ?? null,
+          attributionSource: priced.partner?.source ?? null,
+          attributionOutcome: priced.partner?.outcome ?? null,
+          selfPurchaseBenefitKobo: priced.selfPurchaseBenefitKobo,
+        })
+        .returning();
+    } catch (err) {
+      // A concurrent duplicate submit lost the unique-key race.
+      const [dupe] = await db.select().from(orders).where(eq(orders.clientRequestId, data.clientRequestId)).limit(1);
+      if (dupe) {
+        return { orderNumber: dupe.orderNumber, requested: dupe.paymentStatus === "requested", duplicate: true, orderUrl: `/order/${dupe.orderNumber}` };
+      }
+      throw err;
+    }
 
     await db.insert(orderItems).values(
-      priced.map((item) => ({
+      priced.lines.map((item) => ({
         orderId: order.id,
         productId: item.productId,
         sku: item.sku,
@@ -291,9 +275,8 @@ export const initializeCheckout = createServerFn({ method: "POST" })
         purchaseOption: item.purchaseOption,
         customization: {
           ...(item.customization ?? {}),
-          ...(item.purchaseOption === "complete_package"
-            ? { purchaseOption: "Complete Package" }
-            : { purchaseOption: "Product Only" }),
+          purchaseOption: item.purchaseOption === "complete_package" ? "Complete Package" : "Product Only",
+          ...(item.quoteRequired ? { pricing: "Quote required" } : {}),
         },
         imageUrl: item.imageUrl,
         unitPrice: item.unitPrice,
@@ -303,90 +286,113 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     );
     await db.insert(orderEvents).values({
       orderId: order.id,
-      status: "order_received",
-      note: "Order created, awaiting payment",
+      status: firstStatus,
+      note: isRequest
+        ? "Order request received — unpaid. The house confirms details and sends a payment link."
+        : "Order created, awaiting payment",
     });
 
-    // Referral funnel: a referred visitor's click-session (or account) is
-    // marked order_started server-side. No reward is created here.
+    // Referral funnel bookkeeping (no reward is created here).
     if (data.referralSessionId || customer) {
       const { markAttributionOrderStarted } = await import("./referrals.server");
-      await markAttributionOrderStarted(
-        data.referralSessionId || null,
-        customer?.id ?? null,
-        orderNumber,
-      ).catch(() => {
+      await markAttributionOrderStarted(data.referralSessionId || null, customer?.id ?? null, orderNumber).catch(() => {
         /* attribution must never block checkout */
       });
     }
+
+    if (isRequest) {
+      return {
+        orderNumber,
+        requested: true,
+        duplicate: false,
+        orderUrl: `/order/${orderNumber}`,
+        reason: !provider ? "payment_unavailable" : priced.hasQuoteLines ? "quote_required" : "customer_choice",
+      };
+    }
+
     await db.insert(payments).values({
       orderId: order.id,
-      reference,
+      reference: reference!,
       amountKobo: paymentPlan === "deposit" ? depositKobo : total,
       currency: "NGN",
       kind: paymentPlan === "deposit" ? "deposit" : "full",
       status: "initialized",
     });
 
-    // Hold the voucher against this order before payment begins. If payment
-    // fails, the hold is released and the voucher returns to the wallet.
-    if (voucherId != null) {
-      const hold = await holdVoucherForOrder(
-        voucherId,
-        order.id,
-        customer?.id ?? null,
-        discountKobo,
-      );
-      if (!hold.ok) {
-        throw new Error(hold.reason ?? "The voucher could not be applied to this order.");
-      }
+    if (priced.voucherId != null) {
+      const hold = await holdVoucherForOrder(priced.voucherId, order.id, customer?.id ?? null, discountKobo);
+      if (!hold.ok) throw new Error(hold.reason ?? "The voucher could not be applied to this order.");
     }
 
-    // ── 100%-covered order ────────────────────────────────────────────
-    // A voucher that covers the entire total completes server-side with no
-    // Paystack charge (charging ₦0 is not possible).
     if (fullyCovered) {
-      await confirmOrderPaid(order.id, reference, "voucher", "verify");
-      return {
-        orderNumber,
-        fullyCovered: true,
-        orderUrl: `/order/${orderNumber}`,
-        reference,
-      };
+      await confirmOrderPaid(order.id, reference!, "voucher", "verify");
+      return { orderNumber, requested: false, duplicate: false, fullyCovered: true, orderUrl: `/order/${orderNumber}`, reference };
     }
 
-    // A fully-covered order needs no gateway; otherwise Paystack is required.
-    const provider = getPaymentProvider("paystack");
-    if (!provider && !fullyCovered) {
-      throw new Error(
-        "Online payment is not yet active. Please contact us on WhatsApp to complete your order.",
-      );
-    }
-
-    const siteUrl = process.env.SITE_URL || "http://localhost:3000";
+    const siteUrl = process.env.SITE_URL || process.env.URL || "http://localhost:3000";
     const init = await provider!.initialize({
       email: data.email || `${orderNumber}@dreamzfk.order`,
       amountKobo: paymentPlan === "deposit" ? depositKobo : total,
-      reference,
+      reference: reference!,
       callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(orderNumber)}`,
       metadata: {
         order_number: orderNumber,
         phone: data.phone,
         payment_plan: paymentPlan,
-        ...(paymentPlan === "deposit"
-          ? { deposit_kobo: depositKobo, balance_kobo: balanceKobo }
-          : {}),
+        ...(paymentPlan === "deposit" ? { deposit_kobo: depositKobo, balance_kobo: balanceKobo } : {}),
       },
     });
 
     return {
       orderNumber,
+      requested: false,
+      duplicate: false,
       authorizationUrl: init.authorizationUrl,
       reference,
       paymentPlan,
       depositKobo,
       balanceKobo,
     };
+  });
+
+/**
+ * Pay for an order request once online payment is live. The amount is the
+ * server's recorded total (never a browser figure), the saved partner
+ * attribution is kept, and quote lines must be priced by the house first.
+ */
+export const initializeRequestPayment = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ orderNumber: z.string().min(4).max(40), contact: z.string().min(5).max(120) }))
+  .handler(async ({ data }) => {
+    const provider = getPaymentProvider("paystack");
+    if (!provider) throw new Error("Online payment is not active yet — the DREAMZ team will send you a payment link.");
+    const [order] = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber.trim().toUpperCase())).limit(1);
+    if (!order) throw new Error("We could not find that order");
+    const contact = data.contact.trim().toLowerCase();
+    const digitsIn = contact.replace(/\D/g, "");
+    const matches =
+      (digitsIn.length >= 7 && order.phone.replace(/\D/g, "").endsWith(digitsIn)) ||
+      (!!order.email && order.email.toLowerCase() === contact);
+    if (!matches) throw new Error("We could not find that order");
+    if (order.paymentStatus !== "requested") throw new Error("This order is not awaiting a payment link.");
+    const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
+    if (items.some((i) => i.unitPrice <= 0)) throw new Error("Part of this order is still being quoted by the house.");
+    if (order.total <= 0) throw new Error("Nothing to pay on this order.");
+
+    const reference = `PSK-${order.orderNumber}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    await db.insert(payments).values({ orderId: order.id, reference, amountKobo: order.total, currency: "NGN", kind: "full", status: "initialized" });
+    await db
+      .update(orders)
+      .set({ paymentStatus: "pending_payment", paymentReference: reference, updatedAt: new Date() })
+      .where(eq(orders.id, order.id));
+    const siteUrl = process.env.SITE_URL || process.env.URL || "http://localhost:3000";
+    const init = await provider.initialize({
+      email: order.email || `${order.orderNumber}@dreamzfk.order`,
+      amountKobo: order.total,
+      reference,
+      callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(order.orderNumber)}`,
+      metadata: { order_number: order.orderNumber, payment_plan: "full", from_request: true },
+    });
+    return { authorizationUrl: init.authorizationUrl };
   });
 
 /**
@@ -624,6 +630,8 @@ export const lookupMyOrderNumber = createServerFn({ method: "GET" })
       .select({
         productName: orderItems.productName,
         variantLabel: orderItems.variantLabel,
+        purchaseOption: orderItems.purchaseOption,
+        customization: orderItems.customization,
         unitPrice: orderItems.unitPrice,
         quantity: orderItems.quantity,
       })
@@ -635,6 +643,14 @@ export const lookupMyOrderNumber = createServerFn({ method: "GET" })
         orderNumber: order.orderNumber,
         status: order.status,
         paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
+        subtotal: order.subtotal,
+        deliveryFee: order.deliveryFee,
+        discountKobo: order.discountKobo,
+        voucherCode: order.voucherCode,
+        selfPurchaseBenefitKobo: order.selfPurchaseBenefitKobo,
+        referralCode: order.referralCode,
+        attributionOutcome: order.attributionOutcome,
         total: order.total,
         createdAt: order.createdAt?.toISOString() ?? null,
         items,

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
-import { trackOrder, initializeBalancePayment } from "@/server/checkout.functions";
+import { trackOrder, initializeBalancePayment, initializeRequestPayment } from "@/server/checkout.functions";
 import { formatNaira, ORDER_STATUS_LABELS, TRACKING_FLOW, PAYMENT_STATUS_LABELS } from "@/lib/format";
 import { BRAND } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
@@ -150,8 +150,12 @@ function TrackOrder() {
               </div>
             </div>
 
+            {order.paymentStatus === "requested" && (
+              <RequestedNotice orderNumber={order.orderNumber} contact={contactInput} />
+            )}
+
             {/* Timeline */}
-            {!cancelled && (
+            {!cancelled && order.paymentStatus !== "requested" && (
               <ol className="mb-10" aria-label="Order progress">
                 {TRACKING_FLOW.map((status, i) => {
                   const reached = currentIndex >= i;
@@ -223,7 +227,7 @@ function TrackOrder() {
               </div>
               <div className="flex justify-between">
                 <dt className="text-stone">Delivery</dt>
-                <dd>{order.deliveryFee === 0 ? "Complimentary" : formatNaira(order.deliveryFee)}</dd>
+                <dd>{order.deliveryFee === 0 ? "Free" : formatNaira(order.deliveryFee)}</dd>
               </div>
               <div className="flex justify-between border-t border-ink/10 pt-3">
                 <dt className="uppercase tracking-btn text-xs self-center">Total</dt>
@@ -308,6 +312,42 @@ function PayBalanceButton({ orderNumber }: { orderNumber: string }) {
           {error}
         </p>
       )}
+    </div>
+  );
+}
+
+
+/**
+ * Unpaid order request: nothing has been charged. When online payment is
+ * live the customer can pay the recorded total; otherwise the house sends a
+ * payment link. The server re-checks everything.
+ */
+function RequestedNotice({ orderNumber, contact }: { orderNumber: string; contact: string }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const pay = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const res = await initializeRequestPayment({ data: { orderNumber, contact } });
+      window.location.href = res.authorizationUrl;
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Online payment is not available yet.");
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="mb-10 border border-gold/50 bg-gold/5 px-5 py-4 text-sm leading-relaxed">
+      <p className="font-medium">Order request received — not paid yet</p>
+      <p className="text-stone mt-1">
+        Nothing has been charged. The DREAMZ team confirms availability,
+        sizing and any custom-design quote, then sends you a secure payment
+        link. Production starts after payment is verified.
+      </p>
+      <button type="button" onClick={pay} disabled={busy} className="btn-lux btn-lux-outline !py-2 !px-5 mt-3">
+        {busy ? "Checking…" : "Pay online now"}
+      </button>
+      {message && <p role="status" className="text-xs text-stone mt-2">{message}</p>}
     </div>
   );
 }

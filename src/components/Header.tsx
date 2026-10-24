@@ -6,10 +6,11 @@ import { useCart, useCartHydrated } from "@/store/cart";
 import { useAuth } from "@/lib/auth-client";
 
 const PRIMARY_NAV: Array<{ label: string; to: string }> = [
-  { label: "Shop", to: "/shop" },
   { label: "Design Yours", to: "/custom" },
-  { label: "Earn with DREAMZ", to: "/earn" },
-  { label: "Corporate Orders", to: "/corporate" },
+  { label: "See Samples", to: "/shop" },
+  { label: "Creators & Partners", to: "/creators" },
+  { label: "About", to: "/about" },
+  { label: "Help", to: "/contact" },
 ];
 
 export function Header({
@@ -24,9 +25,10 @@ export function Header({
   const openCart = useCart((s) => s.open);
   const { user } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const isHome = pathname === "/";
-  // Header is transparent over the hero on the homepage until scrolled.
-  const transparent = isHome && !scrolled && !mobileOpen;
+  // The header stays solid everywhere: the homepage hero sits on ivory, so a
+  // transparent light header would be unreadable.
+  const transparent = false;
+  void scrolled;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -34,6 +36,9 @@ export function Header({
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Close the mobile menu after navigating.
+  useEffect(() => setMobileOpen(false), [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? "hidden" : "";
@@ -154,7 +159,7 @@ export function Header({
         {mobileOpen && (
           <div className="lg:hidden bg-ivory text-ink border-b border-ink/10 max-h-[80svh] overflow-y-auto">
             <nav className="px-6 py-6 flex flex-col gap-1" aria-label="Mobile">
-              {[...PRIMARY_NAV, { label: user ? "My Account" : "Sign In", to: user ? "/account" : "/account/login" }, { label: "Track Order", to: "/track-order" }, { label: "Have a Voucher?", to: "/voucher" }].map((item) => (
+              {[...PRIMARY_NAV, { label: user ? "My Account" : "Sign In", to: user ? "/account" : "/account/login" }, { label: "Track Order", to: "/track-order" }, { label: "Corporate Orders", to: "/corporate" }].map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}

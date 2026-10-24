@@ -1,7 +1,8 @@
 import { Link, createFileRoute, notFound, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { getCatalog, getCategoriesFn } from "@/server/catalog.functions";
-import { ProductGrid } from "@/components/ProductCard";
+import { ProductGrid, photographyFirst } from "@/components/ProductCard";
+import { groupCounts, productGroup } from "@/lib/taxonomy";
 import { BRAND } from "@/lib/config";
 import { PRODUCT_TIERS, TIER_LABELS, TIER_TAGLINES, TIER_DESCRIPTIONS, formatNaira, type ProductTier } from "@/lib/format";
 
@@ -105,10 +106,8 @@ function CategoryPage() {
     [products],
   );
 
-  const subcategories = useMemo(
-    () => [...new Set(products.map((p) => p.subcategory).filter(Boolean))] as string[],
-    [products],
-  );
+  // Browsing groups (Shoes / Loafers / Boots / Slides …) with live counts.
+  const groups = useMemo(() => groupCounts(category?.slug ?? "", products), [products, category?.slug]);
   const availableSizes = useMemo(() => {
     const set = new Set<string>();
     for (const p of products) for (const s of p.sizes ?? []) set.add(String(s));
@@ -124,7 +123,11 @@ function CategoryPage() {
     let out = products;
     if (search.sub) {
       const wanted = (search.sub as string).toLowerCase();
-      out = out.filter((p) => (p.subcategory ?? "").toLowerCase().includes(wanted));
+      out = out.filter(
+        (p) =>
+          (productGroup(p.categorySlug, p.subcategory) ?? "").toLowerCase() === wanted ||
+          (p.subcategory ?? "").toLowerCase() === wanted,
+      );
     }
     if (search.tier && PRODUCT_TIERS.includes(search.tier as never)) {
       out = out.filter((p) => p.tier === search.tier);
@@ -154,8 +157,8 @@ function CategoryPage() {
         );
         break;
       default:
-        out = [...out].sort(
-          (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.id - b.id,
+        out = photographyFirst(
+          [...out].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.id - b.id),
         );
     }
     return out;
@@ -302,9 +305,9 @@ function CategoryPage() {
         </form>
 
         {/* Subcategory + tier chips */}
-        {(subcategories.length > 1 || products.some((p) => p.tier)) && (
+        {(groups.length > 1 || products.some((p) => p.tier)) && (
           <div className="flex flex-wrap gap-x-7 gap-y-3 mb-10">
-            {subcategories.length > 1 && (
+            {groups.length > 1 && (
               <>
                 <button
                   type="button"
@@ -312,9 +315,9 @@ function CategoryPage() {
                   aria-pressed={!search.sub}
                   className={`nav-link text-[0.7rem] uppercase tracking-btn ${!search.sub ? "text-brand-red" : ""}`}
                 >
-                  All {category.name}
+                  All {category.name} ({products.length})
                 </button>
-                {subcategories.map((s) => (
+                {groups.map(({ group: s, count }) => (
                   <button
                     key={s}
                     type="button"
@@ -326,7 +329,7 @@ function CategoryPage() {
                         : ""
                     }`}
                   >
-                    {s}
+                    {s} ({count})
                   </button>
                 ))}
               </>

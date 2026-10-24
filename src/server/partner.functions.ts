@@ -219,3 +219,19 @@ export const listCuratableProducts = createServerFn({ method: "GET" }).handler(a
     .limit(200);
   return rows;
 });
+
+/** Public partner terms for the Creators & Partners page — no private data. */
+export const getPublicPartnerTerms = createServerFn({ method: "GET" }).handler(async () => {
+  const { getPartnerSettingsFull } = await import("./order-pricing.server");
+  const { formatRate } = await import("../lib/attribution");
+  const t = await getPartnerSettingsFull();
+  return {
+    rateConfigured: t.commissionBps > 0,
+    rateLabel: formatRate(t.commissionBps),
+    returnWindowDays: t.returnWindowDays,
+    payoutThresholdKobo: t.payoutThresholdKobo,
+    attributionWindowDays: t.attributionWindowDays,
+    selfPurchaseBenefitBps: t.selfPurchaseBenefitBps,
+    termsNote: t.termsNote,
+  };
+});
