@@ -15,6 +15,7 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as BespokeRouteImport } from './routes/bespoke'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CorporateRouteImport } from './routes/corporate'
+import { Route as CreatorsRouteImport } from './routes/creators'
 import { Route as CustomRouteImport } from './routes/custom'
 import { Route as D5exRouteImport } from './routes/d5ex'
 import { Route as Dreamz5RouteImport } from './routes/dreamz-5'
@@ -67,6 +68,7 @@ import { Route as RCodeRouteImport } from './routes/r/$code'
 import { Route as RoyaleRequestRouteImport } from './routes/royale/request'
 import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ShopCategoryRouteImport } from './routes/shop/$category'
+import { Route as ApiDesignReferencesSplatRouteImport } from './routes/api/design-references/$'
 import { Route as ApiMediaSplatRouteImport } from './routes/api/media/$'
 import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/paystack'
 import { Route as CorporateQuoteQuoteNumberRouteImport } from './routes/corporate/quote/$quoteNumber'
@@ -99,6 +101,11 @@ const ContactRoute = ContactRouteImport.update({
 const CorporateRoute = CorporateRouteImport.update({
   id: '/corporate',
   path: '/corporate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreatorsRoute = CreatorsRouteImport.update({
+  id: '/creators',
+  path: '/creators',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomRoute = CustomRouteImport.update({
@@ -361,6 +368,12 @@ const ShopCategoryRoute = ShopCategoryRouteImport.update({
   path: '/shop/$category',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDesignReferencesSplatRoute =
+  ApiDesignReferencesSplatRouteImport.update({
+    id: '/api/design-references/$',
+    path: '/api/design-references/$',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMediaSplatRoute = ApiMediaSplatRouteImport.update({
   id: '/api/media/$',
   path: '/api/media/$',
@@ -385,6 +398,7 @@ export interface FileRoutesByFullPath {
   '/bespoke': typeof BespokeRoute
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
+  '/creators': typeof CreatorsRoute
   '/custom': typeof CustomRoute
   '/d5ex': typeof D5exRoute
   '/dreamz-5': typeof Dreamz5Route
@@ -437,6 +451,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/api/design-references/$': typeof ApiDesignReferencesSplatRoute
   '/api/media/$': typeof ApiMediaSplatRoute
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/corporate/quote/$quoteNumber': typeof CorporateQuoteQuoteNumberRoute
@@ -447,6 +462,7 @@ export interface FileRoutesByTo {
   '/bespoke': typeof BespokeRoute
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
+  '/creators': typeof CreatorsRoute
   '/custom': typeof CustomRoute
   '/d5ex': typeof D5exRoute
   '/dreamz-5': typeof Dreamz5Route
@@ -499,6 +515,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminIndexRoute
   '/checkout': typeof CheckoutIndexRoute
   '/shop': typeof ShopIndexRoute
+  '/api/design-references/$': typeof ApiDesignReferencesSplatRoute
   '/api/media/$': typeof ApiMediaSplatRoute
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/corporate/quote/$quoteNumber': typeof CorporateQuoteQuoteNumberRoute
@@ -511,6 +528,7 @@ export interface FileRoutesById {
   '/bespoke': typeof BespokeRoute
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
+  '/creators': typeof CreatorsRoute
   '/custom': typeof CustomRoute
   '/d5ex': typeof D5exRoute
   '/dreamz-5': typeof Dreamz5Route
@@ -563,6 +581,7 @@ export interface FileRoutesById {
   '/admin/': typeof AdminIndexRoute
   '/checkout/': typeof CheckoutIndexRoute
   '/shop/': typeof ShopIndexRoute
+  '/api/design-references/$': typeof ApiDesignReferencesSplatRoute
   '/api/media/$': typeof ApiMediaSplatRoute
   '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/corporate/quote/$quoteNumber': typeof CorporateQuoteQuoteNumberRoute
@@ -576,6 +595,7 @@ export interface FileRouteTypes {
     | '/bespoke'
     | '/contact'
     | '/corporate'
+    | '/creators'
     | '/custom'
     | '/d5ex'
     | '/dreamz-5'
@@ -628,6 +648,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/checkout/'
     | '/shop/'
+    | '/api/design-references/$'
     | '/api/media/$'
     | '/api/webhooks/paystack'
     | '/corporate/quote/$quoteNumber'
@@ -638,6 +659,7 @@ export interface FileRouteTypes {
     | '/bespoke'
     | '/contact'
     | '/corporate'
+    | '/creators'
     | '/custom'
     | '/d5ex'
     | '/dreamz-5'
@@ -690,6 +712,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/checkout'
     | '/shop'
+    | '/api/design-references/$'
     | '/api/media/$'
     | '/api/webhooks/paystack'
     | '/corporate/quote/$quoteNumber'
@@ -701,6 +724,7 @@ export interface FileRouteTypes {
     | '/bespoke'
     | '/contact'
     | '/corporate'
+    | '/creators'
     | '/custom'
     | '/d5ex'
     | '/dreamz-5'
@@ -753,6 +777,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/checkout/'
     | '/shop/'
+    | '/api/design-references/$'
     | '/api/media/$'
     | '/api/webhooks/paystack'
     | '/corporate/quote/$quoteNumber'
@@ -765,6 +790,7 @@ export interface RootRouteChildren {
   BespokeRoute: typeof BespokeRoute
   ContactRoute: typeof ContactRoute
   CorporateRoute: typeof CorporateRouteWithChildren
+  CreatorsRoute: typeof CreatorsRoute
   CustomRoute: typeof CustomRoute
   D5exRoute: typeof D5exRoute
   Dreamz5Route: typeof Dreamz5Route
@@ -805,6 +831,7 @@ export interface RootRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   CheckoutIndexRoute: typeof CheckoutIndexRoute
   ShopIndexRoute: typeof ShopIndexRoute
+  ApiDesignReferencesSplatRoute: typeof ApiDesignReferencesSplatRoute
   ApiMediaSplatRoute: typeof ApiMediaSplatRoute
   ApiWebhooksPaystackRoute: typeof ApiWebhooksPaystackRoute
 }
@@ -851,6 +878,13 @@ declare module '@tanstack/react-router' {
       path: '/corporate'
       fullPath: '/corporate'
       preLoaderRoute: typeof CorporateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creators': {
+      id: '/creators'
+      path: '/creators'
+      fullPath: '/creators'
+      preLoaderRoute: typeof CreatorsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/custom': {
@@ -1217,6 +1251,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ShopCategoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/design-references/$': {
+      id: '/api/design-references/$'
+      path: '/api/design-references/$'
+      fullPath: '/api/design-references/$'
+      preLoaderRoute: typeof ApiDesignReferencesSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/media/$': {
       id: '/api/media/$'
       path: '/api/media/$'
@@ -1302,6 +1343,7 @@ const rootRouteChildren: RootRouteChildren = {
   BespokeRoute: BespokeRoute,
   ContactRoute: ContactRoute,
   CorporateRoute: CorporateRouteWithChildren,
+  CreatorsRoute: CreatorsRoute,
   CustomRoute: CustomRoute,
   D5exRoute: D5exRoute,
   Dreamz5Route: Dreamz5Route,
@@ -1342,6 +1384,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   CheckoutIndexRoute: CheckoutIndexRoute,
   ShopIndexRoute: ShopIndexRoute,
+  ApiDesignReferencesSplatRoute: ApiDesignReferencesSplatRoute,
   ApiMediaSplatRoute: ApiMediaSplatRoute,
   ApiWebhooksPaystackRoute: ApiWebhooksPaystackRoute,
 }

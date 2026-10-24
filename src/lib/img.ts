@@ -42,3 +42,36 @@ export function isDisplayableImageUrl(url: string | null | undefined): url is st
     (url.startsWith("/api/media/") || url.startsWith("/img/products/") || url.startsWith("https://"))
   );
 }
+
+/**
+ * House promotional posters (product photo + name, prices and package text
+ * printed on the artwork). They are approved originals and stay in each
+ * gallery, but grids show them uncropped ("contain") and list clean product
+ * photography first. Classified by visual inspection, 2026-10-24.
+ */
+const POSTER_FILES = new Set([
+  "asiwaju-mule-black-white.jpg",
+  "asiwaju-mule-brown.jpg",
+  "boot-of-many-colours.jpg",
+  "crimson-cross.jpg",
+  "crimson-pin.jpg",
+  "executive-leather-handbag.jpg",
+  "exotic-elegance.jpg",
+  "gentleman-complete-combo.jpg",
+  "lagos-tassel.jpg",
+  "lightning-strap-loafer.jpg",
+  "onyx-stride.jpg",
+  "onyx-wave.jpg",
+  "pedra-satchel.jpg",
+  "pinnacle-denim.jpg",
+  "strap-twist.jpg",
+  "terra-cove.jpg",
+  "terra-cross.jpg",
+  "verona-buckle-slide.jpg",
+]);
+
+export function isPosterArtwork(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const file = url.split("/").pop() ?? "";
+  return POSTER_FILES.has(file);
+}

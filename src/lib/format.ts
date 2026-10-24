@@ -115,6 +115,7 @@ export function normalizeProductLine(
 // ── Order lifecycle ──────────────────────────────────────────────────
 
 export const ORDER_STATUSES = [
+  "order_requested",
   "order_received",
   "payment_confirmed",
   "size_details_confirmed",
@@ -131,6 +132,7 @@ export const ORDER_STATUSES = [
 ] as const;
 
 export const ORDER_STATUS_LABELS: Record<string, string> = {
+  order_requested: "Order Request Received",
   order_received: "Order Received",
   payment_confirmed: "Payment Confirmed",
   size_details_confirmed: "Size & Details Confirmed",
@@ -147,6 +149,7 @@ export const ORDER_STATUS_LABELS: Record<string, string> = {
 };
 
 export const PAYMENT_STATUS_LABELS: Record<string, string> = {
+  requested: "Unpaid — Payment Link to Follow",
   pending_payment: "Pending Payment",
   deposit_paid: "Deposit Paid — Balance Outstanding",
   paid: "Paid",
@@ -166,4 +169,4 @@ export function generateCorporateNumber(prefix: "CEN" | "QUO"): string {
 }
 
 /** Fulfilment progress timeline — cancelled stops the ladder. */
-export const TRACKING_FLOW: string[] = ORDER_STATUSES.filter((s) => s !== "cancelled");
+export const TRACKING_FLOW: string[] = ORDER_STATUSES.filter((s) => s !== "cancelled" && s !== "order_requested");

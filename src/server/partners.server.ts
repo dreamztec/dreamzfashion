@@ -1,6 +1,8 @@
 import { db } from "../../db/index";
 import {
   commissions,
+  orderEvents,
+  orders,
   partnerProfiles,
   payoutRequests,
   products,
@@ -8,6 +10,15 @@ import {
 } from "../../db/schema";
 import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import { isDisplayableImageUrl } from "../lib/img";
+import {
+  bpsOf,
+  classifyAttribution,
+  commissionBasisKobo,
+  formatRate,
+  isCommissionEligible,
+  isSelfPurchase,
+} from "../lib/attribution";
+import { getPartnerSettingsFull } from "./order-pricing.server";
 
 /**
  * Earn-with-DREAMZ partner engine.
@@ -45,75 +56,130 @@ export async function getPartnerSettings(): Promise<PartnerSettings> {
 
 /**
  * Commission engine — called ONLY from runPostPaymentEngines (fully paid
- * orders). Attribution is resolved server-side: the /r/CODE click session was
- * bound to the order at checkout time (referral_attributions.order_number),
- * so no browser data is trusted here.
+ * orders). Attribution was resolved and saved on the order when it was
+ * created (explicit checkout code > referral link), so an unpaid request
+ * that is paid later keeps its partner. Legacy orders without a saved
+ * attribution fall back to the /r/CODE click session bound at checkout.
+ * Rules live in src/lib/attribution.ts.
  */
 export async function recordVerifiedCommission(
-  order: { id: number; orderNumber: string; total: number; customerId: number | null },
-): Promise<void> {
-  const { referralAttributions } = await import("../../db/schema");
-  const conds = [eq(referralAttributions.orderNumber, order.orderNumber)];
-  if (order.customerId) {
-    conds.push(eq(referralAttributions.customerId, order.customerId));
+  order: Pick<
+    typeof orders.$inferSelect,
+    "id" | "orderNumber" | "total" | "subtotal" | "discountKobo" | "customerId" | "email" | "phone" | "paymentStatus"
+  > & Partial<Pick<typeof orders.$inferSelect, "referrerId" | "attributionOutcome" | "selfPurchaseBenefitKobo">>,
+): Promise<{ created: boolean; reason: string }> {
+  if (order.paymentStatus !== "paid") return { created: false, reason: "unpaid" };
+  let referrerId = order.referrerId ?? null;
+  if (!referrerId) {
+    const { referralAttributions } = await import("../../db/schema");
+    const conds = [eq(referralAttributions.orderNumber, order.orderNumber)];
+    if (order.customerId) conds.push(eq(referralAttributions.customerId, order.customerId));
+    const [attribution] = await db
+      .select({ referrerId: referralAttributions.referrerId })
+      .from(referralAttributions)
+      .where(and(inArray(referralAttributions.status, ["order_started", "payment_verified", "registered"]), or(...conds)))
+      .orderBy(asc(referralAttributions.id))
+      .limit(1);
+    referrerId = attribution?.referrerId ?? null;
   }
-  const [attribution] = await db
-    .select({ referrerId: referralAttributions.referrerId })
-    .from(referralAttributions)
-    .where(
-      and(
-        inArray(referralAttributions.status, ["order_started", "payment_verified", "registered"]),
-        or(...conds),
-      ),
-    )
-    .orderBy(asc(referralAttributions.id))
-    .limit(1);
-  const referrerId = attribution?.referrerId ?? null;
-  if (!referrerId) return;
-
-  // Idempotency: (order, partner) unique index.
-  const [existing] = await db
-    .select({ id: commissions.id })
-    .from(commissions)
-    .where(and(eq(commissions.orderId, order.id), eq(commissions.referrerId, referrerId)))
-    .limit(1);
-  if (existing) return;
+  if (!referrerId) return { created: false, reason: "no_attribution" };
 
   const [referrer] = await db.select().from(referrers).where(eq(referrers.id, referrerId)).limit(1);
-  if (!referrer || referrer.status !== "approved") return;
-  // Only creator and trade partners earn cash commissions here; referral
-  // track rewards run through the referral engine.
-  if (referrer.track !== "creator" && referrer.track !== "trade") return;
+  if (!referrer || referrer.status !== "approved") return { created: false, reason: "partner_not_approved" };
 
-  // Self-referral guard: the partner's own account never earns.
-  if (referrer.customerId && referrer.customerId === order.customerId) return;
-
-  const settings = await getPartnerSettings();
-  if (settings.commissionBps <= 0) return; // no invented earnings
-
-  const amountKobo = Math.floor((order.total * settings.commissionBps) / 10_000);
-  if (amountKobo <= 0) return;
-
-  await db.insert(commissions).values({
-    referrerId: referrer.id,
-    orderId: order.id,
-    orderNumber: order.orderNumber,
-    orderTotalKobo: order.total,
-    rateBps: settings.commissionBps,
-    amountKobo,
-    status: "pending",
+  const settings = await getPartnerSettingsFull();
+  const self =
+    order.attributionOutcome === "self_purchase" ||
+    order.attributionOutcome === "self_purchase_benefit" ||
+    isSelfPurchase(
+      { customerId: referrer.customerId, email: referrer.email, phone: referrer.phone },
+      { customerId: order.customerId, email: order.email, phone: order.phone },
+    );
+  const outcome = classifyAttribution({
+    track: referrer.track,
+    selfPurchase: self,
+    commissionBps: settings.commissionBps,
+    selfPurchaseBenefitBps: settings.selfPurchaseBenefitBps,
   });
+  if (outcome !== "commission") return { created: false, reason: outcome };
 
-  // Bind the attribution to this order for the partner's own dashboard.
+  const basis = commissionBasisKobo(order);
+  const amountKobo = bpsOf(basis, settings.commissionBps);
+  if (amountKobo <= 0) return { created: false, reason: "zero_amount" };
+
+  // Idempotency: the (order, partner) unique index makes duplicate payment
+  // events (verify + webhook, retries) a no-op.
+  const inserted = await db
+    .insert(commissions)
+    .values({
+      referrerId: referrer.id,
+      orderId: order.id,
+      orderNumber: order.orderNumber,
+      orderTotalKobo: basis,
+      rateBps: settings.commissionBps,
+      amountKobo,
+      status: "pending",
+      note: "Basis: merchandise after discounts, excluding delivery",
+    })
+    .onConflictDoNothing({ target: [commissions.orderId, commissions.referrerId] })
+    .returning();
+  if (inserted.length === 0) return { created: false, reason: "duplicate" };
+
+  const { referralAttributions } = await import("../../db/schema");
   await db
     .update(referralAttributions)
     .set({ status: "payment_verified", orderNumber: order.orderNumber, orderId: order.id, updatedAt: new Date() })
+    .where(and(eq(referralAttributions.referrerId, referrerId), inArray(referralAttributions.status, ["order_started"])));
+  return { created: true, reason: "commission" };
+}
+
+/**
+ * Pending → eligible: the order is fully paid, delivered/completed, and the
+ * return window (Admin → Settings → Partner commissions) has passed since
+ * delivery. Safe to run repeatedly; called when dashboards load.
+ */
+export async function promoteEligibleCommissions(referrerId?: number): Promise<number> {
+  const settings = await getPartnerSettingsFull();
+  const pending = await db
+    .select({ id: commissions.id, orderId: commissions.orderId })
+    .from(commissions)
     .where(
-      and(
-        eq(referralAttributions.referrerId, referrerId),
-        inArray(referralAttributions.status, ["order_started"]),
-      ),
-    );
+      referrerId
+        ? and(eq(commissions.status, "pending"), eq(commissions.referrerId, referrerId))
+        : eq(commissions.status, "pending"),
+    )
+    .limit(500);
+  let promoted = 0;
+  for (const c of pending) {
+    if (!c.orderId) continue;
+    const [o] = await db
+      .select({ status: orders.status, paymentStatus: orders.paymentStatus, id: orders.id })
+      .from(orders)
+      .where(eq(orders.id, c.orderId))
+      .limit(1);
+    if (!o) continue;
+    const [delivered] = await db
+      .select({ at: orderEvents.createdAt })
+      .from(orderEvents)
+      .where(and(eq(orderEvents.orderId, o.id), inArray(orderEvents.status, ["delivered", "completed"])))
+      .orderBy(asc(orderEvents.id))
+      .limit(1);
+    if (
+      isCommissionEligible({
+        orderStatus: o.status,
+        paymentStatus: o.paymentStatus,
+        deliveredAt: delivered?.at ?? null,
+        returnWindowDays: settings.returnWindowDays,
+      })
+    ) {
+      await db
+        .update(commissions)
+        .set({ status: "eligible", eligibleAt: new Date(), updatedAt: new Date() })
+        .where(and(eq(commissions.id, c.id), eq(commissions.status, "pending")));
+      promoted++;
+    }
+  }
+  return promoted;
 }
 
 /** Public creator storefront data — approved products only, minimum info. */
@@ -187,6 +253,7 @@ export async function getCreatorStorefront(slug: string) {
 export async function getPartnerDashboard(referrerId: number) {
   const [partner] = await db.select().from(referrers).where(eq(referrers.id, referrerId)).limit(1);
   if (!partner) return null;
+  await promoteEligibleCommissions(referrerId).catch(() => 0);
   const profile = (
     await db.select().from(partnerProfiles).where(eq(partnerProfiles.referrerId, referrerId)).limit(1)
   )[0];
@@ -210,10 +277,27 @@ export async function getPartnerDashboard(referrerId: number) {
     .from(sql`referral_attributions`)
     .where(sql`referrer_id = ${referrerId}`);
 
-  const settings = await getPartnerSettings();
+  const settings = await getPartnerSettingsFull();
   const payableKobo = myCommissions
-    .filter((c) => c.status === "eligible")
+    .filter((c) => c.status === "eligible" && !c.payoutRequestId)
     .reduce((s, c) => s + c.amountKobo, 0);
+  // Orders carrying this partner's code — order number, date, status and
+  // value only. No customer names, addresses or phone numbers.
+  const attributed = await db
+    .select({
+      orderNumber: orders.orderNumber,
+      createdAt: orders.createdAt,
+      paymentStatus: orders.paymentStatus,
+      status: orders.status,
+      subtotal: orders.subtotal,
+      discountKobo: orders.discountKobo,
+      attributionSource: orders.attributionSource,
+      attributionOutcome: orders.attributionOutcome,
+    })
+    .from(orders)
+    .where(eq(orders.referrerId, referrerId))
+    .orderBy(desc(orders.id))
+    .limit(100);
 
   return {
     code: partner.code,
@@ -233,9 +317,22 @@ export async function getPartnerDashboard(referrerId: number) {
     commissions: myCommissions.map((c) => ({
       id: c.id,
       orderNumber: c.orderNumber,
+      basisKobo: c.orderTotalKobo,
+      rateBps: c.rateBps,
       amountKobo: c.amountKobo,
       status: c.status,
+      inPayout: Boolean(c.payoutRequestId),
       createdAt: c.createdAt?.toISOString() ?? null,
+    })),
+    attributedOrders: attributed.map((o) => ({
+      orderNumber: o.orderNumber,
+      createdAt: o.createdAt?.toISOString() ?? null,
+      paid: o.paymentStatus === "paid",
+      paymentStatus: o.paymentStatus,
+      status: o.status,
+      merchandiseKobo: Math.max(0, o.subtotal - o.discountKobo),
+      source: o.attributionSource,
+      outcome: o.attributionOutcome,
     })),
     payouts: myPayouts.map((p) => ({
       id: p.id,
@@ -249,11 +346,17 @@ export async function getPartnerDashboard(referrerId: number) {
       paidOrders: Number(attributedOrders?.paid ?? 0),
       pendingKobo: myCommissions.filter((c) => c.status === "pending").reduce((s, c) => s + c.amountKobo, 0),
       eligibleKobo: payableKobo,
+      reversedKobo: myCommissions.filter((c) => c.status === "reversed").reduce((s, c) => s + c.amountKobo, 0),
+      paidKobo: myCommissions.filter((c) => c.status === "paid").reduce((s, c) => s + c.amountKobo, 0),
       lifetimeKobo: myCommissions.filter((c) => c.status !== "reversed").reduce((s, c) => s + c.amountKobo, 0),
     },
     terms: {
       payoutThresholdKobo: settings.payoutThresholdKobo,
       termsNote: settings.termsNote,
+      commissionBps: settings.commissionBps,
+      rateLabel: formatRate(settings.commissionBps),
+      returnWindowDays: settings.returnWindowDays,
+      selfPurchaseBenefitBps: settings.selfPurchaseBenefitBps,
     },
   };
 }
@@ -272,19 +375,34 @@ export async function requestPayout(referrerId: number, destination: string): Pr
     .where(and(eq(payoutRequests.referrerId, referrerId), inArray(payoutRequests.status, ["requested", "approved"])))
     .limit(1);
   if (openRequest.length > 0) throw new Error("You already have a payout under review");
-  await db.insert(payoutRequests).values({
-    referrerId,
-    amountKobo: dashboard.stats.eligibleKobo,
-    destination,
-  });
+  const [request] = await db
+    .insert(payoutRequests)
+    .values({ referrerId, amountKobo: dashboard.stats.eligibleKobo, destination })
+    .returning();
+  // Reserve exactly the eligible commissions this request covers.
+  await db
+    .update(commissions)
+    .set({ payoutRequestId: request.id, updatedAt: new Date() })
+    .where(
+      and(
+        eq(commissions.referrerId, referrerId),
+        eq(commissions.status, "eligible"),
+        sql`${commissions.payoutRequestId} IS NULL`,
+      ),
+    );
 }
 
 /** Reverse commissions when an order is refunded or cancelled. */
-export async function reverseCommissionsForOrder(orderId: number): Promise<void> {
+export async function reverseCommissionsForOrder(orderId: number, reason: "refund" | "cancellation"): Promise<void> {
   await db
     .update(commissions)
-    .set({ status: "reversed", updatedAt: new Date() })
-    .where(and(eq(commissions.orderId, orderId), inArray(commissions.status, ["pending", "eligible", "paid"])));
+    .set({ status: "reversed", note: `Reversed — order ${reason}`, payoutRequestId: null, updatedAt: new Date() })
+    .where(and(eq(commissions.orderId, orderId), inArray(commissions.status, ["pending", "eligible"])));
+  // Already-paid commissions are never silently rewritten: flag for the owner.
+  await db
+    .update(commissions)
+    .set({ note: `Order ${reason} after payout — recover manually`, updatedAt: new Date() })
+    .where(and(eq(commissions.orderId, orderId), eq(commissions.status, "paid")));
 }
 
 /** Attribution window note: sessions older than the window never attribute. */

@@ -86,7 +86,7 @@ export function CartDrawer() {
                           {item.name}
                         </Link>
                         <span className="text-sm whitespace-nowrap">
-                          {formatNaira(item.unitPrice * item.quantity)}
+                          {item.quoteRequired ? "Quote" : formatNaira(item.unitPrice * item.quantity)}
                         </span>
                       </div>
                       {item.variantLabel && (
@@ -97,11 +97,15 @@ export function CartDrawer() {
                           ? "Complete Package"
                           : "Product Only"}
                       </p>
-                      {item.customization && (
+                      {item.designId ? (
+                        <p className="text-xs text-gold mt-1 tracking-wide">
+                          Custom design {item.designId} · price confirmed by quote
+                        </p>
+                      ) : item.customization ? (
                         <p className="text-xs text-gold mt-1 tracking-wide uppercase">
                           Custom piece
                         </p>
-                      )}
+                      ) : null}
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center border border-ink/20">
                           <button
@@ -143,7 +147,8 @@ export function CartDrawer() {
                 <span className="font-editorial text-xl">{formatNaira(total)}</span>
               </div>
               <p className="text-xs text-stone">
-                Delivery calculated at checkout. Free above ₦150,000.
+                Delivery is calculated at checkout once you select your state
+                (included with Complete Package orders).
               </p>
               <Link
                 to="/checkout"

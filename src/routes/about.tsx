@@ -81,7 +81,7 @@ function About() {
             <h2 className="font-editorial text-2xl sm:text-3xl mb-5">The Journey Ahead</h2>
             <p className="text-stone leading-relaxed">
               We are building a house that will stand beside the great fashion
-              names of the world — from Lagos, with African identity at its
+              names of the world — from Nigeria, with African identity at its
               core. The road is long, and we are early in the journey. What will
               not change is the standard: craftsmanship, personalization, and
               modern luxury, without compromise.

@@ -7,6 +7,8 @@ import { ImageComingSoon } from "@/components/brand";
 import { ProductWhatsAppCTA, WhatsAppCTAButton } from "@/components/whatsapp";
 import { useCart } from "@/store/cart";
 import { formatNaira, normalizeTier, TIER_LABELS } from "@/lib/format";
+import { isPosterArtwork } from "@/lib/img";
+import { templateForSku } from "@/lib/design-templates";
 import { availabilityOf } from "@/lib/availability";
 import { BRAND, SITE_URL } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
@@ -234,7 +236,8 @@ function ProductPage() {
               aria-label="View image fullscreen"
             >
               <img
-                src={img(image, { w: 1000, fit: product.imageFit === "contain" ? "contain" : undefined })}
+                src={img(image, { w: 1000, fit: product.imageFit === "contain" || isPosterArtwork(image) ? "contain" : undefined })}
+                style={product.imageFit === "contain" || isPosterArtwork(image) ? { objectFit: "contain" } : undefined}
                 alt={product.images[selectedImage]?.altText ?? product.name}
                 fetchPriority={selectedImage === 0 ? "high" : undefined}
               />
@@ -254,7 +257,12 @@ function ProductPage() {
                     selectedImage === i ? "border-gold" : "border-transparent opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img src={img(im.url, { w: 160, fit: product.imageFit === "contain" ? "contain" : undefined })} alt="" loading="lazy" />
+                  <img
+                    src={img(im.url, { w: 160, fit: product.imageFit === "contain" || isPosterArtwork(im.url) ? "contain" : undefined })}
+                    style={product.imageFit === "contain" || isPosterArtwork(im.url) ? { objectFit: "contain" } : undefined}
+                    alt=""
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>
@@ -263,12 +271,11 @@ function ProductPage() {
 
         {/* Details */}
         <div className="lg:sticky lg:top-28 lg:self-start">
+          {/* Collection, product type and service level are separate facts. */}
           <p className="tier-badge mb-3">
-            {TIER_LABELS[tier]}
-            {product.collection && (
-              <span className="text-stone/75 font-normal tracking-normal ml-2">
-                · {product.collection}
-              </span>
+            {product.collection ?? TIER_LABELS[tier]}
+            {product.subcategory && (
+              <span className="text-stone/75 font-normal tracking-normal ml-2">· {product.subcategory}</span>
             )}
           </p>
           <h1 className="font-editorial text-3xl sm:text-4xl lg:text-5xl leading-tight">
@@ -503,14 +510,23 @@ function ProductPage() {
               </>
             ) : null}
           </div>
-          {!quoteOnly && product.customizable && (
+          {templateForSku(product.sku) ? (
             <Link
               to="/custom"
+              search={{ design: undefined, t: undefined }}
+              className="btn-lux btn-lux-gold w-full mt-3"
+            >
+              Design Your Own Version
+            </Link>
+          ) : !quoteOnly && product.customizable ? (
+            <Link
+              to="/custom"
+              search={{ design: undefined, t: undefined }}
               className="btn-lux btn-lux-gold w-full mt-3"
             >
               Design Something Similar
             </Link>
-          )}
+          ) : null}
           {tier === "bespoke" && !quoteOnly && (
             <Link
               to="/royale/request"

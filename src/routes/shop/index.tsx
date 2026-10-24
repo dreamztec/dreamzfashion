@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { getCatalog, getCategoriesFn, searchCatalog } from "@/server/catalog.functions";
-import { ProductGrid } from "@/components/ProductCard";
+import { ProductGrid, photographyFirst } from "@/components/ProductCard";
 import { BRAND } from "@/lib/config";
 import { PRODUCT_TIERS, TIER_LABELS, formatNaira } from "@/lib/format";
 
@@ -141,9 +141,9 @@ function ShopIndex() {
         );
         break;
       default:
-        // Featured first, then by id (stable).
-        out = [...out].sort(
-          (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.id - b.id,
+        // Clean photography first, then featured, then by id (stable).
+        out = photographyFirst(
+          [...out].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.id - b.id),
         );
     }
     return out;
@@ -169,7 +169,11 @@ function ShopIndex() {
     <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-32 pb-8">
       <div className="text-center mb-12">
         <p className="overline-label mb-3">The Collection</p>
-        <h1 className="font-editorial text-4xl sm:text-6xl">Shop</h1>
+        <h1 className="font-editorial text-4xl sm:text-6xl">Samples</h1>
+        <p className="text-stone mt-4 max-w-xl mx-auto text-sm">
+          Order any piece as shown, or{" "}
+          <Link to="/custom" className="underline hover:text-ink">design your own</Link>.
+        </p>
         <div className="rule-gold mx-auto mt-6" />
       </div>
 
@@ -331,7 +335,9 @@ function ShopIndex() {
               >
                 <option value="">All Collections</option>
                 {availableCollections.map((col) => (
-                  <option key={col} value={col}>{col}</option>
+                  <option key={col} value={col}>
+                    {col} ({products.filter((p) => p.collection === col).length})
+                  </option>
                 ))}
               </select>
             </div>

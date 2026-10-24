@@ -506,11 +506,43 @@ export const adminUpdateOrder = createServerFn({ method: "POST" })
         .update(rr)
         .set({ status: "reversed", updatedAt: new Date() })
         .where(sql`${rr.orderId} = ${order.id} AND ${rr.status} IN ('pending','approved')`);
-      await db
-        .update(commissions)
-        .set({ status: "reversed", updatedAt: new Date() })
-        .where(sql`${commissions.orderId} = ${order.id} AND ${commissions.status} IN ('pending','eligible')`);
+      const { reverseCommissionsForOrder } = await import("./partners.server");
+      await reverseCommissionsForOrder(order.id, "cancellation");
     }
+    return { ok: true };
+  });
+
+/**
+ * Record a refund the owner has actually made (in Paystack or by transfer).
+ * No money moves from here: this records the reference, marks the order
+ * refunded and reverses partner commissions and referral rewards.
+ */
+export const adminRecordRefund = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ orderNumber: z.string().min(4).max(40), reference: z.string().min(3).max(120) }))
+  .handler(async ({ data }) => {
+    await requireAdminRole(["owner"]);
+    const [order] = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber)).limit(1);
+    if (!order) throw new Error("Order not found");
+    if (!["paid", "deposit_paid"].includes(order.paymentStatus)) {
+      throw new Error("Only paid orders can be refunded.");
+    }
+    const note = `Refund recorded — reference ${data.reference}`;
+    await db
+      .update(orders)
+      .set({
+        paymentStatus: "refunded",
+        timeline: [...(order.timeline ?? []), { status: "refunded", at: new Date().toISOString(), note }],
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, order.id));
+    await db.insert(orderEvents).values({ orderId: order.id, status: "refunded", note });
+    const { referralRewards: rr } = await import("../../db/schema");
+    await db
+      .update(rr)
+      .set({ status: "reversed", updatedAt: new Date() })
+      .where(sql`${rr.orderId} = ${order.id} AND ${rr.status} IN ('pending','approved')`);
+    const { reverseCommissionsForOrder } = await import("./partners.server");
+    await reverseCommissionsForOrder(order.id, "refund");
     return { ok: true };
   });
 
@@ -567,8 +599,13 @@ const SettingsSchema = z.object({
       payoutThresholdKobo: z.number().int().min(0),
       attributionWindowDays: z.number().int().min(1).max(365),
       termsNote: z.string().max(600),
+      // Owner-configured benefit when a creator buys with their own code
+      // (0 = none). Self-purchases never earn commission.
+      selfPurchaseBenefitBps: z.number().int().min(0).max(5_000).default(0),
+      // Days after delivery before a commission becomes eligible.
+      returnWindowDays: z.number().int().min(0).max(120).default(2),
     })
-    .default({ commissionBps: 0, payoutThresholdKobo: 0, attributionWindowDays: 30, termsNote: "" }),
+    .default({ commissionBps: 0, payoutThresholdKobo: 0, attributionWindowDays: 30, termsNote: "", selfPurchaseBenefitBps: 0, returnWindowDays: 2 }),
   anniversary: z
     .object({
       enabled: z.boolean(),
@@ -655,6 +692,8 @@ export const adminGetSettings = createServerFn({ method: "GET" }).handler(async 
       payoutThresholdKobo: typeof partnersRow?.payoutThresholdKobo === "number" ? partnersRow.payoutThresholdKobo : 0,
       attributionWindowDays: typeof partnersRow?.attributionWindowDays === "number" ? partnersRow.attributionWindowDays : 30,
       termsNote: typeof partnersRow?.termsNote === "string" ? partnersRow.termsNote : "",
+      selfPurchaseBenefitBps: typeof partnersRow?.selfPurchaseBenefitBps === "number" ? partnersRow.selfPurchaseBenefitBps : 0,
+      returnWindowDays: typeof partnersRow?.returnWindowDays === "number" ? partnersRow.returnWindowDays : 2,
     },
     anniversary: {
       enabled: anniversaryRow?.enabled !== false,
@@ -1381,6 +1420,16 @@ export const adminUpdatePartner = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireAdminRole(["owner", "sales"]);
+    if (data.status === "approved") {
+      // A creator/trade partner can only be activated once the owner has set
+      // a real commission rate — no partner is approved onto unknown terms.
+      const [r] = await db.select({ track: referrers.track }).from(referrers).where(eq(referrers.id, data.id)).limit(1);
+      const { getPartnerSettingsFull } = await import("./order-pricing.server");
+      const terms = await getPartnerSettingsFull();
+      if (r && ["creator", "trade"].includes(r.track) && terms.commissionBps <= 0) {
+        throw new Error("Set the creator commission rate in Settings → Partner commissions before approving creators.");
+      }
+    }
     if (data.status) {
       await db
         .update(referrers)
@@ -1414,7 +1463,8 @@ export const adminUpdateCommission = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
       id: z.number().int(),
-      status: z.enum(["pending", "eligible", "paid", "reversed"]),
+      // "paid" is set only through a payout with a recorded transfer reference.
+      status: z.enum(["pending", "eligible", "reversed"]),
       note: z.string().max(300).optional().or(z.literal("")),
     }),
   )
@@ -1425,7 +1475,6 @@ export const adminUpdateCommission = createServerFn({ method: "POST" })
       .set({
         status: data.status,
         ...(data.status === "eligible" ? { eligibleAt: new Date() } : {}),
-        ...(data.status === "paid" ? { paidAt: new Date() } : {}),
         ...(data.note ? { note: data.note } : {}),
         updatedAt: new Date(),
       })
@@ -1444,6 +1493,9 @@ export const adminUpdatePayoutRequest = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireAdminRole(["owner", "sales"]);
+    if (data.status === "paid" && !(data.adminReference ?? "").trim()) {
+      throw new Error("Record the actual transfer reference before marking a payout paid.");
+    }
     await db
       .update(payoutRequests)
       .set({
@@ -1458,7 +1510,14 @@ export const adminUpdatePayoutRequest = createServerFn({ method: "POST" })
       await db
         .update(commissions)
         .set({ status: "paid", paidAt: new Date(), updatedAt: new Date() })
-        .where(sql`${commissions.payoutRequestId} = ${data.id} AND ${commissions.status} IN ('pending','eligible')`);
+        .where(sql`${commissions.payoutRequestId} = ${data.id} AND ${commissions.status} = 'eligible'`);
+    }
+    // A rejected request releases its commissions for a future request.
+    if (data.status === "rejected") {
+      await db
+        .update(commissions)
+        .set({ payoutRequestId: null, updatedAt: new Date() })
+        .where(sql`${commissions.payoutRequestId} = ${data.id} AND ${commissions.status} = 'eligible'`);
     }
     return { ok: true };
   });

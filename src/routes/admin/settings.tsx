@@ -43,6 +43,8 @@ function AdminSettings() {
     partnerPayoutThreshold: "0",
     partnerAttributionWindowDays: "30",
     partnerTermsNote: "",
+    partnerSelfBenefitBps: "0",
+    partnerReturnWindowDays: "2",
     // Anniversary campaign
     anniversaryEnabled: true,
     anniversaryDate: "2027-06-12",
@@ -99,9 +101,12 @@ function AdminSettings() {
           depositBalanceDueDays: String(deposits.balanceDueDays ?? 14),
           depositTermsText: String(deposits.termsText ?? ""),
           partnerCommissionBps: String(partners.commissionBps ?? 0),
-          partnerPayoutThreshold: String(partners.payoutThresholdKobo ?? 0),
+          // Stored in kobo, edited in naira.
+          partnerPayoutThreshold: String(Math.round(Number(partners.payoutThresholdKobo ?? 0) / 100)),
           partnerAttributionWindowDays: String(partners.attributionWindowDays ?? 30),
           partnerTermsNote: String(partners.termsNote ?? ""),
+          partnerSelfBenefitBps: String(partners.selfPurchaseBenefitBps ?? 0),
+          partnerReturnWindowDays: String(partners.returnWindowDays ?? 2),
           anniversaryEnabled: anniversary.enabled !== false,
           anniversaryDate: String(anniversary.date ?? "2027-06-12"),
           anniversaryLabel: String(anniversary.label ?? "The Fifth Anniversary Collection"),
@@ -161,9 +166,11 @@ function AdminSettings() {
         },
         partners: {
           commissionBps: Number(form.partnerCommissionBps) || 0,
-          payoutThresholdKobo: Number(form.partnerPayoutThreshold) || 0,
+          payoutThresholdKobo: Math.round((Number(form.partnerPayoutThreshold) || 0) * 100),
           attributionWindowDays: Number(form.partnerAttributionWindowDays) || 30,
           termsNote: form.partnerTermsNote,
+          selfPurchaseBenefitBps: Number(form.partnerSelfBenefitBps) || 0,
+          returnWindowDays: Math.max(0, Number(form.partnerReturnWindowDays) || 0),
         },
         anniversary: {
           enabled: form.anniversaryEnabled,
@@ -323,9 +330,11 @@ function AdminSettings() {
 
         <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Partner Commissions &amp; Terms</h2>
         <p className="text-xs text-stone -mt-2">
-          Rates apply to creator and trade partners. Zero = no earnings are
-          promised or recorded until you set real terms. Payouts always require
-          your review before any transfer.
+          The commission rate applies to creator and trade partners on the
+          merchandise value of verified, fully paid orders (after discounts,
+          excluding delivery). While it is zero the site shows “Rate confirmed
+          on approval” and creators cannot be approved. Payouts always require
+          your review and a recorded transfer reference.
         </p>
         <div className="grid gap-5 sm:grid-cols-2">
           <div>
@@ -343,6 +352,14 @@ function AdminSettings() {
           <div>
             <label className="input-lux-label">Partner Terms Note</label>
             <input className="input-lux" value={form.partnerTermsNote} onChange={set("partnerTermsNote")} />
+          </div>
+          <div>
+            <label className="input-lux-label">Return Window Before Eligible (days after delivery)</label>
+            <input className="input-lux" type="number" min="0" max="120" value={form.partnerReturnWindowDays} onChange={set("partnerReturnWindowDays")} />
+          </div>
+          <div>
+            <label className="input-lux-label">Creator Self-Purchase Benefit (basis points, 0 = none)</label>
+            <input className="input-lux" type="number" min="0" max="5000" value={form.partnerSelfBenefitBps} onChange={set("partnerSelfBenefitBps")} placeholder="0 = no benefit" />
           </div>
         </div>
 

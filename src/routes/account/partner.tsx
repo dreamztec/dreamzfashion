@@ -68,7 +68,7 @@ function PartnerDashboard() {
         <p className="text-stone mb-8">
           This dashboard opens after your partner application is approved.
         </p>
-        <Link to="/earn" className="btn-lux btn-lux-primary">Apply on the Partner Hub</Link>
+        <Link to="/creators" className="btn-lux btn-lux-primary">Apply to become a creator</Link>
       </div>
     );
   }
@@ -81,7 +81,7 @@ function PartnerDashboard() {
       <p className="overline-label mb-2">Partner Dashboard</p>
       <h1 className="font-editorial text-4xl mb-2">{data.displayName || data.code}</h1>
       <p className="text-xs uppercase tracking-btn text-stone mb-8">
-        {data.track === "creator" ? "Creator Partner" : "Trade Partner"} ·{" "}
+        {data.track === "creator" ? "Creator Partner" : data.track === "trade" ? "Trade Partner" : "Referral Partner"} ·{" "}
         {data.status === "approved" ? "Approved" : data.status}
       </p>
 
@@ -92,19 +92,25 @@ function PartnerDashboard() {
         </p>
       )}
 
-      {/* Link + stats */}
-      <div className="grid gap-4 sm:grid-cols-3 mb-12">
-        <Stat label="Link clicks" value={String(data.stats.clicks)} />
-        <Stat label="Paid orders" value={String(data.stats.paidOrders)} />
-        <Stat
-          label="Eligible earnings"
-          value={formatNaira(data.stats.eligibleKobo)}
-        />
-      </div>
-
-      <div className="border border-ink/10 px-6 py-6 mb-12">
-        <p className="input-lux-label">Your unique link</p>
-        <code className="block bg-ivory-deep px-4 py-3 text-sm break-all select-all">{shareLink}</code>
+      {/* Code + link */}
+      <div className="border border-ink/10 px-6 py-6 mb-10">
+        <div className="grid gap-6 sm:grid-cols-2">
+          <div>
+            <p className="input-lux-label">Your creator code</p>
+            <div className="flex gap-2 items-stretch">
+              <code className="flex-1 bg-ivory-deep px-4 py-3 text-lg tracking-[0.2em] select-all">{data.code}</code>
+              <CopyButton text={data.code} label="Copy code" />
+            </div>
+            <p className="text-xs text-stone mt-2">Not case-sensitive — customers type it at checkout.</p>
+          </div>
+          <div>
+            <p className="input-lux-label">Your shareable link</p>
+            <div className="flex gap-2 items-stretch">
+              <code className="flex-1 bg-ivory-deep px-4 py-3 text-sm break-all select-all">{shareLink}</code>
+              <CopyButton text={shareLink} label="Copy link" />
+            </div>
+          </div>
+        </div>
         {storefrontUrl && (
           <>
             <p className="input-lux-label mt-5">Your storefront</p>
@@ -113,18 +119,65 @@ function PartnerDashboard() {
             </a>
           </>
         )}
-        <p className="mt-4 text-xs text-stone">
-          Commissions are confirmed only after the order is fulfilled and the
-          return window closes. Refunds and cancellations reverse commissions.
-          {data.terms.termsNote && <span> {data.terms.termsNote}</span>}
+      </div>
+
+      {/* Terms in plain words */}
+      <div className="border border-gold/40 bg-gold/5 px-6 py-5 mb-10 text-sm leading-relaxed">
+        <p>
+          <strong>Commission rate:</strong> {data.terms.rateLabel}
+          {data.terms.commissionBps > 0 && " of the merchandise value (after discounts, excluding delivery) of each verified, fully paid order placed with your code or link."}
+        </p>
+        <p className="mt-2 text-stone">
+          Unpaid order requests earn nothing. A paid order creates a{" "}
+          <em>pending</em> commission; it becomes <em>available</em>{" "}
+          {data.terms.returnWindowDays} day{data.terms.returnWindowDays === 1 ? "" : "s"} after
+          delivery. Refunds and cancellations reverse it. Buying with your own
+          code never earns commission
+          {data.terms.selfPurchaseBenefitBps > 0
+            ? ` — it gives you a ${(data.terms.selfPurchaseBenefitBps / 100).toFixed(0)}% creator purchase benefit instead.`
+            : "."}
+          {data.terms.payoutThresholdKobo > 0 && ` Minimum payout: ${formatNaira(data.terms.payoutThresholdKobo)}.`}
+          {data.terms.termsNote && ` ${data.terms.termsNote}`}
         </p>
       </div>
 
+      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4 mb-12">
+        <Stat label="Link clicks" value={String(data.stats.clicks)} />
+        <Stat label="Pending" value={formatNaira(data.stats.pendingKobo)} />
+        <Stat label="Available" value={formatNaira(data.stats.eligibleKobo)} />
+        <Stat label="Paid out" value={formatNaira(data.stats.paidKobo)} />
+      </div>
+      {data.stats.reversedKobo > 0 && (
+        <p className="text-xs text-stone -mt-8 mb-12">Reversed (refunds/cancellations): {formatNaira(data.stats.reversedKobo)}</p>
+      )}
+
+      {/* Attributed orders — no customer details */}
+      <h2 className="font-editorial text-2xl mb-4">Orders with your code</h2>
+      {data.attributedOrders.length === 0 ? (
+        <p className="text-sm text-stone mb-12">No orders yet.</p>
+      ) : (
+        <ul className="divide-y divide-ink/10 border border-ink/10 mb-12">
+          {data.attributedOrders.map((o) => (
+            <li key={o.orderNumber} className="px-5 py-3.5 flex justify-between items-center text-sm gap-4">
+              <div>
+                <p>{o.orderNumber}</p>
+                <p className="text-xs text-stone">
+                  {o.createdAt ? new Date(o.createdAt).toLocaleDateString("en-NG") : ""} ·{" "}
+                  {o.paid ? "Paid" : o.paymentStatus === "requested" ? "Unpaid request — no commission yet" : o.paymentStatus.replace(/_/g, " ")}
+                  {o.outcome === "self_purchase" || o.outcome === "self_purchase_benefit" ? " · your own purchase (no commission)" : ""}
+                </p>
+              </div>
+              <span>{formatNaira(o.merchandiseKobo)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {/* Earnings ledger */}
-      <h2 className="font-editorial text-2xl mb-4">Commissions</h2>
+      <h2 className="font-editorial text-2xl mb-4">Commission ledger</h2>
       {data.commissions.length === 0 ? (
         <p className="text-sm text-stone mb-12">
-          No commissions yet — share your link and your first verified sale will appear here.
+          No commissions yet — your first verified, paid sale will appear here.
         </p>
       ) : (
         <ul className="divide-y divide-ink/10 border border-ink/10 mb-12">
@@ -133,10 +186,12 @@ function PartnerDashboard() {
               <div>
                 <p>{c.orderNumber}</p>
                 <p className="text-xs text-stone">
-                  {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-NG") : ""} · {c.status}
+                  {c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-NG") : ""} ·{" "}
+                  {c.status === "eligible" ? (c.inPayout ? "in payout request" : "available") : c.status} ·{" "}
+                  {(c.rateBps / 100).toFixed(2).replace(/\.00$/, "")}% of {formatNaira(c.basisKobo)}
                 </p>
               </div>
-              <span>{formatNaira(c.amountKobo)}</span>
+              <span className={c.status === "reversed" ? "line-through text-stone" : ""}>{formatNaira(c.amountKobo)}</span>
             </li>
           ))}
         </ul>
@@ -374,5 +429,27 @@ function DesignSubmission({ onSubmitted }: { onSubmitted: () => void }) {
         a guaranteed design.
       </p>
     </form>
+  );
+}
+
+function CopyButton({ text, label }: { text: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        void navigator.clipboard
+          ?.writeText(text)
+          .then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1800);
+          })
+          .catch(() => setCopied(false));
+      }}
+      className="btn-lux btn-lux-outline !py-2 !px-4 text-xs whitespace-nowrap"
+      aria-live="polite"
+    >
+      {copied ? "Copied ✓" : label}
+    </button>
   );
 }

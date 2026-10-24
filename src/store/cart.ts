@@ -10,6 +10,10 @@ export interface CartItem {
   variantLabel: string | null;
   purchaseOption: "product_only" | "complete_package";
   customization: Record<string, string> | null;
+  /** Saved custom design (DZD-…) — the server loads the exact spec. */
+  designId?: string | null;
+  /** True when the line awaits the house's quote (custom designs). */
+  quoteRequired?: boolean;
   imageUrl: string | null;
   unitPrice: number; // kobo — display only; the server re-prices at checkout
   quantity: number;
@@ -49,7 +53,8 @@ export const useCart = create<CartState>()(
         const customizationKey = item.customization
           ? JSON.stringify(item.customization)
           : "";
-        const id = `${item.productId}::${item.variantLabel ?? ""}::${item.purchaseOption}::${customizationKey}`;
+        // Different sizes, packages and designs are always distinct lines.
+        const id = `${item.productId}::${item.variantLabel ?? ""}::${item.purchaseOption}::${item.designId ?? ""}::${customizationKey}`;
         const existing = get().items.find((i) => i.id === id);
         if (existing) {
           set({
