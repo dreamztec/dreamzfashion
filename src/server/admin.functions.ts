@@ -37,17 +37,30 @@ import { isDisplayableImageUrl } from "../lib/img";
  * (Netlify Identity) and are authorised through the admin_users table.
  */
 import { requireAdmin, requireAdminRole } from "./admin-auth.server";
+import { consumeRateLimit, clientIp } from "./rate-limit.server";
+import { timingSafeEqual } from "node:crypto";
 
 export type AdminRole = "owner" | "sales" | "operations";
 
 export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { secret: string }) => data)
   .handler(async ({ data }) => {
+    // Unauthenticated endpoint that validates the master key — throttle it so
+    // the secret cannot be brute-forced online.
+    const limit = await consumeRateLimit("admin-login", clientIp(), 5, 15 * 60);
+    if (!limit.ok) {
+      return {
+        ok: false,
+        error: `Too many sign-in attempts. Please try again in about ${Math.max(1, Math.ceil(limit.retryAfterSeconds / 60))} minutes.`,
+      };
+    }
     const secret = process.env.ADMIN_SECRET;
     if (!secret) {
       return { ok: false, error: "Admin access is not configured on this deployment." };
     }
-    if (data.secret === secret) {
+    const provided = Buffer.from(String(data.secret ?? ""), "utf8");
+    const expected = Buffer.from(secret, "utf8");
+    if (provided.length === expected.length && timingSafeEqual(provided, expected)) {
       return { ok: true, role: "owner" as const };
     }
     // Identity-team members sign in with their account, not the master key.

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { db } from "../../../db/index";
 import { analyticsEvents } from "../../../db/schema";
+import { consumeRateLimit, clientIpFromRequest } from "../../server/rate-limit.server";
 
 /**
  * Lightweight analytics event collector (fire-and-forget).
@@ -12,21 +13,23 @@ export const Route = createFileRoute("/api/event")({
     handlers: {
       POST: async ({ request }) => {
         try {
-          const body = (await request.json()) as {
-            name?: string;
-            data?: Record<string, unknown>;
-          };
-          const name = (body.name ?? "").trim();
-          if (!name || name.length > 60) {
-            return new Response(JSON.stringify({ ok: false }), {
-              status: 400,
-              headers: { "Content-Type": "application/json" },
-            });
+          // Unauthenticated write endpoint — throttle and cap payload size so
+          // it cannot be used to flood the database.
+          const limit = await consumeRateLimit("event", clientIpFromRequest(request), 30, 60);
+          if (limit.ok) {
+            const body = (await request.json()) as {
+              name?: string;
+              data?: Record<string, unknown>;
+            };
+            const name = (body.name ?? "").trim();
+            const metadata = body.data ?? {};
+            if (name && name.length <= 60 && JSON.stringify(metadata).length <= 2048) {
+              await db.insert(analyticsEvents).values({
+                eventName: name,
+                metadata,
+              });
+            }
           }
-          await db.insert(analyticsEvents).values({
-            eventName: name,
-            metadata: body.data ?? {},
-          });
         } catch {
           // Analytics must never break a page or CTA.
         }

@@ -9,6 +9,7 @@ import { getCurrentCustomer } from "./auth.server";
 import { holdVoucherForOrder } from "./vouchers.server";
 import { priceOrder, PricingError, type PricedOrder } from "./order-pricing.server";
 import { confirmOrderPaid } from "./commerce.internal";
+import { consumeRateLimit, clientIp } from "./rate-limit.server";
 import {
   generateOrderNumber,
   isValidNigerianPhone,
@@ -542,6 +543,16 @@ export const trackOrder = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    // Order lookup is unauthenticated — throttle per IP so order numbers
+    // cannot be probed at volume.
+    const limit = await consumeRateLimit("track-order", clientIp(), 20, 15 * 60);
+    if (!limit.ok) {
+      return {
+        found: false as const,
+        throttled: true as const,
+        reason: "Too many lookups. Please try again in a few minutes.",
+      };
+    }
     const [order] = await db
       .select()
       .from(orders)
