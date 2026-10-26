@@ -11,6 +11,15 @@ import { BRAND, SITE_URL } from "@/lib/config";
 import { COMPANY, CONTACT } from "@/lib/contact";
 import { useEffect } from "react";
 import "../styles.css";
+// Self-hosted fonts (was: render-blocking Google Fonts stylesheet). Only the
+// weights the site actually uses — Cormorant Garamond 500 for editorial type,
+// Jost 400/500 for body and emphasis — bundled and emitted by Vite.
+import "@fontsource/cormorant-garamond/latin-500.css";
+import "@fontsource/jost/latin-400.css";
+import "@fontsource/jost/latin-500.css";
+// Preload the two fonts that paint first: the LCP headline serif and body.
+import cormorant500Woff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-500-normal.woff2?url";
+import jost400Woff2 from "@fontsource/jost/files/jost-latin-400-normal.woff2?url";
 
 const siteDescription = BRAND.description;
 
@@ -60,11 +69,19 @@ export const Route = createRootRoute({
     links: [
       { rel: "icon", href: "/favicon.ico" },
       { rel: "apple-touch-icon", href: "/img/dfk-logo-mark.jpg" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500&display=swap",
+        rel: "preload",
+        href: cormorant500Woff2,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
+      {
+        rel: "preload",
+        href: jost400Woff2,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
       },
     ],
     scripts: [
