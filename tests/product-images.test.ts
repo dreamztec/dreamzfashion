@@ -26,7 +26,8 @@ const PUBLISHED_GALLERIES: Record<string, string[]> = {
   "DFK-FTW-008": ["crimson-cross.jpg"],
   "DFK-FTW-009": ["pinnacle-denim.jpg"],
   "DFK-FTW-010": ["terra-cove.jpg"],
-  "DFK-FTW-011": ["lightning-strap-loafer.jpg"],
+  // DFK-FTW-011 (Lightning Strap Loafer) was finalized as DFK-ORG-022,
+  // "Legacy Strap Loafer", in 20261026135913_originals-front-edit-ten-products.
   "DFK-FTW-016": ["lagos-tassel.jpg"],
   "DFK-FTW-017": ["verona-buckle-slide.jpg"],
   "DFK-FTW-019": ["strap-twist.jpg"],
@@ -37,7 +38,7 @@ const PUBLISHED_GALLERIES: Record<string, string[]> = {
   "DFK-ORG-001": ["dreamz-faith-tan-green.jpg", "dreamz-faith-taupe-navy.jpg"],
   "DFK-ORG-002": ["dreamz-vision-green-red-orange-brown.jpg"],
   "DFK-ORG-003": ["dreamz-focus-black-royal-blue.jpg"],
-  "DFK-ORG-004": ["dreamz-courage-black-red.jpg"],
+  // DFK-ORG-004 (Dreamz Courage) was finalized as DFK-ORG-023, "Voltage Noir Loafer".
   "DFK-ORG-005": ["dreamz-integrity-black-burgundy.jpg"],
   "DFK-ORG-006": ["dreamz-purpose-brown-blue.jpg"],
   "DFK-ORG-007": ["dreamz-discipline-black-blue.jpg"],
@@ -45,10 +46,21 @@ const PUBLISHED_GALLERIES: Record<string, string[]> = {
   "DFK-ORG-009": ["dreamz-excellence-brown-white.jpg", "dreamz-excellence-black-blue.jpg"],
   "DFK-ORG-010": ["dreamz-grace-black-white.jpg", "dreamz-grace-black-blue.jpg"],
   "DFK-ORG-011": ["dreamz-confidence-black-royal-blue.jpg"],
-  "DFK-ORG-012": ["dreamz-unity-multicolour.jpg"],
+  // DFK-ORG-012 (Dreamz Unity) was finalized as DFK-ORG-026, "Prism Cross Sandal".
   "DFK-ORG-013": ["dreamz-balance-sand-multicolour.jpg"],
   "DFK-ORG-014": ["dreamz-harmony-cream-multicolour.jpg"],
   "DFK-ORG-015": ["dreamz-resolve-multicolour.jpg"],
+  // DREAMZ Originals front edit — the ten approved designs (2026-10-26).
+  "DFK-ORG-022": ["legacy-strap-loafer.jpg"],
+  "DFK-ORG-016": ["spectrum-buckle-slide.jpg"],
+  "DFK-ORG-023": ["voltage-noir-loafer.jpg"],
+  "DFK-ORG-017": ["heritage-medallion-oxford.jpg"],
+  "DFK-ORG-018": ["executive-spectrum-briefcase.jpg"],
+  "DFK-ORG-024": ["voyager-colourline-pouch.jpg"],
+  "DFK-ORG-020": ["regent-croc-tote.jpg"],
+  "DFK-ORG-025": ["ascension-oxford.jpg"],
+  "DFK-ORG-026": ["prism-cross-sandal.jpg"],
+  "DFK-ORG-021": ["mosaic-crest-mule.jpg"],
 };
 
 /** Byte-identical duplicates of canonical photographs (superseded draft names). */
@@ -67,6 +79,17 @@ const SUPERSEDED_DUPLICATES = [
   "dreamz-purpose-cognac-royal-blue.jpg",
   "dreamz-rhythm-olive-orange-brown-black.jpg",
   "dreamz-unity-cream-multi.jpg",
+];
+
+/**
+ * Photography of pieces superseded by the 2026-10-26 Originals front edit.
+ * The old rows were renamed in place (SKU rekeyed); their earlier artwork
+ * stays on disk behind the approved photo in each gallery.
+ */
+const SUPERSEDED_FRONT_EDIT_PHOTO = [
+  "lightning-strap-loafer.jpg",
+  "dreamz-courage-black-red.jpg",
+  "dreamz-unity-multicolour.jpg",
 ];
 
 /** Present but intentionally unpublished, with the reason. */
@@ -117,6 +140,7 @@ describe("Published product galleries", () => {
     const accounted = new Set([
       ...Object.values(PUBLISHED_GALLERIES).flat(),
       ...SUPERSEDED_DUPLICATES,
+      ...SUPERSEDED_FRONT_EDIT_PHOTO,
       ...Object.keys(HELD_BACK),
     ]);
     const orphans = fs.readdirSync(PRODUCTS_DIR).filter((f) => !accounted.has(f));
