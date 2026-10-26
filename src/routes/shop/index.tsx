@@ -2,7 +2,7 @@ import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, type FormEvent } from "react";
 import { getCatalog, getCategoriesFn, searchCatalog } from "@/server/catalog.functions";
 import { ProductGrid, photographyFirst } from "@/components/ProductCard";
-import { BRAND } from "@/lib/config";
+import { BRAND, SITE_URL } from "@/lib/config";
 import { PRODUCT_TIERS, TIER_LABELS, formatNaira } from "@/lib/format";
 
 /** Every filter lives in the URL so results are shareable and back-safe. */
@@ -51,6 +51,9 @@ export const Route = createFileRoute("/shop/")({
         content: `Browse DREAMZ leather footwear, bags and accessories — Essentials, Originals and Royale.`,
       },
     ],
+    // Filter/sort/search params create duplicate URLs; every variant points
+    // back to the clean, canonical /shop.
+    links: [{ rel: "canonical", href: `${SITE_URL}/shop` }],
   }),
   component: ShopIndex,
 });
@@ -169,10 +172,15 @@ function ShopIndex() {
     <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-32 pb-8">
       <div className="text-center mb-12">
         <p className="overline-label mb-3">The Collection</p>
-        <h1 className="font-editorial text-4xl sm:text-6xl">Samples</h1>
-        <p className="text-stone mt-4 max-w-xl mx-auto text-sm">
-          Order any piece as shown, or{" "}
-          <Link to="/custom" className="underline hover:text-ink">design your own</Link>.
+        <h1 className="font-editorial text-4xl sm:text-6xl">
+          Handmade Leather Footwear &amp; Accessories
+        </h1>
+        <p className="text-stone mt-4 max-w-xl mx-auto text-sm leading-relaxed">
+          Every piece here is a sample of what DREAMZ can make for you —
+          handcrafted leather shoes, boots, sandals, bags and accessories made
+          in Nigeria. Order any piece as shown in your size and colourway, or{" "}
+          <Link to="/custom" className="underline hover:text-ink">design your own</Link>{" "}
+          from scratch. Nationwide delivery in 2–5 working days.
         </p>
         <div className="rule-gold mx-auto mt-6" />
       </div>

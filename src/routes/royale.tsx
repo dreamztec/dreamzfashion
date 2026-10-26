@@ -3,7 +3,7 @@ import { getCatalog } from "@/server/catalog.functions";
 import { ProductGrid } from "@/components/ProductCard";
 import { Reveal } from "@/components/Reveal";
 import { WhatsAppCTAButton } from "@/components/whatsapp";
-import { BRAND } from "@/lib/config";
+import { BRAND, SITE_URL } from "@/lib/config";
 import { getSiteSettings } from "@/server/catalog.functions";
 
 export const Route = createFileRoute("/royale")({
@@ -26,6 +26,7 @@ export const Route = createFileRoute("/royale")({
           "DREAMZ Royale — premium customisation and bespoke client work. Created for one client. Created around one vision.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/royale` }],
   }),
   component: RoyalePage,
 });

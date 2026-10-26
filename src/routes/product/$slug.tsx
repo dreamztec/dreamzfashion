@@ -26,6 +26,19 @@ function logEvent(name: string, data: Record<string, unknown>) {
   }
 }
 
+/** First non-empty of the candidates, trimmed to a sentence boundary. */
+function describe(...candidates: Array<string | null | undefined>): string {
+  for (const c of candidates) {
+    if (c && c.trim()) {
+      const text = c.trim().replace(/\s+/g, " ");
+      if (text.length <= 300) return text;
+      const cut = text.slice(0, 300);
+      return `${cut.slice(0, Math.max(cut.lastIndexOf(". "), cut.lastIndexOf(" ")))}…`;
+    }
+  }
+  return BRAND.description;
+}
+
 export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
     const product = await getProduct({ data: params.slug });
@@ -40,8 +53,13 @@ export const Route = createFileRoute("/product/$slug")({
     if (!loaderData) return { meta: [] };
     const { product } = loaderData;
     const title = product.seoTitle || `${product.name} — ${BRAND.name}`;
-    const description =
-      product.seoDescription || product.shortDescription || BRAND.description;
+    // Substantive copy, not just the tagline: searchers and AI answers need
+    // materials, sizing and delivery context in the description.
+    const description = describe(
+      product.seoDescription,
+      product.shortDescription,
+      product.fullDescription,
+    );
     const image = product.images[0]?.url;
     const canonical = `${SITE_URL}/product/${product.slug}`;
     const quoteOnly = product.price <= 0 || !product.checkoutReady;
@@ -50,7 +68,7 @@ export const Route = createFileRoute("/product/$slug")({
       "@type": "Product",
       name: product.name,
       sku: product.sku,
-      description: product.shortDescription,
+      description: describe(product.seoDescription, product.fullDescription),
       brand: { "@type": "Brand", name: BRAND.name },
       ...(image ? { image: `${SITE_URL}${image}` } : {}),
       ...(quoteOnly
@@ -75,7 +93,6 @@ export const Route = createFileRoute("/product/$slug")({
       meta: [
         { title },
         { name: "description", content: description },
-        { link: canonical, rel: "canonical" } as never,
         { property: "og:title", content: title },
         { property: "og:description", content: description },
         { property: "og:type", content: "product" },
@@ -83,6 +100,7 @@ export const Route = createFileRoute("/product/$slug")({
         ...(image ? [{ property: "og:image", content: `${SITE_URL}${image}` }] : []),
         { name: "twitter:card", content: "summary_large_image" },
       ],
+      links: [{ rel: "canonical", href: canonical }],
       scripts: [
         {
           type: "application/ld+json",
@@ -739,6 +757,9 @@ function Accordion({
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  // Content stays in the DOM even when collapsed — it is always present in
+  // the server-rendered HTML for crawlers and AI fetchers; only visibility
+  // toggles.
   return (
     <div>
       <button
@@ -751,7 +772,9 @@ function Accordion({
           {open ? "−" : "+"}
         </span>
       </button>
-      {open && <div className="pb-5 text-sm text-stone space-y-3">{children}</div>}
+      <div className={`pb-5 text-sm text-stone space-y-3 ${open ? "" : "hidden"}`}>
+        {children}
+      </div>
     </div>
   );
 }

@@ -3,7 +3,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { getCatalog, getCategoriesFn } from "@/server/catalog.functions";
 import { ProductGrid, photographyFirst } from "@/components/ProductCard";
 import { groupCounts, productGroup } from "@/lib/taxonomy";
-import { BRAND } from "@/lib/config";
+import { BRAND, SITE_URL } from "@/lib/config";
 import { PRODUCT_TIERS, TIER_LABELS, TIER_TAGLINES, TIER_DESCRIPTIONS, formatNaira, type ProductTier } from "@/lib/format";
 
 /** Old collection URLs keep working under the new names. */
@@ -58,6 +58,16 @@ export const Route = createFileRoute("/shop/$category")({
         content:
           loaderData?.category?.description ||
           `Browse ${BRAND.name} leather pieces.`,
+      },
+    ],
+    // Filter params create duplicate URLs; legacy tier slugs (/shop/signature,
+    // /shop/bespoke) point at their current tier names.
+    links: [
+      {
+        rel: "canonical",
+        href: loaderData?.tier
+          ? `${SITE_URL}/shop/${loaderData.tier}`
+          : `${SITE_URL}/shop/${loaderData?.category?.slug ?? ""}`,
       },
     ],
   }),
