@@ -700,6 +700,20 @@ export const referrers = pgTable(
     school: text("school"),
     socialProfile: text("social_profile"),
     agreedTerms: boolean("agreed_terms").notNull().default(false),
+    // Partner business setup: digital | physical | both. Paid plans are
+    // annual business-support memberships, never a requirement to earn from
+    // genuine product sales (Scout remains free).
+    sellingMode: text("selling_mode").notNull().default("digital"),
+    partnerPlan: text("partner_plan").notNull().default("scout"),
+    // undecided | bulk | credit | commission — relevant to physical/both.
+    physicalModel: text("physical_model").notNull().default("undecided"),
+    // not_required | payment_requested | paid | waived
+    membershipPaymentStatus: text("membership_payment_status").notNull().default("not_required"),
+    membershipStartsAt: timestamp("membership_starts_at"),
+    membershipExpiresAt: timestamp("membership_expires_at"),
+    // Optional single-level introducer code. There is deliberately no
+    // recursive parent/downline relation.
+    introducerCode: text("introducer_code"),
     programId: integer("program_id").references(() => referralPrograms.id, {
       onDelete: "set null",
     }),
