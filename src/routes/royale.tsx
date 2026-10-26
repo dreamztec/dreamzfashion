@@ -85,7 +85,7 @@ function RoyalePage() {
               Start a Design
             </Link>
             <Link to="/royale/request" className="btn-lux text-ivory border border-ivory/40 hover:border-ivory">
-              Bespoke Request
+              Request a Consultation
             </Link>
           </div>
         </div>

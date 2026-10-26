@@ -34,7 +34,7 @@ export function ProductCard({
           eager={priority}
           // Two-column mobile grid at DPR 2 needs a ~640px source; larger
           // breakpoints step up through the Image CDN. No huge originals.
-          sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 30vw"
+          sizes="(max-width: 479px) 92vw, (max-width: 1023px) 46vw, 30vw"
           // Product photography shows the whole piece; lifestyle scenes may
           // crop. The admin's per-product imageFit is respected.
           fit={displayFit(product.images[0]?.kind, product.imageFit)}
@@ -99,7 +99,7 @@ export function ProductGrid({
   priority?: boolean;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3 lg:gap-x-8">
+    <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-3 lg:gap-x-8">
       {products.map((p, i) => (
         <ProductCard key={p.id} product={p} priority={priority && i < 3} />
       ))}

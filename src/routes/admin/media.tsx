@@ -63,7 +63,13 @@ function AdminMedia() {
   }, [load]);
 
   const visible = assets.filter((a) => {
-    if (filter !== "ALL" && a.category !== filter) return false;
+    if (filter === "UNASSIGNED") {
+      // Uploaded product photography waiting for a product assignment —
+      // never silently lost, always reviewable here.
+      if (a.category !== "PRODUCT" || a.productId) return false;
+    } else if (filter !== "ALL" && a.category !== filter) {
+      return false;
+    }
     if (search && !`${a.title} ${a.altText}`.toLowerCase().includes(search.toLowerCase()))
       return false;
     return true;
@@ -258,6 +264,15 @@ function AdminMedia() {
           }`}
         >
           All ({assets.length})
+        </button>
+        <button
+          onClick={() => setFilter("UNASSIGNED")}
+          className={`text-[0.68rem] uppercase tracking-btn px-3 py-1.5 border ${
+            filter === "UNASSIGNED" ? "border-ink bg-ink text-ivory" : "border-ink/20"
+          }`}
+        >
+          Unassigned (
+            {assets.filter((a) => a.category === "PRODUCT" && !a.productId).length})
         </button>
         {CATEGORIES.map((c) => {
           const n = assets.filter((a) => a.category === c).length;

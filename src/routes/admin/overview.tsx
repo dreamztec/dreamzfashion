@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { adminOverview, adminTisasngStatus } from "@/server/admin.functions";
+import { adminOverview, adminReadiness, adminTisasngStatus } from "@/server/admin.functions";
 import { adminCall } from "@/lib/admin-client";
 import { formatNaira } from "@/lib/format";
 import { useEffect, useState } from "react";
@@ -33,6 +33,13 @@ function AdminOverview() {
       </div>
     );
   }
+
+  // The dashboard loading at all proves the store is live and the database
+  // is connected — those two rows are stated, not probed.
+  const readinessRows = [
+    { label: "STORE", value: "Live" },
+    { label: "DATABASE", value: "Connected" },
+  ];
 
   const stats = [
     { label: "Paid Sales (excl. cancelled)", value: formatNaira(data.revenue) },
@@ -68,6 +75,7 @@ function AdminOverview() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
       <h1 className="font-editorial text-3xl mb-8">Overview</h1>
+      <ReadinessPanel base={readinessRows} />
       <TisasngStatusCard />
 
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-ink/10 border border-ink/10 mb-6">
@@ -140,6 +148,115 @@ function AdminOverview() {
             ))}
           </ul>
         </section>      </div>
+    </div>
+  );
+}
+
+/**
+ * Production-readiness strip. Everything here is an operational fact the
+ * house acts on — configuration presence (never key values) and the four
+ * catalogue-quality queues that need attention before a product earns
+ * customer trust.
+ */
+function ReadinessPanel({ base }: { base: Array<{ label: string; value: string }> }) {
+  const [readiness, setReadiness] = useState<Awaited<ReturnType<typeof adminReadiness>> | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    adminCall(adminReadiness)
+      .then(setReadiness)
+      .catch(() => setFailed(true));
+  }, []);
+
+  const flag = (ok: boolean, okText: string, badText: string) => (
+    <span className={ok ? "text-forest font-medium" : "text-oxblood font-medium"}>
+      {ok ? okText : badText}
+    </span>
+  );
+
+  const rows: Array<{ label: string; value: React.ReactNode; note?: string; href?: string }> = [
+    ...base.map((r) => ({ label: r.label, value: <span className="text-forest font-medium">{r.value}</span> as React.ReactNode })),
+    {
+      label: "PAYSTACK",
+      value: readiness
+        ? flag(readiness.paystackConfigured, "Connected", "Not Connected")
+        : <span className="text-stone">Checking…</span>,
+      note: readiness?.paystackConfigured
+        ? undefined
+        : "Set PAYSTACK_SECRET_KEY in the Netlify environment — online payment switches on automatically, no code change.",
+    },
+    {
+      label: "AI ASSISTANT",
+      value: readiness
+        ? flag(readiness.aiTextConfigured, "Connected", "Fallback Mode")
+        : <span className="text-stone">Checking…</span>,
+      note: readiness?.aiTextConfigured
+        ? undefined
+        : "The assistant works from the live catalogue in fallback mode. Add NETLIFY_AI_GATEWAY_KEY and NETLIFY_AI_GATEWAY_BASE_URL to enable AI-written advice.",
+    },
+    {
+      label: "AI CONCEPT GENERATION",
+      value: readiness
+        ? flag(readiness.aiConceptConfigured, "Connected", "Unavailable")
+        : <span className="text-stone">Checking…</span>,
+      note: readiness?.aiConceptConfigured
+        ? undefined
+        : "Concept sketches need the AI Gateway credentials above.",
+    },
+    {
+      label: "PRODUCTS PUBLISHED",
+      value: readiness ? String(readiness.published) : "…",
+    },
+    {
+      label: "NEEDS CATEGORY CONFIRMATION",
+      value: readiness ? String(readiness.needsCategoryConfirmationCount) : "…",
+      href: "/admin/products",
+      note: "Ambiguous pieces awaiting an admin collection decision — never auto-guessed.",
+    },
+    {
+      label: "UNASSIGNED MEDIA",
+      value: readiness ? String(readiness.unassignedMedia) : "…",
+      href: "/admin/media",
+      note: "Uploaded product images not yet attached to a product. Nothing is lost — assign or re-categorise them.",
+    },
+    {
+      label: "PRODUCTS MISSING IMAGE",
+      value: readiness ? String(readiness.productsMissingImage) : "…",
+      href: "/admin/products",
+      note: "Published pieces whose only imagery is the 'coming soon' placeholder.",
+    },
+    {
+      label: "WAITING FOR CHECKOUT APPROVAL",
+      value: readiness ? String(readiness.awaitingCheckoutApproval) : "…",
+      href: "/admin/products",
+      note: "Published pieces not yet approved for checkout — customers see 'Request a Quote'.",
+    },
+  ];
+
+  return (
+    <div className="border border-ink/10 mb-10">
+      <p className="overline-label px-5 pt-4 pb-3">Production Readiness</p>
+      <dl className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 border-t border-ink/10">
+        {rows.map((r) => (
+          <div key={r.label} className="px-5 py-4 border-b border-ink/5 sm:border-r last:border-r-0">
+            <dt className="text-[0.62rem] uppercase tracking-btn text-stone">{r.label}</dt>
+            <dd className="text-sm mt-1">
+              {r.href ? (
+                <a href={r.href} className="hover:underline">
+                  {r.value}
+                </a>
+              ) : (
+                r.value
+              )}
+            </dd>
+            {r.note && <p className="text-[0.62rem] text-stone mt-1 leading-snug">{r.note}</p>}
+          </div>
+        ))}
+      </dl>
+      {failed && (
+        <p className="text-xs text-stone px-5 py-2 border-t border-ink/5">
+          Readiness figures unavailable right now.
+        </p>
+      )}
     </div>
   );
 }

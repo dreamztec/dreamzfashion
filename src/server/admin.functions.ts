@@ -10,6 +10,7 @@ import {
   corporateQuotes,
   designRequests,
   feedback,
+  mediaAssets,
   orderEvents,
   orderItems,
   orders,
@@ -212,6 +213,78 @@ export const adminOverview = createServerFn({ method: "GET" }).handler(async () 
       status: o.status,
       createdAt: o.createdAt?.toISOString() ?? null,
     })),
+  };
+});
+
+// ── Production readiness (operational status, never secret values) ──
+
+/**
+ * Compact production-readiness snapshot for the admin overview. Every figure
+ * is an operational fact a store manager acts on: configuration booleans
+ * (never key values), catalogue-quality counts and media-queue counts.
+ */
+export const adminReadiness = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdminRole(["owner", "sales", "operations"]);
+
+  const rows = await db
+    .select({
+      id: products.id,
+      tier: products.tier,
+      price: products.price,
+      colors: products.colors,
+      status: products.status,
+      checkoutReady: products.checkoutReady,
+    })
+    .from(products);
+  const imgRows = await db
+    .select({ productId: productImages.productId, url: productImages.url })
+    .from(productImages);
+  const displayableByProduct = new Map<number, number>();
+  for (const im of imgRows) {
+    if (isDisplayableImageUrl(im.url)) {
+      displayableByProduct.set(im.productId, (displayableByProduct.get(im.productId) ?? 0) + 1);
+    }
+  }
+
+  const { needsCategoryConfirmation } = await import("../lib/collection");
+  let needsConfirmationCount = 0;
+  let productsMissingImage = 0;
+  let awaitingCheckoutApproval = 0;
+  for (const p of rows) {
+    if (p.status !== "archived") {
+      const review = needsCategoryConfirmation({
+        storedTier: p.tier,
+        colorsCount: (p.colors ?? []).length || null,
+        priceKobo: p.price,
+      });
+      if (review.needs) needsConfirmationCount += 1;
+    }
+    if (p.status === "published") {
+      if ((displayableByProduct.get(p.id) ?? 0) === 0) productsMissingImage += 1;
+      if (!p.checkoutReady) awaitingCheckoutApproval += 1;
+    }
+  }
+  const [unassignedMedia] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(mediaAssets)
+    .where(sql`${mediaAssets.category} = 'PRODUCT' AND ${mediaAssets.productId} IS NULL`);
+
+  return {
+    // Configuration booleans only — a key's PRESENCE, never its value.
+    paystackConfigured: Boolean(process.env.PAYSTACK_SECRET_KEY),
+    aiTextConfigured: Boolean(
+      process.env.NETLIFY_AI_GATEWAY_KEY && process.env.NETLIFY_AI_GATEWAY_BASE_URL,
+    ),
+    // Concept generation uses the same gateway; "unavailable" reads honestly
+    // while it is absent.
+    aiConceptConfigured: Boolean(
+      process.env.NETLIFY_AI_GATEWAY_KEY && process.env.NETLIFY_AI_GATEWAY_BASE_URL,
+    ),
+    published: rows.filter((p) => p.status === "published").length,
+    needsCategoryConfirmationCount: needsConfirmationCount,
+    unassignedMedia: unassignedMedia?.count ?? 0,
+    productsMissingImage,
+    awaitingCheckoutApproval,
   };
 });
 

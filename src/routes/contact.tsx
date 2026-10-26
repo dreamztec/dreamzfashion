@@ -85,7 +85,7 @@ function ContactPage() {
           <li>
             <strong className="text-ink">Bespoke commissions</strong> — begin on the{" "}
             <Link to="/royale" className="underline hover:text-ink">
-              Bespoke page
+              Royale page
             </Link>{" "}
             or describe your idea in the{" "}
             <Link to="/custom" className="underline hover:text-ink">
