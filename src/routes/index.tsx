@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { getHomeSelectionFn, getSiteSettings } from "@/server/catalog.functions";
+import { getFrontOriginalsFn, getHomeSelectionFn, getSiteSettings } from "@/server/catalog.functions";
 import { ProductMedia, RainbowRule } from "@/components/brand";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
@@ -8,8 +8,8 @@ import { WaitlistSignup } from "@/components/WaitlistSignup";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const [settings, selection] = await Promise.all([getSiteSettings(), getHomeSelectionFn()]);
-    return { settings, ...selection };
+    const [settings, selection, frontOriginals] = await Promise.all([getSiteSettings(), getHomeSelectionFn(), getFrontOriginalsFn()]);
+    return { settings, frontOriginals, ...selection };
   },
   head: () => ({
     meta: [
@@ -28,9 +28,10 @@ const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size:
 type HomeProduct = Awaited<ReturnType<typeof getHomeSelectionFn>>["hero"];
 
 function Home() {
-  const { settings, hero, collectionPreviews, accessoriesPreview, total } = Route.useLoaderData() as {
+  const { settings, hero, frontOriginals, collectionPreviews, accessoriesPreview, total } = Route.useLoaderData() as {
     settings: Record<string, unknown>;
     hero: HomeProduct;
+    frontOriginals: Array<NonNullable<HomeProduct>>;
     collectionPreviews: { essentials: HomeProduct; originals: HomeProduct; royale: HomeProduct };
     accessoriesPreview: HomeProduct;
     total: number;
@@ -102,6 +103,58 @@ function Home() {
           </div>
         )}
       </section>
+
+      {/* ── Curated Originals — explicit house order, never inferred ── */}
+      {frontOriginals.length > 0 && (
+        <section className="border-t border-ink/10 bg-ivory">
+          <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-20">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-9">
+              <div>
+                <p className="overline-label mb-3">DREAMZ Originals</p>
+                <h2 className="font-editorial text-3xl sm:text-4xl">The front edit</h2>
+                <p className="text-sm text-stone mt-3 max-w-xl">
+                  House-selected Originals shown in the order DREAMZ has approved.
+                </p>
+              </div>
+              <Link
+                to="/shop/$category"
+                params={{ category: "originals" }}
+                search={CATEGORY_SEARCH}
+                className="nav-link text-[0.68rem] uppercase tracking-btn"
+              >
+                Shop all Originals →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
+              {frontOriginals.map((product) => {
+                const photo = product.images.find((i) => i.kind !== "lifestyle") ?? product.images[0] ?? null;
+                return (
+                  <Link
+                    key={product.id}
+                    to="/product/$slug"
+                    params={{ slug: product.slug }}
+                    className="group block"
+                  >
+                    <ProductMedia
+                      url={photo?.url ?? null}
+                      alt={photo?.altText ?? product.name}
+                      aspect="aspect-[4/5]"
+                      width={720}
+                      sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
+                      fit="contain"
+                    />
+                    <p className="mt-3 text-[0.62rem] uppercase tracking-btn text-gold-soft">Originals</p>
+                    <h3 className="font-editorial text-base sm:text-lg leading-tight mt-1">{product.name}</h3>
+                    <p className="text-xs text-stone mt-1">
+                      {product.price > 0 && product.checkoutReady ? formatNaira(product.price) : "Request price"}
+                    </p>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── The three collections ───────────────────────────── */}
       <section className="bg-ivory-deep">
