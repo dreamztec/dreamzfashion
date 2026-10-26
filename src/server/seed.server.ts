@@ -295,26 +295,22 @@ async function runSeed() {
           "Complete Package includes fast-track production and doorstep delivery anywhere in Nigeria within 7 days.",
       },
       {
+        // Retired presentation (now the Legacy Strap Loafer, DFK-ORG-022 in
+        // the locked Originals front edit). Kept only so the SKU is not
+        // reused; the row is archived.
         sku: "DFK-FTW-011",
         productLine: "originals",
         name: "Lightning Strap Loafer",
         slug: "lightning-strap-loafer",
         categorySlug: "footwear",
         subcategory: "Loafers",
-        price: 6375000,
-        completePackagePrice: 8500000,
-        packageContents: STANDARD_PACKAGE_CONTENTS,
-        shortDescription: "Bold by Design. Made to Lead.",
-        fullDescription:
-          "A black loafer with the signature star strap detail — expertly crafted with precision for a superior finish. Built for comfort, stability and effortless sophistication.",
+        price: 0,
+        shortDescription: "Superseded by the Legacy Strap Loafer.",
+        fullDescription: "This presentation was superseded by the Legacy Strap Loafer in the DREAMZ Originals front edit.",
         colors: ["Black"],
-        sizes: SHOE_SIZES,
-        stockQuantity: 14,
-        featured: true,
-        newArrival: true,
-        customizable: true,
-        deliveryInformation:
-          "Complete Package includes fast-track production and doorstep delivery anywhere in Nigeria within 7 days.",
+        sizes: [],
+        stockQuantity: 0,
+        status: "archived",
       },
       {
         // Price not yet confirmed by the brand — published as a draft.
@@ -530,7 +526,6 @@ async function runSeed() {
     { slug: "crimson-cross", sizes: SHOE_SIZES, colors: [], stock: 20, sku: "DFK-FTW-008" },
     { slug: "pinnacle-denim", sizes: SHOE_SIZES, colors: [], stock: 20, sku: "DFK-FTW-009" },
     { slug: "terra-cove", sizes: SHOE_SIZES, colors: [], stock: 18, sku: "DFK-FTW-010" },
-    { slug: "lightning-strap-loafer", sizes: SHOE_SIZES, colors: [], stock: 14, sku: "DFK-FTW-011" },
     { slug: "gentleman-complete-combo", sizes: SHOE_SIZES, colors: [], stock: 6, sku: "DFK-ACC-015" },
     { slug: "lagos-tassel", sizes: SHOE_SIZES, colors: [], stock: 14, sku: "DFK-FTW-016" },
     { slug: "verona-buckle-slide", sizes: SHOE_SIZES, colors: [], stock: 24, sku: "DFK-FTW-017" },

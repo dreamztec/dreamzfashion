@@ -20,6 +20,10 @@ const MIGRATION_PATH = path.resolve(
 const SEED_PATH = path.resolve(__dirname, "../src/server/seed.server.ts");
 
 const EXPECTED: Array<{ sku: string; slug: string; category: string; tier: string }> = [
+  // DFK-DFT-150 remains in the immutable staged-drafts migration, but it was
+  // FINALIZED by 20261026135913_originals-front-edit-ten-products: renamed to
+  // "Ascension Oxford" (DFK-ORG-025), priced and published. The finalize
+  // migration test below guards that supersession.
   { sku: "DFK-DFT-150", slug: "ascension-oxford-blue-black", category: "footwear", tier: "signature" },
   { sku: "DFK-DFT-151", slug: "woven-lightning-loafer-brown", category: "footwear", tier: "signature" },
   { sku: "DFK-DFT-152", slug: "buckle-slide-cream-brown", category: "footwear", tier: "essentials" },
@@ -40,7 +44,7 @@ const EXPECTED: Array<{ sku: string; slug: string; category: string; tier: strin
 ];
 
 describe("New-drop drafts (DFK-DFT-150 … DFK-DFT-166)", () => {
-  it("stages exactly 17 contiguous draft SKUs", () => {
+  it("stages exactly 17 contiguous draft SKUs (DFT-150 since finalized as DFK-ORG-025)", () => {
     expect(EXPECTED).toHaveLength(17);
     expect(new Set(EXPECTED.map((e) => e.sku)).size).toBe(17);
     expect(new Set(EXPECTED.map((e) => e.slug)).size).toBe(17);
@@ -67,11 +71,26 @@ describe("New-drop drafts (DFK-DFT-150 … DFK-DFT-166)", () => {
     expect(sql).toContain("ON CONFLICT");
     expect(sql).toContain("DO NOTHING");
     expect(sql).toContain("'draft'");
-    // Every row is unpriced with checkout disabled and zero stock.
+    // Every row is unpriced with checkout disabled and zero stock. The
+    // staged file is immutable and keeps all 17 rows; the finalize migration
+    // (20261026135913) supersedes DFT-150 afterwards.
     const draftRows = (sql.match(/0, 'draft', false/g) ?? []).length;
     expect(draftRows).toBe(17);
     expect(sql).not.toMatch(/checkout_ready[^,]*true/);
     expect(sql).not.toContain("'published'");
+  });
+
+  it("DFT-150 was finalized — priced, published and locked by the front-edit migration", () => {
+    const finalize = fs.readFileSync(
+      path.resolve(
+        __dirname,
+        "../netlify/database/migrations/20261026135913_originals-front-edit-ten-products/migration.sql",
+      ),
+      "utf-8",
+    );
+    expect(finalize).toContain("'ascension-oxford-blue-black'");
+    expect(finalize).toContain("'DFK-ORG-025'");
+    expect(finalize).toContain("'Ascension Oxford'");
   });
 
   it("bundles no imagery for the new drop", () => {
