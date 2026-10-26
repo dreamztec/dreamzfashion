@@ -45,6 +45,7 @@ function AdminSettings() {
     partnerTermsNote: "",
     partnerSelfBenefitBps: "0",
     partnerReturnWindowDays: "2",
+    partnerIntroductionBonus: "0",
     // Anniversary campaign
     anniversaryEnabled: true,
     anniversaryDate: "2027-06-12",
@@ -107,6 +108,7 @@ function AdminSettings() {
           partnerTermsNote: String(partners.termsNote ?? ""),
           partnerSelfBenefitBps: String(partners.selfPurchaseBenefitBps ?? 0),
           partnerReturnWindowDays: String(partners.returnWindowDays ?? 2),
+          partnerIntroductionBonus: String(Math.round(Number(partners.partnerIntroductionBonusKobo ?? 0) / 100)),
           anniversaryEnabled: anniversary.enabled !== false,
           anniversaryDate: String(anniversary.date ?? "2027-06-12"),
           anniversaryLabel: String(anniversary.label ?? "The Fifth Anniversary Collection"),
@@ -171,6 +173,7 @@ function AdminSettings() {
           termsNote: form.partnerTermsNote,
           selfPurchaseBenefitBps: Number(form.partnerSelfBenefitBps) || 0,
           returnWindowDays: Math.max(0, Number(form.partnerReturnWindowDays) || 0),
+          partnerIntroductionBonusKobo: Math.round((Number(form.partnerIntroductionBonus) || 0) * 100),
         },
         anniversary: {
           enabled: form.anniversaryEnabled,
@@ -352,6 +355,13 @@ function AdminSettings() {
           <div>
             <label className="input-lux-label">Partner Terms Note</label>
             <input className="input-lux" value={form.partnerTermsNote} onChange={set("partnerTermsNote")} />
+          </div>
+          <div>
+            <label className="input-lux-label">Productive Partner Introduction Bonus (₦)</label>
+            <input className="input-lux" type="number" min="0" value={form.partnerIntroductionBonus} onChange={set("partnerIntroductionBonus")} />
+            <p className="mt-1 text-xs text-stone">
+              Optional one-time reward after an introduced partner completes their first verified customer sale. 0 = disabled. No multi-level/downline rewards.
+            </p>
           </div>
           <div>
             <label className="input-lux-label">Return Window Before Eligible (days after delivery)</label>
