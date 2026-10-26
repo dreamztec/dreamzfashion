@@ -82,10 +82,28 @@ export const applyAsPartner = createServerFn({ method: "POST" })
 
     // One pending application per email: re-applying updates the existing row.
     const [existing] = await db
-      .select({ id: referrers.id })
+      .select({
+        id: referrers.id,
+        status: referrers.status,
+        code: referrers.code,
+        partnerPlan: referrers.partnerPlan,
+        membershipPaymentStatus: referrers.membershipPaymentStatus,
+      })
       .from(referrers)
       .where(eq(referrers.email, data.email.toLowerCase()))
       .limit(1);
+    if (existing && existing.status === "approved") {
+      const existingPlan = getPartnerPlan(existing.partnerPlan);
+      return {
+        ok: true as const,
+        resubmitted: true,
+        applicationCode: existing.code,
+        planId: existingPlan.id,
+        planName: existingPlan.name,
+        feeKobo: existingPlan.feeKobo,
+        paymentRequested: existingPlan.feeKobo > 0 && !["paid", "waived"].includes(existing.membershipPaymentStatus),
+      };
+    }
     if (existing) {
       await db
         .update(referrers)
