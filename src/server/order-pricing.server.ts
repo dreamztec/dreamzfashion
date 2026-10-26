@@ -176,6 +176,7 @@ export type PartnerSettingsFull = {
   termsNote: string;
   selfPurchaseBenefitBps: number;
   returnWindowDays: number;
+  partnerIntroductionBonusKobo: number;
 };
 
 export async function getPartnerSettingsFull(): Promise<PartnerSettingsFull> {
@@ -188,6 +189,9 @@ export async function getPartnerSettingsFull(): Promise<PartnerSettingsFull> {
     selfPurchaseBenefitBps: Number(s.selfPurchaseBenefitBps ?? 0) || 0,
     // Returns policy: faults reported within 48 hours of delivery.
     returnWindowDays: s.returnWindowDays == null ? 2 : Number(s.returnWindowDays) || 0,
+    // Optional one-time reward for introducing a partner who then makes their
+    // first verified customer sale. Zero means disabled; there is no downline.
+    partnerIntroductionBonusKobo: Number(s.partnerIntroductionBonusKobo ?? 0) || 0,
   };
 }
 
