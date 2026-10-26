@@ -33,6 +33,12 @@ export const products = pgTable(
     categorySlug: text("category_slug").notNull(),
     subcategory: text("subcategory"),
     collection: text("collection"),
+    // Once the house approves a product's home collection, automatic
+    // suggestions must never move it. Admin can deliberately unlock/change it.
+    collectionLocked: boolean("collection_locked").notNull().default(false),
+    // Explicit merchandising order for the front-page Originals edit.
+    // null = not in the curated front edit.
+    frontOriginalRank: integer("front_original_rank"),
     price: integer("price").notNull(), // kobo — "Product Only" price
     completePackagePrice: integer("complete_package_price"), // kobo — "Complete Package" price; null = single-price product
     packageContents: jsonb("package_contents").$type<string[]>().notNull().default([]),
