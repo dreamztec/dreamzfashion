@@ -38,7 +38,7 @@ const SPREADS = [
     title: "The Occasion",
     body: "When the room matters, the details speak first. Refined essentials, effortless distinction.",
     ctaTo: "/royale",
-    ctaLabel: "Commission Bespoke",
+    ctaLabel: "Commission Royale",
   },
 ] as const;
 

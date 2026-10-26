@@ -192,8 +192,8 @@ export function DesignAssistant() {
             message={`Hello ${BRAND.shortName}, I have submitted Design Request ${submitted.requestNumber} through the Design Lab and would like to continue the consultation.`}
             label="Continue on WhatsApp"
           />
-          <Link to="/bespoke" className="btn-lux btn-lux-outline">
-            Book a Bespoke Consultation
+          <Link to="/royale" className="btn-lux btn-lux-outline">
+            Continue into Royale
           </Link>
         </div>
       </div>

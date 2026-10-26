@@ -383,11 +383,15 @@ function AdminSettings() {
           </div>
         </div>
 
-        <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Payments</h2>
+        <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Payment Status</h2>
         <p className="text-xs text-stone -mt-2">
+          Paystack:{" "}
+          <span className={form.paymentConfigured ? "text-forest font-medium" : "text-oxblood font-medium"}>
+            {form.paymentConfigured ? "Connected" : "Not Connected"}
+          </span>
           {form.paymentConfigured
-            ? "Paystack credentials detected. Live/test mode is whatever your Paystack dashboard keys control — verify with a small real transaction before launch."
-            : "PAYSTACK_SECRET_KEY is not set on this deployment — online payment is disabled and checkout asks customers to complete orders on WhatsApp. No fake payment success is ever shown."}
+            ? " — live/test mode is whatever your Paystack dashboard keys control. Verify with a small real transaction before launch."
+            : " — PAYSTACK_SECRET_KEY is missing from this deployment. Checkout shows an honest Order Request (nothing is charged); online payment switches on automatically once the key is added. No code change needed."}
         </p>
 
         <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Delivery</h2>

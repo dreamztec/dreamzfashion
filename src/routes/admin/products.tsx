@@ -404,6 +404,35 @@ function AdminProducts() {
   };
 
   const setStatus = async (id: number, status: "draft" | "published" | "archived") => {
+    // Publishing safety review: a piece goes live only after the admin sees
+    // (and explicitly accepts) any gaps in the record. Nothing is invented
+    // and no gap is silently published.
+    if (status === "published") {
+      const p = products.find((x) => x.id === id);
+      if (p) {
+        const gaps: string[] = [];
+        const hasImage = (p.gallery ?? []).some((g) => isDisplayableImageUrl(g.url));
+        if (!hasImage) gaps.push("no approved product image (customers will see “Image coming soon”)");
+        if ((p.colors ?? []).length === 0) gaps.push("no colour data");
+        if (p.price <= 0 && p.checkoutReady) gaps.push("no price while checkout is approved — customers will see “Request a Quote”");
+        if (p.stockQuantity <= 0 && p.availability === "available") gaps.push("zero stock while marked Available");
+        if (!p.checkoutReady) gaps.push("not approved for checkout (quote-only presentation)");
+        const review = needsCategoryConfirmation({
+          storedTier: p.tier,
+          colorsCount: (p.colors ?? []).length || null,
+          priceKobo: p.price,
+        });
+        if (review.needs) gaps.push(`collection not confirmed (${review.reason ?? "ambiguous"})`);
+        if (
+          gaps.length > 0 &&
+          !window.confirm(
+            `Publishing “${p.name}” with open items:\n\n• ${gaps.join("\n• ")}\n\nPublish anyway? Nothing is invented — you can fix these after publishing.`,
+          )
+        ) {
+          return;
+        }
+      }
+    }
     await adminCall(adminSetProductStatus, { id, status });
     await load();
   };

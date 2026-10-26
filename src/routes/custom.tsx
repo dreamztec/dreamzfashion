@@ -166,7 +166,7 @@ function Custom() {
 
         <div className="text-center mt-16">
           <Link to="/royale" className="btn-lux btn-lux-outline">
-            Prefer a full bespoke commission? Visit Bespoke
+            Prefer a full bespoke commission? Visit Royale
           </Link>
         </div>
       </div>
