@@ -7,7 +7,7 @@ import {
   settings,
   type Product,
 } from "../../db/schema";
-import { and, asc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNotNull, like, ne, or, sql } from "drizzle-orm";
 import { isDisplayableImageUrl } from "../lib/img";
 import { TIER_LABELS, normalizeTier } from "../lib/format";
 
@@ -90,6 +90,23 @@ export function isPurchasable(p: Pick<Product, "price" | "checkoutReady">): bool
   // Bespoke-tier pieces priced after review carry no price yet and fall out
   // naturally (price 0 → "Request a quote"). Verified prices are preserved.
   return p.price > 0 && p.checkoutReady;
+}
+
+/** Explicit DREAMZ merchandising order for the homepage Originals edit. */
+export async function getFrontOriginals(): Promise<ProductWithMedia[]> {
+  const rows = await db
+    .select()
+    .from(products)
+    .where(
+      and(
+        eq(products.status, "published"),
+        eq(products.tier, "originals"),
+        isNotNull(products.frontOriginalRank),
+      ),
+    )
+    .orderBy(asc(products.frontOriginalRank), asc(products.id))
+    .limit(10);
+  return attachMedia(rows);
 }
 
 export async function getPublishedProducts(opts?: {
