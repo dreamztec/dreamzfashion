@@ -818,8 +818,11 @@ const SettingsSchema = z.object({
       selfPurchaseBenefitBps: z.number().int().min(0).max(5_000).default(0),
       // Days after delivery before a commission becomes eligible.
       returnWindowDays: z.number().int().min(0).max(120).default(2),
+      // One-time reward for introducing a partner who completes a first
+      // verified customer sale. Zero disables it; never cascades to a downline.
+      partnerIntroductionBonusKobo: z.number().int().min(0).default(0),
     })
-    .default({ commissionBps: 0, payoutThresholdKobo: 0, attributionWindowDays: 30, termsNote: "", selfPurchaseBenefitBps: 0, returnWindowDays: 2 }),
+    .default({ commissionBps: 0, payoutThresholdKobo: 0, attributionWindowDays: 30, termsNote: "", selfPurchaseBenefitBps: 0, returnWindowDays: 2, partnerIntroductionBonusKobo: 0 }),
   anniversary: z
     .object({
       enabled: z.boolean(),
@@ -908,6 +911,10 @@ export const adminGetSettings = createServerFn({ method: "GET" }).handler(async 
       termsNote: typeof partnersRow?.termsNote === "string" ? partnersRow.termsNote : "",
       selfPurchaseBenefitBps: typeof partnersRow?.selfPurchaseBenefitBps === "number" ? partnersRow.selfPurchaseBenefitBps : 0,
       returnWindowDays: typeof partnersRow?.returnWindowDays === "number" ? partnersRow.returnWindowDays : 2,
+      partnerIntroductionBonusKobo:
+        typeof partnersRow?.partnerIntroductionBonusKobo === "number"
+          ? partnersRow.partnerIntroductionBonusKobo
+          : 0,
     },
     anniversary: {
       enabled: anniversaryRow?.enabled !== false,
