@@ -8,7 +8,7 @@ import { AuthProvider } from "@/lib/auth-client";
 import { getSiteSettings } from "@/server/catalog.functions";
 import { useSiteSettings } from "@/store/settings";
 import { BRAND, SITE_URL } from "@/lib/config";
-import { COMPANY } from "@/lib/contact";
+import { COMPANY, CONTACT } from "@/lib/contact";
 import { useEffect } from "react";
 import "../styles.css";
 // Self-hosted fonts (was: render-blocking Google Fonts stylesheet). Only the
@@ -29,6 +29,10 @@ const organizationJsonLd = {
   name: COMPANY.legalName,
   alternateName: BRAND.name,
   url: SITE_URL,
+  logo: {
+    "@type": "ImageObject",
+    url: `${SITE_URL}/img/dfk-logo-mark.jpg`,
+  },
   foundingDate: "2025-01-13",
   address: {
     "@type": "PostalAddress",
@@ -37,7 +41,7 @@ const organizationJsonLd = {
   contactPoint: [
     {
       "@type": "ContactPoint",
-      telephone: "+2349038560517",
+      telephone: `+${CONTACT.whatsappNumber}`,
       contactType: "customer service",
       availableLanguage: ["en"],
     },
