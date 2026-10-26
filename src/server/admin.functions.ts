@@ -248,6 +248,7 @@ export const adminReadiness = createServerFn({ method: "GET" }).handler(async ()
       colors: products.colors,
       status: products.status,
       checkoutReady: products.checkoutReady,
+      collectionLocked: products.collectionLocked,
     })
     .from(products);
   const imgRows = await db
@@ -271,7 +272,7 @@ export const adminReadiness = createServerFn({ method: "GET" }).handler(async ()
         colorsCount: (p.colors ?? []).length || null,
         priceKobo: p.price,
       });
-      if (review.needs) needsConfirmationCount += 1;
+      if (!p.collectionLocked && review.needs) needsConfirmationCount += 1;
     }
     if (p.status === "published") {
       if ((displayableByProduct.get(p.id) ?? 0) === 0) productsMissingImage += 1;
@@ -333,6 +334,8 @@ const ProductInputSchema = z.object({
   homepageHero: z.boolean().default(false),
   customizable: z.boolean().default(false),
   productLine: z.enum(["essentials", "originals", "royale"]).default("essentials"),
+  collectionLocked: z.boolean().default(false),
+  frontOriginalRank: z.number().int().min(1).max(100).nullable().optional(),
   // Customer-facing collection — independent of packaging. Legacy values are
   // accepted for compatibility and stored under the new names.
   tier: z
@@ -389,6 +392,13 @@ export const adminSaveProduct = createServerFn({ method: "POST" })
       returnsTerms: values.returnsTerms || null,
       careInformation: values.careInformation || null,
       deliveryInformation: values.deliveryInformation || null,
+      collection:
+        values.tier === "originals"
+          ? "DREAMZ Originals"
+          : values.tier === "royale"
+            ? "DREAMZ Royale"
+            : "DREAMZ Essentials",
+      productLine: values.tier,
       updatedAt: new Date(),
     };
 
@@ -509,9 +519,21 @@ export const adminSetProductCollection = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireAdminRole(["owner", "operations"]);
+    const collection =
+      data.tier === "originals"
+        ? "DREAMZ Originals"
+        : data.tier === "royale"
+          ? "DREAMZ Royale"
+          : "DREAMZ Essentials";
     await db
       .update(products)
-      .set({ tier: data.tier, updatedAt: new Date() })
+      .set({
+        tier: data.tier,
+        productLine: data.tier,
+        collection,
+        collectionLocked: true,
+        updatedAt: new Date(),
+      })
       .where(eq(products.id, data.id));
     return { ok: true };
   });
