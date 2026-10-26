@@ -334,7 +334,7 @@ const ProductInputSchema = z.object({
   homepageHero: z.boolean().default(false),
   customizable: z.boolean().default(false),
   productLine: z.enum(["essentials", "originals", "royale"]).default("essentials"),
-  collectionLocked: z.boolean().default(false),
+  collectionLocked: z.boolean().optional(),
   frontOriginalRank: z.number().int().min(1).max(100).nullable().optional(),
   // Customer-facing collection — independent of packaging. Legacy values are
   // accepted for compatibility and stored under the new names.
