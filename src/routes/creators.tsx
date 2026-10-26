@@ -13,7 +13,7 @@ export const Route = createFileRoute("/creators")({
       {
         name: "description",
         content:
-          "Become a DREAMZ creator — free to apply. Earn commission on qualifying sales, and collaborate on paid campaign tiers from Spark to Icon.",
+          "Sell DREAMZ through your audience. Start free as a Scout or choose an optional annual Partner Business Plan; creator campaign collaborations remain separate.",
       },
     ],
   }),
@@ -21,7 +21,7 @@ export const Route = createFileRoute("/creators")({
 });
 
 const STEPS: Array<[string, string]> = [
-  ["Apply to become a DREAMZ creator", "Free to apply. Tell us where you share and who you reach. No purchase is required."],
+  ["Choose how you want to sell", "Start free as a Scout, or choose an optional annual Partner Business Plan for additional tools and support."],
   ["Receive approval and your code", "Once approved you get a unique creator code (not case-sensitive) and a shareable link, with copy buttons in your dashboard."],
   ["Share samples and your link", "Share DREAMZ samples, products and custom designs with your audience, together with your code or link."],
   ["Customers order with your code", "Customers type your code at checkout, or arrive through your link. A code typed at checkout takes precedence over a link."],
@@ -104,7 +104,7 @@ function CreatorsPage() {
           </ul>
           <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
             <Link to="/earn" hash="apply" className="btn-lux btn-lux-primary">
-              Apply to become a creator
+              Join the Partner Network
             </Link>
             <Link to="/account/partner" className="btn-lux btn-lux-outline">
               Creator dashboard
@@ -120,11 +120,12 @@ function CreatorsPage() {
             <h2 className="font-editorial text-3xl sm:text-4xl">Seven ways to create with DREAMZ</h2>
             <div className="rule-gold mx-auto mt-6" />
             <p className="text-stone mt-6 max-w-2xl mx-auto leading-relaxed">
-              These are paid <strong>collaboration campaigns</strong> — what a
-              DREAMZ campaign with a creator costs. They are not joining fees:
-              applying to the creator programme is free, and no one ever pays to
-              become a seller. Creator selection depends on audience quality,
-              content quality, reach, conversion history and negotiated scope.
+              These are paid <strong>creator collaboration campaigns</strong> —
+              what DREAMZ may budget when engaging a creator for campaign work.
+              They are separate from the Partner Network: anyone can start selling
+              at the free Scout level, while optional annual Partner Business
+              Plans add tools and support. Creator selection depends on audience
+              quality, content quality, reach, conversion history and negotiated scope.
             </p>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">

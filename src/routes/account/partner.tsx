@@ -92,6 +92,22 @@ function PartnerDashboard() {
         </p>
       )}
 
+      <div className="grid gap-3 sm:grid-cols-4 mb-10">
+        <Stat label="Plan" value={data.membership.plan.replace(/\b\w/g, (m) => m.toUpperCase())} />
+        <Stat label="Selling" value={data.membership.sellingMode.replace(/\b\w/g, (m) => m.toUpperCase())} />
+        <Stat label="Payment" value={data.membership.paymentStatus.replace(/_/g, " ")} />
+        <Stat
+          label="Membership"
+          value={
+            data.membership.expiresAt
+              ? `Until ${new Date(data.membership.expiresAt).toLocaleDateString("en-NG")}`
+              : data.membership.plan === "scout"
+                ? "No expiry"
+                : "Pending activation"
+          }
+        />
+      </div>
+
       {/* Code + link */}
       <div className="border border-ink/10 px-6 py-6 mb-10">
         <div className="grid gap-6 sm:grid-cols-2">
@@ -137,6 +153,9 @@ function PartnerDashboard() {
             ? ` — it gives you a ${(data.terms.selfPurchaseBenefitBps / 100).toFixed(0)}% creator purchase benefit instead.`
             : "."}
           {data.terms.payoutThresholdKobo > 0 && ` Minimum payout: ${formatNaira(data.terms.payoutThresholdKobo)}.`}
+          {" "}DREAMZ Payday is <strong>{data.terms.payoutDay}</strong>.
+          {data.terms.partnerIntroductionBonusKobo > 0 &&
+            ` A one-time ${formatNaira(data.terms.partnerIntroductionBonusKobo)} introduction bonus becomes pending only when an introduced partner completes their first verified customer sale.`}
           {data.terms.termsNote && ` ${data.terms.termsNote}`}
         </p>
       </div>
@@ -291,8 +310,8 @@ function PayoutRequest({ eligibleKobo, threshold }: { eligibleKobo: number; thre
       </div>
       {error && <p role="alert" className="mt-2 text-xs text-oxblood">{error}</p>}
       <p className="mt-3 text-xs text-stone">
-        Payouts are reviewed by the house before any transfer — nothing moves
-        automatically.
+        Payout requests can be submitted when you qualify. DREAMZ reviews them
+        before transfer; cleared payouts are processed in the Wednesday payout cycle.
       </p>
     </form>
   );

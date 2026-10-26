@@ -6,6 +6,8 @@ import { db } from "../../db/index";
 import { partnerProfiles, products, referrers } from "../../db/schema";
 import { generateUniqueReferralCode } from "./referrals.server";
 import { isValidNigerianPhone } from "@/lib/format";
+import { getPartnerPlan } from "@/lib/partner-plans";
+import { normalizePartnerCode } from "@/lib/attribution";
 import { getCurrentCustomer } from "./auth.server";
 
 /**
@@ -16,7 +18,10 @@ import { getCurrentCustomer } from "./auth.server";
  */
 
 const ApplySchema = z.object({
-  track: z.enum(["referral", "creator", "trade"]),
+  sellingMode: z.enum(["digital", "physical", "both"]).default("digital"),
+  partnerPlan: z.enum(["scout", "starter", "builder", "pro", "growth", "executive", "prestige", "flagship"]).default("scout"),
+  physicalModel: z.enum(["undecided", "bulk", "credit", "commission"]).default("undecided"),
+  introducerCode: z.string().max(24).optional().or(z.literal("")),
   displayName: z.string().min(2).max(120),
   email: z.string().email().max(140),
   phone: z
@@ -57,44 +62,108 @@ export const applyAsPartner = createServerFn({ method: "POST" })
     // A signed-in customer applying becomes their own referrer record
     // (self-referral purchases never earn — guarded at payment time).
     const customer = await getCurrentCustomer().catch(() => null);
+    const plan = getPartnerPlan(data.partnerPlan);
+    // Digital sellers use the creator commission ledger; physical/both sellers
+    // use the trade ledger. Neither path creates a downline.
+    const track = data.sellingMode === "digital" ? "creator" : "trade";
+    const requestedIntroducer = normalizePartnerCode(data.introducerCode);
+    let introducerCode: string | null = null;
+    if (requestedIntroducer) {
+      const [introducer] = await db
+        .select({ id: referrers.id, email: referrers.email })
+        .from(referrers)
+        .where(eq(referrers.code, requestedIntroducer))
+        .limit(1);
+      if (introducer && introducer.email?.toLowerCase() !== data.email.toLowerCase()) {
+        introducerCode = requestedIntroducer;
+      }
+    }
+    const membershipPaymentStatus = plan.feeKobo > 0 ? "payment_requested" : "not_required";
 
     // One pending application per email: re-applying updates the existing row.
     const [existing] = await db
-      .select({ id: referrers.id })
+      .select({
+        id: referrers.id,
+        status: referrers.status,
+        code: referrers.code,
+        partnerPlan: referrers.partnerPlan,
+        membershipPaymentStatus: referrers.membershipPaymentStatus,
+      })
       .from(referrers)
       .where(eq(referrers.email, data.email.toLowerCase()))
       .limit(1);
+    if (existing && existing.status === "approved") {
+      const existingPlan = getPartnerPlan(existing.partnerPlan);
+      return {
+        ok: true as const,
+        resubmitted: true,
+        applicationCode: existing.code,
+        planId: existingPlan.id,
+        planName: existingPlan.name,
+        feeKobo: existingPlan.feeKobo,
+        paymentRequested: existingPlan.feeKobo > 0 && !["paid", "waived"].includes(existing.membershipPaymentStatus),
+      };
+    }
     if (existing) {
       await db
         .update(referrers)
         .set({
-          track: data.track,
+          track,
           displayName: data.displayName,
           phone: data.phone,
           socialProfile: data.socialProfile || null,
+          school: data.sellingMode === "digital" ? null : data.businessName || null,
           agreedTerms: true,
+          sellingMode: data.sellingMode,
+          partnerPlan: data.partnerPlan,
+          physicalModel: data.sellingMode === "digital" ? "undecided" : data.physicalModel,
+          membershipPaymentStatus,
+          membershipStartsAt: null,
+          membershipExpiresAt: null,
+          introducerCode,
           updatedAt: new Date(),
         })
         .where(eq(referrers.id, existing.id));
-      return { ok: true as const, resubmitted: true };
+      return {
+        ok: true as const,
+        resubmitted: true,
+        applicationCode: null,
+        planId: plan.id,
+        planName: plan.name,
+        feeKobo: plan.feeKobo,
+        paymentRequested: plan.feeKobo > 0,
+      };
     }
 
     const code = await generateUniqueReferralCode();
     await db.insert(referrers).values({
       code,
-      track: data.track,
-      // New partner types sit in review; status stays pending until the
-      // house approves. Customer link is attached when signed in.
+      track,
+      // Every application sits in review. Paid plans start their 365-day term
+      // only after DREAMZ records the membership payment as paid/waived.
       customerId: customer?.id ?? null,
       status: "pending",
       displayName: data.displayName,
       email: data.email.toLowerCase(),
       phone: data.phone,
-      school: data.track === "trade" ? data.businessName || null : null,
+      school: data.sellingMode === "digital" ? null : data.businessName || null,
       socialProfile: data.socialProfile || null,
       agreedTerms: true,
+      sellingMode: data.sellingMode,
+      partnerPlan: data.partnerPlan,
+      physicalModel: data.sellingMode === "digital" ? "undecided" : data.physicalModel,
+      membershipPaymentStatus,
+      introducerCode,
     });
-    return { ok: true as const, resubmitted: false };
+    return {
+      ok: true as const,
+      resubmitted: false,
+      applicationCode: code,
+      planId: plan.id,
+      planName: plan.name,
+      feeKobo: plan.feeKobo,
+      paymentRequested: plan.feeKobo > 0,
+    };
   });
 
 // ── Partner dashboard (identity-gated to their own records) ──────────

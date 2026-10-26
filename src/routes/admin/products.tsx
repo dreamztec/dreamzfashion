@@ -417,11 +417,13 @@ function AdminProducts() {
         if (p.price <= 0 && p.checkoutReady) gaps.push("no price while checkout is approved — customers will see “Request a Quote”");
         if (p.stockQuantity <= 0 && p.availability === "available") gaps.push("zero stock while marked Available");
         if (!p.checkoutReady) gaps.push("not approved for checkout (quote-only presentation)");
-        const review = needsCategoryConfirmation({
-          storedTier: p.tier,
-          colorsCount: (p.colors ?? []).length || null,
-          priceKobo: p.price,
-        });
+        const review = (p as { collectionLocked?: boolean }).collectionLocked
+          ? { needs: false, reason: null }
+          : needsCategoryConfirmation({
+              storedTier: p.tier,
+              colorsCount: (p.colors ?? []).length || null,
+              priceKobo: p.price,
+            });
         if (review.needs) gaps.push(`collection not confirmed (${review.reason ?? "ambiguous"})`);
         if (
           gaps.length > 0 &&
@@ -453,11 +455,13 @@ function AdminProducts() {
     .filter((p) => p.status !== "archived")
     .map((p) => ({
       product: p,
-      review: needsCategoryConfirmation({
-        storedTier: p.tier,
-        colorsCount: (p.colors ?? []).length || null,
-        priceKobo: p.price,
-      }),
+      review: (p as { collectionLocked?: boolean }).collectionLocked
+        ? { needs: false, reason: null }
+        : needsCategoryConfirmation({
+            storedTier: p.tier,
+            colorsCount: (p.colors ?? []).length || null,
+            priceKobo: p.price,
+          }),
     }))
     .filter((x) => x.review.needs);
 
@@ -1090,11 +1094,13 @@ function AdminProducts() {
           </thead>
           <tbody className="divide-y divide-ink/10">
             {products.map((p) => {
-              const review = needsCategoryConfirmation({
-                storedTier: p.tier,
-                colorsCount: (p.colors ?? []).length || null,
-                priceKobo: p.price,
-              });
+              const review = (p as { collectionLocked?: boolean }).collectionLocked
+                ? { needs: false, reason: null }
+                : needsCategoryConfirmation({
+                    storedTier: p.tier,
+                    colorsCount: (p.colors ?? []).length || null,
+                    priceKobo: p.price,
+                  });
               return (
                 <tr key={p.id}>
                   <td className="px-4 py-3">

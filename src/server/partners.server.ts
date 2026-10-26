@@ -107,6 +107,20 @@ export async function recordVerifiedCommission(
   const amountKobo = bpsOf(basis, settings.commissionBps);
   if (amountKobo <= 0) return { created: false, reason: "zero_amount" };
 
+  // A partner-introduction bonus can fire only on this seller's first
+  // non-reversed customer-sale commission. This is deliberately single-level:
+  // we inspect only this partner's introducerCode and never recurse upward.
+  const [priorProductiveSales] = await db
+    .select({
+      count: sql<number>`count(*) FILTER (
+        WHERE ${commissions.referrerId} = ${referrer.id}
+          AND ${commissions.rateBps} > 0
+          AND ${commissions.status} != 'reversed'
+      )::int`,
+    })
+    .from(commissions);
+  const firstProductiveSale = Number(priorProductiveSales?.count ?? 0) === 0;
+
   // Idempotency: the (order, partner) unique index makes duplicate payment
   // events (verify + webhook, retries) a no-op.
   const inserted = await db
@@ -124,6 +138,38 @@ export async function recordVerifiedCommission(
     .onConflictDoNothing({ target: [commissions.orderId, commissions.referrerId] })
     .returning();
   if (inserted.length === 0) return { created: false, reason: "duplicate" };
+
+  if (
+    firstProductiveSale &&
+    referrer.introducerCode &&
+    settings.partnerIntroductionBonusKobo > 0
+  ) {
+    const [introducer] = await db
+      .select({ id: referrers.id, code: referrers.code })
+      .from(referrers)
+      .where(
+        and(
+          sql`upper(${referrers.code}) = ${referrer.introducerCode.toUpperCase()}`,
+          eq(referrers.status, "approved"),
+        ),
+      )
+      .limit(1);
+    if (introducer && introducer.id !== referrer.id) {
+      await db
+        .insert(commissions)
+        .values({
+          referrerId: introducer.id,
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          orderTotalKobo: basis,
+          rateBps: 0,
+          amountKobo: settings.partnerIntroductionBonusKobo,
+          status: "pending",
+          note: `One-time productive partner introduction bonus — ${referrer.code} first verified customer sale`,
+        })
+        .onConflictDoNothing({ target: [commissions.orderId, commissions.referrerId] });
+    }
+  }
 
   const { referralAttributions } = await import("../../db/schema");
   await db
@@ -304,6 +350,16 @@ export async function getPartnerDashboard(referrerId: number) {
     status: partner.status,
     track: partner.track,
     displayName: partner.displayName,
+    membership: {
+      sellingMode: partner.sellingMode,
+      plan: partner.partnerPlan,
+      physicalModel: partner.physicalModel,
+      paymentStatus: partner.membershipPaymentStatus,
+      startsAt: partner.membershipStartsAt?.toISOString() ?? null,
+      expiresAt: partner.membershipExpiresAt?.toISOString() ?? null,
+      introducerCode: partner.introducerCode,
+      payoutDay: "Wednesday",
+    },
     profile: profile
       ? {
           storeName: profile.storeName,
@@ -357,6 +413,8 @@ export async function getPartnerDashboard(referrerId: number) {
       rateLabel: formatRate(settings.commissionBps),
       returnWindowDays: settings.returnWindowDays,
       selfPurchaseBenefitBps: settings.selfPurchaseBenefitBps,
+      partnerIntroductionBonusKobo: settings.partnerIntroductionBonusKobo,
+      payoutDay: "Wednesday",
     },
   };
 }
