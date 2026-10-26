@@ -48,7 +48,7 @@ export const Route = createFileRoute("/shop/")({
       { title: `Shop — ${BRAND.name}` },
       {
         name: "description",
-        content: `Browse DREAMZ leather footwear, bags and accessories — Essentials, Signature and Bespoke.`,
+        content: `Browse DREAMZ leather footwear, bags and accessories — Essentials, Originals and Royale.`,
       },
     ],
   }),

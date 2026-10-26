@@ -84,7 +84,7 @@ function RoyalePage() {
             <Link to="/royale/request" className="btn-lux btn-lux-gold">
               Start a Design
             </Link>
-            <Link to="/bespoke" className="btn-lux text-ivory border border-ivory/40 hover:border-ivory">
+            <Link to="/royale/request" className="btn-lux text-ivory border border-ivory/40 hover:border-ivory">
               Bespoke Request
             </Link>
           </div>

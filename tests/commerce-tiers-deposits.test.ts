@@ -4,31 +4,32 @@ import { tierFromProductLine, normalizeTier, TIER_LABELS } from "../src/lib/form
 
 /**
  * Tier + quote-only semantics of the rebuilt platform:
- *  - three customer-facing tiers (Essentials / Signature / Bespoke)
+ *  - three customer-facing collections (Essentials / Originals / Royale)
  *  - unpriced or admin-gated products are quote-only, never buyable
- *  - legacy product lines map onto the tiers without losing data
+ *  - legacy product lines and stored values map onto the collections
  */
 
 describe("Tier system", () => {
-  it("legacy product lines map onto customer-facing tiers", () => {
+  it("legacy product lines map onto customer-facing collections", () => {
     expect(tierFromProductLine("essentials")).toBe("essentials");
-    expect(tierFromProductLine("originals")).toBe("signature");
-    expect(tierFromProductLine("royale")).toBe("bespoke");
+    expect(tierFromProductLine("originals")).toBe("originals");
+    expect(tierFromProductLine("royale")).toBe("royale");
     expect(tierFromProductLine(null)).toBe("essentials");
   });
 
-  it("normalizeTier only accepts the three tiers", () => {
-    expect(normalizeTier("signature")).toBe("signature");
-    expect(normalizeTier("bespoke")).toBe("bespoke");
+  it("normalizeTier maps legacy values onto the new collections", () => {
     expect(normalizeTier("essentials")).toBe("essentials");
+    expect(normalizeTier("signature")).toBe("originals");
+    expect(normalizeTier("originals")).toBe("originals");
+    expect(normalizeTier("bespoke")).toBe("royale");
+    expect(normalizeTier("royale")).toBe("royale");
     expect(normalizeTier("unknown")).toBe("essentials");
-    expect(normalizeTier("royale")).toBe("essentials");
   });
 
-  it("tier labels are customer-facing", () => {
+  it("collection labels are customer-facing (no Signature / Bespoke)", () => {
     expect(TIER_LABELS.essentials).toBe("DREAMZ Essentials");
-    expect(TIER_LABELS.signature).toBe("DREAMZ Signature");
-    expect(TIER_LABELS.bespoke).toBe("DREAMZ Bespoke");
+    expect(TIER_LABELS.originals).toBe("DREAMZ Originals");
+    expect(TIER_LABELS.royale).toBe("DREAMZ Royale");
   });
 });
 

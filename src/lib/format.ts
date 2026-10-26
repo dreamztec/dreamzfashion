@@ -59,48 +59,48 @@ export const PRODUCT_LINE_LABELS: Record<ProductLine, string> = {
   royale: "DREAMZ Royale",
 };
 
-// ── Commercial tiers (customer-facing, admin-editable) ────────────────
-// Tiers describe what the customer is buying; packaging upgrades
-// ("Complete Package") stay a separate choice at checkout.
+// ── Collections (customer-facing, admin-editable) ─────────────────────
+// The three primary DREAMZ collections: Essentials (ready-to-wear),
+// Originals (distinctive house designs) and Royale (the premium design &
+// customization service). Legacy stored values ("signature", "bespoke")
+// are presented under their new names via normalizeTier.
+// Packaging upgrades ("Complete Package") stay a separate choice at checkout.
 
-export type ProductTier = "essentials" | "signature" | "bespoke";
+export type ProductTier = "essentials" | "originals" | "royale";
 
-export const PRODUCT_TIERS: ProductTier[] = ["essentials", "signature", "bespoke"];
+export const PRODUCT_TIERS: ProductTier[] = ["essentials", "originals", "royale"];
 
 export const TIER_LABELS: Record<ProductTier, string> = {
   essentials: "DREAMZ Essentials",
-  signature: "DREAMZ Signature",
-  bespoke: "DREAMZ Bespoke",
+  originals: "DREAMZ Originals",
+  royale: "DREAMZ Royale",
 };
 
 export const TIER_TAGLINES: Record<ProductTier, string> = {
-  essentials: "Accessible everyday pieces and practical bundles.",
-  signature: "Distinctive designs, premium finishes, personal touches.",
-  bespoke: "Individually commissioned. Priced after review.",
+  essentials: "Ready-to-wear, accessible every day.",
+  originals: "Distinctive DREAMZ house designs.",
+  royale: "Premium design and customization, made for you.",
 };
 
 export const TIER_DESCRIPTIONS: Record<ProductTier, string> = {
   essentials:
     "Everyday leather goods made to the DREAMZ standard — slides, sandals, belts and practical bundles with honest prices.",
-  signature:
-    "The house's distinctive designs: premium finishes, considered details and personalization options on request.",
-  bespoke:
-    "One vision, commissioned for you. Share your brief, receive a considered quotation, and we craft it together.",
+  originals:
+    "The house's distinctive designs: the Boot of Many Colours and other original statements, with personalization where approved.",
+  royale:
+    "Our premium design and customization service. Share a reference or brief, choose materials, colours and hardware, and receive a considered quotation.",
 };
 
 export function normalizeTier(raw: string | null | undefined): ProductTier {
   const value = (raw ?? "").toLowerCase();
-  if (value === "signature") return "signature";
-  if (value === "bespoke") return "bespoke";
+  if (value === "originals" || value === "signature") return "originals";
+  if (value === "royale" || value === "bespoke") return "royale";
   return "essentials";
 }
 
-/** Legacy product line → customer-facing tier. */
+/** Legacy brand line → customer-facing collection (identity for new values). */
 export function tierFromProductLine(line: string | null | undefined): ProductTier {
-  const value = (line ?? "").toLowerCase();
-  if (value === "originals") return "signature";
-  if (value === "royale") return "bespoke";
-  return "essentials";
+  return normalizeTier(line);
 }
 
 export function normalizeProductLine(

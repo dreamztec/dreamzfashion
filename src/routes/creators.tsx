@@ -3,6 +3,7 @@ import { getPublicPartnerTerms } from "@/server/partner.functions";
 import { RainbowRule } from "@/components/brand";
 import { BRAND } from "@/lib/config";
 import { formatNaira } from "@/lib/format";
+import { CAMPAIGN_TIERS } from "@/lib/campaign-tiers";
 
 export const Route = createFileRoute("/creators")({
   loader: () => getPublicPartnerTerms(),
@@ -12,7 +13,7 @@ export const Route = createFileRoute("/creators")({
       {
         name: "description",
         content:
-          "Become a DREAMZ creator: get a personal code and link, share samples, and earn commission on qualifying, fulfilled sales.",
+          "Become a DREAMZ creator — free to apply. Earn commission on qualifying sales, and collaborate on paid campaign tiers from Spark to Icon.",
       },
     ],
   }),
@@ -109,6 +110,49 @@ function CreatorsPage() {
               Creator dashboard
             </Link>
           </div>
+        </div>
+      </section>
+      {/* ── Campaign tiers (collaboration values, not joining fees) ── */}
+      <section className="bg-ivory-deep">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-16">
+          <div className="text-center mb-10">
+            <p className="overline-label mb-3">Campaign Tiers</p>
+            <h2 className="font-editorial text-3xl sm:text-4xl">Seven ways to create with DREAMZ</h2>
+            <div className="rule-gold mx-auto mt-6" />
+            <p className="text-stone mt-6 max-w-2xl mx-auto leading-relaxed">
+              These are paid <strong>collaboration campaigns</strong> — what a
+              DREAMZ campaign with a creator costs. They are not joining fees:
+              applying to the creator programme is free, and no one ever pays to
+              become a seller. Creator selection depends on audience quality,
+              content quality, reach, conversion history and negotiated scope.
+            </p>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {CAMPAIGN_TIERS.map((tier) => (
+              <article key={tier.level} className="border border-ink/15 bg-ivory px-6 py-6">
+                <div className="flex items-baseline justify-between gap-3 flex-wrap">
+                  <p className="overline-label !text-gold-soft">
+                    {tier.level} — {tier.name}
+                  </p>
+                  <p className="font-editorial text-xl">{tier.price}</p>
+                </div>
+                <p className="text-xs text-stone mt-2">{tier.audience}</p>
+                <ul className="mt-3 space-y-1.5 text-sm">
+                  {tier.deliverables.map((d) => (
+                    <li key={d} className="flex gap-2">
+                      <span aria-hidden="true" className="text-gold">·</span>
+                      <span>{d}</span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
+          </div>
+          <p className="mt-8 text-xs text-stone text-center max-w-2xl mx-auto leading-relaxed">
+            Deliverables are indicative. Every campaign is agreed in writing —
+            nothing on this page guarantees views, revenue or conversions.
+            The sales-code commission system above is separate and unaffected.
+          </p>
         </div>
       </section>
     </div>

@@ -1,6 +1,7 @@
 import { db } from "../../db/index";
 import { categories, productVariants, products, referralPrograms, settings } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
+import { tierFromProductLine } from "../lib/format";
 
 /**
  * Real DREAMZ catalogue (Master Product Catalogue v2).
@@ -83,7 +84,8 @@ async function runSeed() {
     .values([
       {
         sku: "DFK-FTW-001",
-        productLine: "royale",
+        productLine: "originals",
+        tier: "originals",
         name: "Boot of Many Colours",
         slug: "boot-of-many-colours",
         categorySlug: "footwear",
@@ -100,6 +102,7 @@ async function runSeed() {
         featured: true,
         newArrival: true,
         bestseller: true,
+        homepageHero: true,
         customizable: true,
         deliveryInformation:
           "Complete Package includes fast-track production and doorstep delivery anywhere in Nigeria within 7 days.",
@@ -509,7 +512,7 @@ async function runSeed() {
         deliveryInformation:
           "Complete Package includes fast-track production and doorstep delivery anywhere in Nigeria within 7 days.",
       },
-    ])
+    ].map((p) => ({ ...p, tier: tierFromProductLine(p.productLine) })))
     .onConflictDoNothing();
 
   // Variant rows for the products above — created once, deduped on every
@@ -721,44 +724,44 @@ const CATALOGUE_DRAFTS: Array<{
   shortDescription: string;
 }> = [
   // Boots (allocation: 5)
-  { sku: "DFK-DFT-101", name: "Chelsea Boot — Ebony", slug: "chelsea-boot-ebony", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "A sleek Chelsea boot in deep black leather with elastic side panels." },
-  { sku: "DFK-DFT-102", name: "Lace-Up Ankle Boot — Tan", slug: "lace-up-ankle-boot-tan", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "Tan leather ankle boot with a full lace-up front and stacked heel." },
-  { sku: "DFK-DFT-103", name: "Rider Boot — Chestnut", slug: "rider-boot-chestnut", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "A chestnut rider boot with a rounded toe and a confident profile." },
+  { sku: "DFK-DFT-101", name: "Chelsea Boot — Ebony", slug: "chelsea-boot-ebony", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "A sleek Chelsea boot in deep black leather with elastic side panels." },
+  { sku: "DFK-DFT-102", name: "Lace-Up Ankle Boot — Tan", slug: "lace-up-ankle-boot-tan", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "Tan leather ankle boot with a full lace-up front and stacked heel." },
+  { sku: "DFK-DFT-103", name: "Rider Boot — Chestnut", slug: "rider-boot-chestnut", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "A chestnut rider boot with a rounded toe and a confident profile." },
   { sku: "DFK-DFT-104", name: "Desert Boot — Sand", slug: "desert-boot-sand", categorySlug: "footwear", subcategory: "Boots", tier: "essentials", shortDescription: "Sand suede desert boot with crepe sole — easy, everyday character." },
   // Shoes & loafers (allocation: 15)
-  { sku: "DFK-DFT-110", name: "Horsebit Loafer — Cognac", slug: "horsebit-loafer-cognac", categorySlug: "footwear", subcategory: "Loafers", tier: "signature", shortDescription: "Cognac loafer with a metal horsebit accent and a hand-burnished finish." },
-  { sku: "DFK-DFT-111", name: "Tassel Loafer — Oxblood", slug: "tassel-loafer-oxblood", categorySlug: "footwear", subcategory: "Loafers", tier: "signature", shortDescription: "An oxblood tassel loafer with a considered, elegant profile." },
-  { sku: "DFK-DFT-112", name: "Derby Shoe — Espresso", slug: "derby-shoe-espresso", categorySlug: "footwear", subcategory: "Derby Shoes", tier: "signature", shortDescription: "An espresso Derby shoe with an open-lace construction for a tailored fit." },
+  { sku: "DFK-DFT-110", name: "Horsebit Loafer — Cognac", slug: "horsebit-loafer-cognac", categorySlug: "footwear", subcategory: "Loafers", tier: "originals", shortDescription: "Cognac loafer with a metal horsebit accent and a hand-burnished finish." },
+  { sku: "DFK-DFT-111", name: "Tassel Loafer — Oxblood", slug: "tassel-loafer-oxblood", categorySlug: "footwear", subcategory: "Loafers", tier: "originals", shortDescription: "An oxblood tassel loafer with a considered, elegant profile." },
+  { sku: "DFK-DFT-112", name: "Derby Shoe — Espresso", slug: "derby-shoe-espresso", categorySlug: "footwear", subcategory: "Derby Shoes", tier: "originals", shortDescription: "An espresso Derby shoe with an open-lace construction for a tailored fit." },
   // Bags (allocation: 8)
-  { sku: "DFK-DFT-120", name: "Weekender Duffle — Espresso", slug: "weekender-duffle-espresso", categorySlug: "bags", subcategory: "Duffle Bags", tier: "signature", shortDescription: "A full-leather weekender duffle with brass hardware and a canvas-lined interior." },
+  { sku: "DFK-DFT-120", name: "Weekender Duffle — Espresso", slug: "weekender-duffle-espresso", categorySlug: "bags", subcategory: "Duffle Bags", tier: "originals", shortDescription: "A full-leather weekender duffle with brass hardware and a canvas-lined interior." },
   { sku: "DFK-DFT-121", name: "Crossbody Saddle Bag", slug: "crossbody-saddle-bag", categorySlug: "bags", subcategory: "Crossbody Bags", tier: "essentials", shortDescription: "A compact saddle crossbody with an adjustable leather strap." },
-  { sku: "DFK-DFT-122", name: "Structured Tote — Onyx", slug: "structured-tote-onyx", categorySlug: "bags", subcategory: "Tote Bags", tier: "signature", shortDescription: "An onyx structured tote that holds its shape and carries a full day." },
-  { sku: "DFK-DFT-123", name: "Mini Evening Bag — Plum", slug: "mini-evening-bag-plum", categorySlug: "bags", subcategory: "Evening Bags", tier: "signature", shortDescription: "A plum leather mini bag with a delicate chain strap for evenings out." },
+  { sku: "DFK-DFT-122", name: "Structured Tote — Onyx", slug: "structured-tote-onyx", categorySlug: "bags", subcategory: "Tote Bags", tier: "originals", shortDescription: "An onyx structured tote that holds its shape and carries a full day." },
+  { sku: "DFK-DFT-123", name: "Mini Evening Bag — Plum", slug: "mini-evening-bag-plum", categorySlug: "bags", subcategory: "Evening Bags", tier: "originals", shortDescription: "A plum leather mini bag with a delicate chain strap for evenings out." },
   { sku: "DFK-DFT-124", name: "Laptop Folio — Charcoal", slug: "laptop-folio-charcoal", categorySlug: "bags", subcategory: "Business Bags", tier: "essentials", shortDescription: "A charcoal leather folio with a padded laptop sleeve and document pockets." },
   // Belts (allocation: 5)
   { sku: "DFK-DFT-130", name: "Classic Dress Belt — Black", slug: "classic-dress-belt-black", categorySlug: "accessories", subcategory: "Belts", tier: "essentials", shortDescription: "A black dress belt with a brushed buckle — the finishing detail of a considered wardrobe." },
   { sku: "DFK-DFT-131", name: "Casual Belt — Tan", slug: "casual-belt-tan", categorySlug: "accessories", subcategory: "Belts", tier: "essentials", shortDescription: "A tan casual belt with a matte roller buckle for everyday wear." },
   { sku: "DFK-DFT-132", name: "Reversible Belt — Brown / Black", slug: "reversible-belt-brown-black", categorySlug: "accessories", subcategory: "Belts", tier: "essentials", shortDescription: "One belt, two colourways — smooth leather that rotates in its buckle." },
   { sku: "DFK-DFT-133", name: "Braided Leather Belt", slug: "braided-leather-belt", categorySlug: "accessories", subcategory: "Belts", tier: "essentials", shortDescription: "Hand-braided leather strands with an articulated buckle — texture with restraint." },
-  { sku: "DFK-DFT-134", name: "Executive Belt — Oxblood", slug: "executive-belt-oxblood", categorySlug: "accessories", subcategory: "Belts", tier: "signature", shortDescription: "An oxblood executive belt with edge stitching and a solid brass buckle." },
+  { sku: "DFK-DFT-134", name: "Executive Belt — Oxblood", slug: "executive-belt-oxblood", categorySlug: "accessories", subcategory: "Belts", tier: "originals", shortDescription: "An oxblood executive belt with edge stitching and a solid brass buckle." },
   // New drop — administrator-supplied designs (allocation: 17).
   // Imagery for these pieces is uploaded by the house in Admin → Media
   // (bulk upload) and assigned per product; the files themselves are never
   // bundled in the repo. Quote-only until the house sets prices.
-  { sku: "DFK-DFT-150", name: "Ascension Oxford — Blue / Black", slug: "ascension-oxford-blue-black", categorySlug: "footwear", subcategory: "Oxfords", tier: "signature", shortDescription: "A blue and black Oxford with a confident, distinctive finish." },
-  { sku: "DFK-DFT-151", name: "Woven Lightning Loafer — Brown", slug: "woven-lightning-loafer-brown", categorySlug: "footwear", subcategory: "Loafers", tier: "signature", shortDescription: "A brown woven loafer with lightning-strap detail." },
+  { sku: "DFK-DFT-150", name: "Ascension Oxford — Blue / Black", slug: "ascension-oxford-blue-black", categorySlug: "footwear", subcategory: "Oxfords", tier: "originals", shortDescription: "A blue and black Oxford with a confident, distinctive finish." },
+  { sku: "DFK-DFT-151", name: "Woven Lightning Loafer — Brown", slug: "woven-lightning-loafer-brown", categorySlug: "footwear", subcategory: "Loafers", tier: "originals", shortDescription: "A brown woven loafer with lightning-strap detail." },
   { sku: "DFK-DFT-152", name: "Buckle Slide — Cream / Brown", slug: "buckle-slide-cream-brown", categorySlug: "footwear", subcategory: "Slides", tier: "essentials", shortDescription: "A cream and brown buckle slide — easy, everyday character." },
-  { sku: "DFK-DFT-153", name: "Regent Button Boot — Emerald", slug: "regent-button-boot-emerald", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "An emerald button boot with a refined, commanding profile." },
+  { sku: "DFK-DFT-153", name: "Regent Button Boot — Emerald", slug: "regent-button-boot-emerald", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "An emerald button boot with a refined, commanding profile." },
   { sku: "DFK-DFT-154", name: "Wrist Pouch — Forest Green", slug: "wrist-pouch-forest-green", categorySlug: "accessories", subcategory: "Pouches", tier: "essentials", shortDescription: "A forest-green leather wrist pouch — carry the essentials well." },
-  { sku: "DFK-DFT-155", name: "Frontier Croc Boot — Multicolour", slug: "frontier-croc-boot-multicolour", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "A multicolour crocodile-texture boot with frontier character." },
-  { sku: "DFK-DFT-156", name: "Heritage Briefcase — Brown", slug: "heritage-briefcase-brown", categorySlug: "bags", subcategory: "Business Bags", tier: "signature", shortDescription: "A brown leather briefcase with a heritage finish." },
-  { sku: "DFK-DFT-157", name: "Heritage Harness Boot — Brown Croc", slug: "heritage-harness-boot-brown-croc", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "A brown crocodile-texture harness boot with heritage detailing." },
-  { sku: "DFK-DFT-158", name: "Midnight Vow Oxford — Black / Red", slug: "midnight-vow-oxford-black-red", categorySlug: "footwear", subcategory: "Oxfords", tier: "signature", shortDescription: "A black Oxford with a red sole — distinctive after dark." },
-  { sku: "DFK-DFT-159", name: "Chelsea Boot — Navy / Cognac", slug: "chelsea-boot-navy-cognac", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "A navy and cognac Chelsea boot with elastic side panels." },
-  { sku: "DFK-DFT-160", name: "Signature Hook Belt — Black / Rainbow", slug: "signature-hook-belt-black-rainbow", categorySlug: "accessories", subcategory: "Belts", tier: "signature", shortDescription: "A black belt with the house's signature rainbow hook." },
-  { sku: "DFK-DFT-161", name: "Voltage Boot — Oxblood / Black", slug: "voltage-boot-oxblood-black", categorySlug: "footwear", subcategory: "Boots", tier: "signature", shortDescription: "An oxblood and black double-strap boot with a charged profile." },
-  { sku: "DFK-DFT-162", name: "Chunky Derby — Black", slug: "chunky-derby-black", categorySlug: "footwear", subcategory: "Derby Shoes", tier: "signature", shortDescription: "A black chunky Derby shoe with an open-lace construction." },
-  { sku: "DFK-DFT-163", name: "Loafer — Tan / Forest Green", slug: "loafer-tan-forest-green", categorySlug: "footwear", subcategory: "Loafers", tier: "signature", shortDescription: "A tan and forest-green loafer with a considered profile." },
+  { sku: "DFK-DFT-155", name: "Frontier Croc Boot — Multicolour", slug: "frontier-croc-boot-multicolour", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "A multicolour crocodile-texture boot with frontier character." },
+  { sku: "DFK-DFT-156", name: "Heritage Briefcase — Brown", slug: "heritage-briefcase-brown", categorySlug: "bags", subcategory: "Business Bags", tier: "originals", shortDescription: "A brown leather briefcase with a heritage finish." },
+  { sku: "DFK-DFT-157", name: "Heritage Harness Boot — Brown Croc", slug: "heritage-harness-boot-brown-croc", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "A brown crocodile-texture harness boot with heritage detailing." },
+  { sku: "DFK-DFT-158", name: "Midnight Vow Oxford — Black / Red", slug: "midnight-vow-oxford-black-red", categorySlug: "footwear", subcategory: "Oxfords", tier: "originals", shortDescription: "A black Oxford with a red sole — distinctive after dark." },
+  { sku: "DFK-DFT-159", name: "Chelsea Boot — Navy / Cognac", slug: "chelsea-boot-navy-cognac", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "A navy and cognac Chelsea boot with elastic side panels." },
+  { sku: "DFK-DFT-160", name: "Signature Hook Belt — Black / Rainbow", slug: "signature-hook-belt-black-rainbow", categorySlug: "accessories", subcategory: "Belts", tier: "originals", shortDescription: "A black belt with the house's signature rainbow hook." },
+  { sku: "DFK-DFT-161", name: "Voltage Boot — Oxblood / Black", slug: "voltage-boot-oxblood-black", categorySlug: "footwear", subcategory: "Boots", tier: "originals", shortDescription: "An oxblood and black double-strap boot with a charged profile." },
+  { sku: "DFK-DFT-162", name: "Chunky Derby — Black", slug: "chunky-derby-black", categorySlug: "footwear", subcategory: "Derby Shoes", tier: "originals", shortDescription: "A black chunky Derby shoe with an open-lace construction." },
+  { sku: "DFK-DFT-163", name: "Loafer — Tan / Forest Green", slug: "loafer-tan-forest-green", categorySlug: "footwear", subcategory: "Loafers", tier: "originals", shortDescription: "A tan and forest-green loafer with a considered profile." },
   { sku: "DFK-DFT-164", name: "Patchwork Slide — Brown", slug: "patchwork-slide-brown", categorySlug: "footwear", subcategory: "Slides", tier: "essentials", shortDescription: "A brown patchwork slide with close-up craft detailing." },
   { sku: "DFK-DFT-165", name: "Lined Belt Trio — Black", slug: "lined-belt-trio-black", categorySlug: "accessories", subcategory: "Belts", tier: "essentials", shortDescription: "Three black belts with colourful linings — one for every mood." },
   { sku: "DFK-DFT-166", name: "Croc Slide — Blue / Black", slug: "croc-slide-blue-black", categorySlug: "footwear", subcategory: "Slides", tier: "essentials", shortDescription: "A blue crocodile-texture and black slide — texture with restraint." },
@@ -766,9 +769,9 @@ const CATALOGUE_DRAFTS: Array<{
   { sku: "DFK-DFT-140", name: "Bifold Wallet — Black", slug: "bifold-wallet-black", categorySlug: "accessories", subcategory: "Wallets", tier: "essentials", shortDescription: "A slim black bifold with six card slots and a full-length note compartment." },
   { sku: "DFK-DFT-141", name: "Card Holder — Tan", slug: "card-holder-tan", categorySlug: "accessories", subcategory: "Card Holders", tier: "essentials", shortDescription: "A tan card holder that softens with use — minimal, quick, everyday." },
   { sku: "DFK-DFT-142", name: "Zip Purse — Espresso", slug: "zip-purse-espresso", categorySlug: "accessories", subcategory: "Purses", tier: "essentials", shortDescription: "An espresso leather zip purse with a lined interior and card wall." },
-  { sku: "DFK-DFT-143", name: "Travel Wallet — Cognac", slug: "travel-wallet-cognac", categorySlug: "accessories", subcategory: "Wallets", tier: "signature", shortDescription: "A cognac travel wallet with slots for passports, cards and boarding passes." },
+  { sku: "DFK-DFT-143", name: "Travel Wallet — Cognac", slug: "travel-wallet-cognac", categorySlug: "accessories", subcategory: "Wallets", tier: "originals", shortDescription: "A cognac travel wallet with slots for passports, cards and boarding passes." },
   { sku: "DFK-DFT-144", name: "Money Clip — Ebony", slug: "money-clip-ebony", categorySlug: "accessories", subcategory: "Money Clips", tier: "essentials", shortDescription: "An ebony leather money clip with a magnetic fold — carry less, carry well." },
-  { sku: "DFK-DFT-145", name: "Clutch Purse — Plum", slug: "clutch-purse-plum", categorySlug: "accessories", subcategory: "Purses", tier: "signature", shortDescription: "A plum leather clutch with a snap closure and an interior zip pocket." },
+  { sku: "DFK-DFT-145", name: "Clutch Purse — Plum", slug: "clutch-purse-plum", categorySlug: "accessories", subcategory: "Purses", tier: "originals", shortDescription: "A plum leather clutch with a snap closure and an interior zip pocket." },
   { sku: "DFK-DFT-146", name: "Passport Holder — Sand", slug: "passport-holder-sand", categorySlug: "accessories", subcategory: "Travel Accessories", tier: "essentials", shortDescription: "A sand leather passport holder with card slots — travel, organised." },
 ];
 
@@ -780,7 +783,7 @@ async function ensureCatalogueDrafts() {
     categorySlug: d.categorySlug,
     subcategory: d.subcategory,
     tier: d.tier,
-    productLine: d.tier === "signature" ? "originals" : "essentials",
+    productLine: d.tier === "royale" ? "royale" : d.tier === "originals" ? "originals" : "essentials",
     price: 0, // no approved price yet — quote-only, even if published early
     shortDescription: d.shortDescription,
     fullDescription: `${d.shortDescription} This piece is being prepared for the collection. Pricing, sizes and imagery are confirmed by the house before it is published.`,

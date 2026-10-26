@@ -5,13 +5,37 @@ import { Wordmark } from "@/components/brand";
 import { useCart, useCartHydrated } from "@/store/cart";
 import { useAuth } from "@/lib/auth-client";
 
-const PRIMARY_NAV: Array<{ label: string; to: string }> = [
+const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
+  { label: "Shop", to: "/shop" },
+  { label: "Essentials", to: "/shop/essentials", shopCategory: true },
+  { label: "Originals", to: "/shop/originals", shopCategory: true },
+  { label: "Royale", to: "/shop/royale", shopCategory: true },
+  { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Design Yours", to: "/custom" },
-  { label: "See Samples", to: "/shop" },
-  { label: "Creators & Partners", to: "/creators" },
-  { label: "About", to: "/about" },
-  { label: "Help", to: "/contact" },
 ];
+
+const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
+  { label: "Shop", to: "/shop" },
+  { label: "Essentials", to: "/shop/essentials", shopCategory: true },
+  { label: "Originals", to: "/shop/originals", shopCategory: true },
+  { label: "Royale", to: "/shop/royale", shopCategory: true },
+  { label: "Accessories", to: "/shop/accessories", shopCategory: true },
+  { label: "Design Yours", to: "/custom" },
+  { label: "Creators", to: "/creators" },
+  { label: "Partnerships", to: "/partnerships" },
+];
+
+/** The /shop/$category search params that must be explicitly cleared. */
+const SHOP_CATEGORY_SEARCH = {
+  tier: undefined,
+  min: undefined,
+  max: undefined,
+  size: undefined,
+  colour: undefined,
+  availability: undefined,
+  sort: undefined,
+  sub: undefined,
+} as const;
 
 export function Header({
   announcement,
@@ -84,7 +108,7 @@ export function Header({
                   <Link
                     key={item.to}
                     to={item.to}
-                    search={item.to === "/shop" ? { q: undefined } : undefined}
+                    search={item.shopCategory ? SHOP_CATEGORY_SEARCH : item.to === "/shop" ? { q: undefined } : undefined}
                     className="nav-link text-[0.62rem] uppercase tracking-btn whitespace-nowrap"
                   >
                     {item.label}
@@ -157,19 +181,36 @@ export function Header({
 
         {/* Mobile menu */}
         {mobileOpen && (
-          <div className="lg:hidden bg-ivory text-ink border-b border-ink/10 max-h-[80svh] overflow-y-auto">
+          <div className="lg:hidden bg-ivory text-ink border-b border-ink/10 max-h-[85svh] overflow-y-auto">
             <nav className="px-6 py-6 flex flex-col gap-1" aria-label="Mobile">
-              {[...PRIMARY_NAV, { label: user ? "My Account" : "Sign In", to: user ? "/account" : "/account/login" }, { label: "Track Order", to: "/track-order" }, { label: "Corporate Orders", to: "/corporate" }].map((item) => (
+              {MOBILE_NAV.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
-                  search={item.to === "/shop" ? { q: undefined } : undefined}
+                  search={item.shopCategory ? SHOP_CATEGORY_SEARCH : item.to === "/shop" ? { q: undefined } : undefined}
                   onClick={() => setMobileOpen(false)}
-                  className="py-3.5 font-editorial text-2xl border-b border-ink/5 last:border-0"
+                  className="py-3.5 font-editorial text-2xl border-b border-ink/5"
                 >
                   {item.label}
                 </Link>
               ))}
+              <Link
+                to={user ? "/account" : "/account/login"}
+                onClick={() => setMobileOpen(false)}
+                className="py-3.5 font-editorial text-2xl border-b border-ink/5"
+              >
+                {user ? "My Account" : "Sign In"}
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileOpen(false);
+                  openCart();
+                }}
+                className="py-3.5 font-editorial text-2xl text-left"
+              >
+                Cart{count > 0 ? ` (${count})` : ""}
+              </button>
             </nav>
           </div>
         )}

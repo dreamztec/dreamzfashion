@@ -157,41 +157,42 @@ describe("Availability states gate purchasing", () => {
 });
 
 describe("Collection classification rules", () => {
-  it("assigns Essentials to 1 or 2 colour designs", async () => {
+  it("labels unannotated pieces by their stored tier (Essentials / Originals / Royale)", async () => {
     const { resolveCollection } = await import("../src/server/catalog.server");
-    expect(resolveCollection({ name: "Single Tone", colors: ["Brown"] })).toBe("Essentials");
-    expect(resolveCollection({ name: "Dual Tone", colors: ["Black / Brown"] })).toBe("Essentials");
+    expect(resolveCollection({ collection: null, tier: "essentials" })).toBe("DREAMZ Essentials");
+    expect(resolveCollection({ collection: null, tier: "originals" })).toBe("DREAMZ Originals");
+    expect(resolveCollection({ collection: null, tier: "royale" })).toBe("DREAMZ Royale");
+    // Legacy stored values present under their new customer-facing names.
+    expect(resolveCollection({ collection: null, tier: "signature" })).toBe("DREAMZ Originals");
+    expect(resolveCollection({ collection: null, tier: "bespoke" })).toBe("DREAMZ Royale");
   });
 
-  it("counts design colours per colourway, not across colourway options", async () => {
-    const { resolveCollection } = await import("../src/server/catalog.server");
-    // Exotic Elegance: one bag offered in three single-colour colourways.
-    expect(
-      resolveCollection({ name: "Exotic Elegance", colors: ["Brown", "Black", "Grey"] }),
-    ).toBe("Essentials");
-  });
-
-  it("assigns Essentials Pro to 3+ colour designs or multicolour", async () => {
-    const { resolveCollection } = await import("../src/server/catalog.server");
-    expect(
-      resolveCollection({ name: "Trio Tone", colors: ["Brown / Black / Grey"] }),
-    ).toBe("Essentials Pro");
-    expect(
-      resolveCollection({ name: "Boot of Many Colours", colors: ["Multicolour"] }),
-    ).toBe("Essentials Pro");
-    expect(
-      resolveCollection({ name: "Rainbow Belt", colors: ["Black / Rainbow"] }),
-    ).toBe("Essentials Pro");
-  });
-
-  it("preserves explicit collection metadata", async () => {
+  it("preserves explicit admin-set collection metadata verbatim", async () => {
     const { resolveCollection } = await import("../src/server/catalog.server");
     expect(
       resolveCollection({
         collection: "DREAMZ Originals",
-        name: "Dreamz Faith",
-        colors: ["Tan / Forest Green", "Taupe / Navy"],
+        tier: "originals",
       }),
     ).toBe("DREAMZ Originals");
+  });
+
+  it("no longer generates 'Essentials Pro' — ambiguity goes to the review queue", async () => {
+    const { suggestCollection, needsCategoryConfirmation } = await import("../src/lib/collection");
+    // Exactly 3 colours: never guessed.
+    const trio = suggestCollection({ colorsCount: 3, priceKobo: 2_000_000 });
+    expect(trio.suggestion).toBeNull();
+    expect(trio.needsConfirmation).toBe(true);
+    // Stored value conflicts with the suggestion: flagged for confirmation.
+    const conflict = needsCategoryConfirmation({
+      storedTier: "essentials",
+      colorsCount: 5,
+      priceKobo: 9_000_000,
+    });
+    expect(conflict.needs).toBe(true);
+    // Clear-cut Originals product: not flagged.
+    expect(
+      needsCategoryConfirmation({ storedTier: "originals", colorsCount: 5, priceKobo: 9_000_000 }).needs,
+    ).toBe(false);
   });
 });

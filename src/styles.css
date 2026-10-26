@@ -187,6 +187,15 @@ textarea:focus-visible,
 .img-frame:hover img {
   transform: scale(1.04);
 }
+/* Product photography shown "contain": the whole product stays visible and
+   is never cropped — so the hover zoom (which would clip its edges) is off. */
+.img-frame[data-fit="contain"] img {
+  object-fit: contain;
+}
+.group:hover .img-frame[data-fit="contain"] img,
+.img-frame[data-fit="contain"]:hover img {
+  transform: none;
+}
 
 /* Inputs */
 .input-lux {

@@ -73,9 +73,16 @@ function AdminMedia() {
     if (!files?.length) return;
     setBusy(true);
     setMessage(null);
+    const qualityNotes: string[] = [];
     for (const file of Array.from(files)) {
       if (!file.type.startsWith("image/")) continue;
       try {
+        // Quality control: measure resolution before upload. Source files are
+        // never deleted or rejected outright — the admin decides.
+        const dims = await measureImage(file);
+        if (dims && Math.min(dims.w, dims.h) < MIN_IMAGE_SIDE_PX) {
+          qualityNotes.push(`${file.name} (${dims.w}×${dims.h}) — below the ${MIN_IMAGE_SIDE_PX}px guidance`);
+        }
         const dataUrl = await readAsDataUrl(file);
         await adminCall(adminUploadMedia, {
           filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "-"),
@@ -92,7 +99,13 @@ function AdminMedia() {
     setBusy(false);
     if (fileRef.current) fileRef.current.value = "";
     await load();
-    if (!message) setMessage("Upload complete.");
+    if (!message) {
+      setMessage(
+        qualityNotes.length > 0
+          ? `Upload complete. ⚠ Low resolution: ${qualityNotes.join("; ")}. Assign these to a product and preview before publishing.`
+          : "Upload complete.",
+      );
+    }
   };
 
   const update = async (id: number, patch: Record<string, unknown>) => {
@@ -112,9 +125,13 @@ function AdminMedia() {
     await load();
   };
 
-  const assign = async (mediaId: number, productId: number) => {
-    await adminCall(adminAssignMediaToProduct, { mediaId, productId, asPrimary: true });
-    setMessage("Assigned as the product's primary image.");
+  const assign = async (mediaId: number, productId: number, asPrimary: boolean) => {
+    await adminCall(adminAssignMediaToProduct, { mediaId, productId, asPrimary });
+    setMessage(
+      asPrimary
+        ? "Assigned as the product's cover image."
+        : "Added to the product's gallery.",
+    );
     await load();
   };
 
@@ -318,13 +335,22 @@ function AdminMedia() {
                   className="w-full text-xs border border-ink/15 px-1.5 py-1 bg-transparent"
                   value=""
                   onChange={(e) => {
-                    if (e.target.value) assign(a.id, Number(e.target.value));
+                    const value = e.target.value;
+                    if (!value) return;
+                    if (value.startsWith("gallery:")) {
+                      assign(a.id, Number(value.slice(8)), false);
+                    } else {
+                      assign(a.id, Number(value), true);
+                    }
                   }}
                   aria-label="Assign to product"
                 >
                   <option value="">Assign to product…</option>
                   {products.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
+                    <option key={p.id} value={p.id}>{p.name} — as cover</option>
+                  ))}
+                  {products.map((p) => (
+                    <option key={`g-${p.id}`} value={`gallery:${p.id}`}>{p.name} — add to gallery</option>
                   ))}
                 </select>
 
@@ -434,5 +460,24 @@ function readAsDataUrl(file: File): Promise<string> {
     reader.onload = () => resolve(String(reader.result));
     reader.onerror = () => reject(new Error("Could not read file"));
     reader.readAsDataURL(file);
+  });
+}
+
+/** Minimum recommended short-side for product photography. */
+const MIN_IMAGE_SIDE_PX = 900;
+
+function measureImage(file: File): Promise<{ w: number; h: number } | null> {
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const im = new Image();
+    im.onload = () => {
+      resolve({ w: im.naturalWidth, h: im.naturalHeight });
+      URL.revokeObjectURL(url);
+    };
+    im.onerror = () => {
+      resolve(null);
+      URL.revokeObjectURL(url);
+    };
+    im.src = url;
   });
 }

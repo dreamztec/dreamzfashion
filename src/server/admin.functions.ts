@@ -24,6 +24,7 @@ import {
   settings,
 } from "../../db/schema";
 import { desc, eq, sql } from "drizzle-orm";
+import { isDisplayableImageUrl } from "../lib/img";
 
 // ── Auth gate ────────────────────────────────────────────────────────
 
@@ -236,14 +237,21 @@ const ProductInputSchema = z.object({
   availability: z
     .enum(["available", "made_to_order", "on_request", "out_of_stock", "sold_out"])
     .default("available"),
-  imageFit: z.enum(["cover", "contain"]).default("cover"),
+  imageFit: z.enum(["cover", "contain"]).default("contain"),
   featured: z.boolean().default(false),
   newArrival: z.boolean().default(false),
   bestseller: z.boolean().default(false),
+  // Explicit admin controls — the homepage hero is chosen here, never by a
+  // hard-coded SKU or an automatic rule.
+  homepageHero: z.boolean().default(false),
   customizable: z.boolean().default(false),
   productLine: z.enum(["essentials", "originals", "royale"]).default("essentials"),
-  // Customer-facing commercial tier — independent of packaging.
-  tier: z.enum(["essentials", "signature", "bespoke"]).default("essentials"),
+  // Customer-facing collection — independent of packaging. Legacy values are
+  // accepted for compatibility and stored under the new names.
+  tier: z
+    .enum(["essentials", "originals", "royale", "signature", "bespoke"])
+    .default("essentials")
+    .transform((t) => (t === "signature" ? "originals" : t === "bespoke" ? "royale" : t)),
   // Private internal cost (kobo) — never displayed on the storefront.
   internalCostKobo: z.number().int().min(0).nullable().optional(),
   // Deposit plan flags — terms come from the house deposits setting.
@@ -259,13 +267,26 @@ const ProductInputSchema = z.object({
   imageUrl: z.string().max(400).optional().or(z.literal("")),
   careInformation: z.string().max(1000).optional().or(z.literal("")),
   deliveryInformation: z.string().max(1000).optional().or(z.literal("")),
+  // Full gallery write: order, alt text and role for every image. When
+  // present this replaces the product's gallery rows (position order is the
+  // display order; index 0 is the cover).
+  images: z
+    .array(
+      z.object({
+        url: z.string().min(1).max(400),
+        altText: z.string().max(300).optional().or(z.literal("")),
+        kind: z.enum(["product", "lifestyle", "catalogue"]).default("product"),
+      }),
+    )
+    .max(24)
+    .optional(),
 });
 
 export const adminSaveProduct = createServerFn({ method: "POST" })
   .inputValidator(ProductInputSchema)
   .handler(async ({ data }) => {
     await requireAdminRole(["owner", "operations"]);
-    const { imageUrl, packageContents, id, ...values } = data;
+    const { imageUrl, packageContents, id, images, ...values } = data;
     const payload = {
       ...values,
       subcategory: values.subcategory || null,
@@ -299,6 +320,24 @@ export const adminSaveProduct = createServerFn({ method: "POST" })
         .values({ ...payload, packageContents })
         .returning();
       productId = created.id;
+    }
+
+    // Full gallery write: replaces the product's image rows with the exact
+    // order the admin arranged (index 0 = cover). Displayable URLs only.
+    if (productId && images) {
+      await db.delete(productImages).where(eq(productImages.productId, productId));
+      const valid = images.filter((i) => isDisplayableImageUrl(i.url));
+      if (valid.length > 0) {
+        await db.insert(productImages).values(
+          valid.map((im, i) => ({
+            productId: productId!,
+            url: im.url,
+            altText: im.altText || data.name,
+            position: i,
+            kind: im.kind,
+          })),
+        );
+      }
     }
 
     if (productId && imageUrl) {
@@ -368,6 +407,28 @@ export const adminSetProductStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+/**
+ * Set the customer-facing collection (Essentials / Originals / Royale) on a
+ * product. This is the admin's manual decision — it always overrides the
+ * automatic suggestion rules. Used by the "Needs Category Confirmation"
+ * review queue and the product form.
+ */
+export const adminSetProductCollection = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.number().int(),
+      tier: z.enum(["essentials", "originals", "royale"]),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireAdminRole(["owner", "operations"]);
+    await db
+      .update(products)
+      .set({ tier: data.tier, updatedAt: new Date() })
+      .where(eq(products.id, data.id));
+    return { ok: true };
+  });
+
 export const adminDeleteProduct = createServerFn({ method: "POST" })
   .inputValidator(z.object({ id: z.number().int() }))
   .handler(async ({ data }) => {
@@ -385,8 +446,52 @@ export const adminListProducts = createServerFn({ method: "GET" }).handler(async
     createdAt: p.createdAt?.toISOString() ?? null,
     updatedAt: p.updatedAt?.toISOString() ?? null,
     image: imgs.find((i) => i.productId === p.id)?.url ?? null,
+    // Full gallery for the admin image manager: order, alt text and role.
+    gallery: imgs
+      .filter((i) => i.productId === p.id)
+      .map((i) => ({ id: i.id, url: i.url, altText: i.altText, position: i.position, kind: i.kind })),
   }));
 });
+
+/**
+ * Replace a product's gallery in one call: the array order is the display
+ * order (index 0 = cover), with per-image alt text and role. Used by the
+ * admin image manager's reorder / remove / set-cover actions.
+ */
+export const adminSaveProductImages = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      productId: z.number().int(),
+      images: z
+        .array(
+          z.object({
+            url: z.string().min(1).max(400),
+            altText: z.string().max(300).optional().or(z.literal("")),
+            kind: z.enum(["product", "lifestyle", "catalogue"]).default("product"),
+          }),
+        )
+        .max(24),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireAdminRole(["owner", "operations"]);
+    const [product] = await db.select().from(products).where(eq(products.id, data.productId)).limit(1);
+    if (!product) throw new Error("Product not found");
+    await db.delete(productImages).where(eq(productImages.productId, data.productId));
+    const valid = data.images.filter((i) => isDisplayableImageUrl(i.url));
+    if (valid.length > 0) {
+      await db.insert(productImages).values(
+        valid.map((im, i) => ({
+          productId: data.productId,
+          url: im.url,
+          altText: im.altText || product.name,
+          position: i,
+          kind: im.kind,
+        })),
+      );
+    }
+    return { ok: true };
+  });
 
 // ── Orders ───────────────────────────────────────────────────────────
 
