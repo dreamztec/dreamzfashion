@@ -11,7 +11,7 @@ import { useCart, useCartHydrated } from "@/store/cart";
 import { deliveryReasonLabel } from "@/lib/delivery";
 import { formatNaira, NIGERIAN_STATES } from "@/lib/format";
 import { BRAND } from "@/lib/config";
-import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
+import { WhatsAppCTAButton, GENERAL_INQUIRY, whatsappLink } from "@/components/whatsapp";
 import { CONTACT } from "@/lib/contact";
 
 export const Route = createFileRoute("/checkout/")({
@@ -200,6 +200,27 @@ function Checkout() {
         window.location.href = result.authorizationUrl;
         return;
       }
+
+      // Until online payment is configured, preserve the real DREAMZ order
+      // first (including partner/referral attribution), then hand the customer
+      // to WhatsApp with the order number and server-priced total prefilled.
+      if (result.requested) {
+        const customerName = String(formData.get("name") || "").trim();
+        const totalLabel = pricing?.total != null ? formatNaira(pricing.total) : "to be confirmed";
+        const message = [
+          `Hello DREAMZ, I have submitted order ${result.orderNumber} and I want to arrange payment.`,
+          customerName ? `Name: ${customerName}` : "",
+          `Order total: ${totalLabel}`,
+          partnerCode ? `Partner code: ${partnerCode}` : "",
+          "Please confirm the payment details and next step for my order.",
+        ].filter(Boolean).join("\n");
+        const href = whatsappLink(message, whatsappNumber);
+        if (href) {
+          window.location.href = href;
+          return;
+        }
+      }
+
       window.location.href = result.orderUrl ?? `/order/${result.orderNumber}`;
     } catch (err) {
       setError(
