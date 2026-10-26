@@ -171,9 +171,9 @@ function PartnershipsPage() {
           <p className="overline-label !text-gold-soft mb-3">Retail Partnership Programme</p>
           <h1 className="font-editorial text-5xl sm:text-7xl leading-tight">SELL DREAMZ</h1>
           <p className="mt-4 max-w-xl text-ivory/85 leading-relaxed">
-            Carry DREAMZ in your store. Three partnership models — bulk sales,
-            credit sales or commission sales — for boutiques, footwear retailers,
-            supermarkets and lifestyle stores.
+            Sell DREAMZ digitally, physically, or both. Physical partners can
+            choose bulk, approved credit or commission/consignment stock after
+            selecting a DREAMZ Partner Business Plan.
           </p>
         </div>
       </section>
@@ -209,6 +209,27 @@ function PartnershipsPage() {
         </div>
       </section>
 
+      <section className="border-y border-ink/10 bg-ivory-deep">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-12 text-center">
+          <p className="overline-label mb-3">One Partner Account</p>
+          <h2 className="font-editorial text-3xl">Choose Digital, Physical or Both</h2>
+          <p className="text-sm text-stone mt-4 max-w-2xl mx-auto leading-relaxed">
+            Start free as a Scout, or choose an optional 365-day Partner Business Plan
+            from ₦25,000 to ₦1,000,000 for additional sales tools, content, display
+            support and service. Paid plans do not restrict which available DREAMZ
+            products you can sell and do not guarantee income.
+          </p>
+          <div className="mt-7 flex flex-col sm:flex-row justify-center gap-3">
+            <Link to="/earn" hash="apply" className="btn-lux btn-lux-primary">
+              Choose Your Partner Plan
+            </Link>
+            <Link to="/earn" className="btn-lux btn-lux-outline">
+              See How Partner Earnings Work
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* General retail terms */}
       <section className="bg-ivory-deep">
         <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16">
@@ -237,17 +258,16 @@ function PartnershipsPage() {
       <section id="apply" className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-20">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-20 items-start">
           <div>
-            <p className="overline-label mb-3">Apply</p>
+            <p className="overline-label mb-3">Retail Enquiry</p>
             <h2 className="font-editorial text-3xl sm:text-4xl leading-tight">
-              Bring DREAMZ to your customers
+              Already have a retail space?
             </h2>
             <div className="rule-gold mt-6 mb-6" />
             <p className="text-stone leading-relaxed">
-              Tell us about your store and which model fits your business. Our
-              partnerships team reviews every application personally — approved
-              partners receive their programme terms, pricing schedule and, where
-              supplied, a DREAMZ display shelf, plus an account dashboard showing
-              their own programme, stock and sales or commission information.
+              Use this form for a preliminary retail-space enquiry. Final seller
+              onboarding, annual-plan selection and your Digital / Physical / Both
+              choice happen through the unified Partner Network. Credit and
+              consignment remain subject to DREAMZ approval, KYC and location review.
             </p>
             <div className="mt-8 flex flex-col gap-3">
               <WhatsAppCTAButton
@@ -258,9 +278,9 @@ function PartnershipsPage() {
               <CallCTAButton label={`Call ${CONTACT.phoneDisplay}`} />
             </div>
             <p className="mt-6 text-xs text-stone leading-relaxed">
-              Not a store? Creators, students and individuals can apply{" "}
-              <Link to="/creators" className="underline hover:text-ink">free of charge</Link>{" "}
-              to the creator programme instead.
+              Students, individuals, creators and store owners all use the same{" "}
+              <Link to="/earn" className="underline hover:text-ink">DREAMZ Partner Network</Link>.
+              The free Scout level requires no paid plan.
             </p>
           </div>
 
