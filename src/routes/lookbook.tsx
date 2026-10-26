@@ -37,7 +37,7 @@ const SPREADS = [
     eyebrow: "Campaign III",
     title: "The Occasion",
     body: "When the room matters, the details speak first. Refined essentials, effortless distinction.",
-    ctaTo: "/bespoke",
+    ctaTo: "/royale",
     ctaLabel: "Commission Bespoke",
   },
 ] as const;
@@ -72,8 +72,8 @@ function Lookbook() {
                 </h2>
                 <p className="text-stone leading-relaxed mb-7">{spread.body}</p>
                 <Link
-                  to={spread.ctaTo === "/bespoke" ? "/bespoke" : "/shop/$category"}
-                  params={spread.ctaTo === "/bespoke" ? undefined : { category: spread.ctaTo.replace("/shop/", "") }}
+                  to={spread.ctaTo === "/royale" ? "/royale" : "/shop/$category"}
+                  params={spread.ctaTo === "/royale" ? undefined : { category: spread.ctaTo.replace("/shop/", "") }}
                   className="btn-lux btn-lux-outline"
                 >
                   {spread.ctaLabel}

@@ -48,6 +48,8 @@ export const products = pgTable(
     featured: boolean("featured").notNull().default(false),
     newArrival: boolean("new_arrival").notNull().default(false),
     bestseller: boolean("bestseller").notNull().default(false),
+    // Explicit admin controls, never derived from a SKU or automatic rules.
+    homepageHero: boolean("homepage_hero").notNull().default(false),
     customizable: boolean("customizable").notNull().default(false),
     // Product line: essentials (ready-to-wear) | originals (house collections
     // and signature releases) | royale (bespoke client service showcase).
@@ -79,9 +81,10 @@ export const products = pgTable(
     tags: jsonb("tags").$type<string[]>().notNull().default([]),
     seoTitle: text("seo_title"),
     seoDescription: text("seo_description"),
-    // "cover" fills the frame; "contain" letterboxes poster-style artwork so
-    // printed information (names/prices) is never cropped.
-    imageFit: text("image_fit").notNull().default("cover"),
+    // "contain" shows the whole product (default — clean product photography
+    // is never cropped); "cover" fills the frame for lifestyle/editorial
+    // imagery or poster artwork the admin chooses to fill with.
+    imageFit: text("image_fit").notNull().default("contain"),
     status: text("status").notNull().default("published"), // draft | published | archived
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -99,6 +102,10 @@ export const productImages = pgTable(
     url: text("url").notNull(),
     altText: text("alt_text"),
     position: integer("position").notNull().default(0),
+    // Image role: product (clean product photography) | lifestyle (editorial
+    // scene) | catalogue (poster/artwork). Photography defaults to "contain"
+    // display; lifestyle may crop ("cover").
+    kind: text("kind").notNull().default("product"),
   },
   (t) => [index("product_images_product_idx").on(t.productId)],
 );
@@ -368,6 +375,9 @@ export const partnershipEnquiries = pgTable("partnership_enquiries", {
   presence: text("presence").notNull(), // store | online | both
   productInterest: text("product_interest").notNull(),
   orderVolume: text("order_volume").notNull(),
+  // Which SELL DREAMZ programme the partner is applying for:
+  // bulk (A) | credit (B) | commission (C) | undecided
+  partnershipCategory: text("partnership_category").notNull().default("undecided"),
   message: text("message"),
   status: text("status").notNull().default("new"), // new | contacted | approved | declined
   createdAt: timestamp("created_at").defaultNow(),

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ProductWithMedia } from "@/server/catalog.server";
 import { formatNaira } from "@/lib/format";
-import { isPosterArtwork } from "@/lib/img";
+import { displayFit, isPosterArtwork } from "@/lib/img";
 import { ProductMedia } from "@/components/brand";
 import { availabilityOf } from "@/lib/availability";
 
@@ -32,9 +32,12 @@ export function ProductCard({
           aspect="aspect-[4/5]"
           width={720}
           eager={priority}
-          sizes="(max-width: 768px) 50vw, 33vw"
-          // Posters are shown whole — never cropped to hide their text.
-          fit={isPosterArtwork(image) || product.imageFit === "contain" ? "contain" : "cover"}
+          // Two-column mobile grid at DPR 2 needs a ~640px source; larger
+          // breakpoints step up through the Image CDN. No huge originals.
+          sizes="(max-width: 640px) 46vw, (max-width: 1024px) 30vw, 30vw"
+          // Product photography shows the whole piece; lifestyle scenes may
+          // crop. The admin's per-product imageFit is respected.
+          fit={displayFit(product.images[0]?.kind, product.imageFit)}
         />
         {info.label !== "Available" && (
           <span className="absolute top-4 left-4 bg-ink text-ivory text-[0.6rem] uppercase tracking-btn px-3 py-1.5">

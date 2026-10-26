@@ -11,12 +11,17 @@
 const FOOTWEAR_GROUPS: Array<[string, RegExp]> = [
   ["Boots", /boot|chelsea/i],
   ["Loafers", /loafer/i],
-  ["Slides", /slide|sandal|mule|clog|slipper/i],
+  ["Sneakers", /sneaker|trainer/i],
+  ["Heels & Wedges", /heel|wedge|pump/i],
+  ["Women's Flats", /flat|ballerina/i],
+  ["Slides & Sandals", /slide|sandal|mule|clog|slipper/i],
   ["Shoes", /oxford|derby|brogue|monk|lace|shoe/i],
 ];
 
 const BAG_GROUPS: Array<[string, RegExp]> = [
-  ["Briefcases", /brief|business|laptop/i],
+  ["Briefcases & Laptop Bags", /brief|business|laptop/i],
+  ["Duffle & Travel", /duffle|travel|weekend|gym/i],
+  ["Crossbody", /crossbody|cross.body/i],
   ["Wrist Pouches", /pouch|clutch|wristlet/i],
   ["Handbags & Totes", /hand|tote|satchel|shoulder|bag/i],
 ];
@@ -24,14 +29,99 @@ const BAG_GROUPS: Array<[string, RegExp]> = [
 const ACCESSORY_GROUPS: Array<[string, RegExp]> = [
   ["Belts", /belt/i],
   ["Gift Sets", /gift|combo|set/i],
-  ["Wallets & Small Goods", /wallet|purse|card|pouch/i],
+  ["Purses", /purse/i],
+  ["Wallets & Small Goods", /wallet|card|pouch|key/i],
 ];
 
 export const GROUP_ORDER: Record<string, string[]> = {
-  footwear: ["Shoes", "Loafers", "Boots", "Slides"],
-  bags: ["Briefcases", "Wrist Pouches", "Handbags & Totes"],
-  accessories: ["Belts", "Gift Sets", "Wallets & Small Goods"],
+  footwear: ["Shoes", "Loafers", "Boots", "Sneakers", "Heels & Wedges", "Women's Flats", "Slides & Sandals"],
+  bags: ["Handbags & Totes", "Briefcases & Laptop Bags", "Duffle & Travel", "Crossbody", "Wrist Pouches"],
+  accessories: ["Belts", "Wallets & Small Goods", "Purses", "Gift Sets"],
 };
+
+// ── Product types (exact admin vocabulary) ────────────────────────────
+// Collection and product type are separate facts: a product's collection
+// (Essentials / Originals / Royale) is chosen by the admin, never derived
+// from its type. These are the canonical types the admin picks from.
+
+export const PRODUCT_TYPES: Record<string, string[]> = {
+  footwear: [
+    "Shoes",
+    "Loafers",
+    "Oxfords",
+    "Derbies",
+    "Boots",
+    "Mules",
+    "Slides",
+    "Sandals",
+    "Sneakers",
+    "Women's Flats",
+    "Heels",
+    "Wedges",
+    "Other Footwear",
+  ],
+  bags: [
+    "Handbags",
+    "Totes",
+    "Mini Totes",
+    "Duffle Bags",
+    "Briefcases",
+    "Laptop Bags",
+    "Crossbody Bags",
+    "Wrist Pouches",
+    "Travel Bags",
+    "Other Bags",
+  ],
+  accessories: [
+    "Belts",
+    "Wallets",
+    "Purses",
+    "Card Holders",
+    "Key Holders",
+    "Gift Sets",
+    "Other Accessories",
+  ],
+};
+
+const TYPE_GROUPS: Record<string, string> = {
+  Shoes: "Shoes",
+  Loafers: "Loafers",
+  Oxfords: "Shoes",
+  Derbies: "Shoes",
+  Boots: "Boots",
+  Mules: "Slides & Sandals",
+  Slides: "Slides & Sandals",
+  Sandals: "Slides & Sandals",
+  Sneakers: "Sneakers",
+  "Women's Flats": "Women's Flats",
+  Heels: "Heels & Wedges",
+  Wedges: "Heels & Wedges",
+  "Other Footwear": "Shoes",
+  Handbags: "Handbags & Totes",
+  Totes: "Handbags & Totes",
+  "Mini Totes": "Handbags & Totes",
+  "Duffle Bags": "Duffle & Travel",
+  Briefcases: "Briefcases & Laptop Bags",
+  "Laptop Bags": "Briefcases & Laptop Bags",
+  "Crossbody Bags": "Crossbody",
+  "Wrist Pouches": "Wrist Pouches",
+  "Travel Bags": "Duffle & Travel",
+  "Other Bags": "Handbags & Totes",
+  Belts: "Belts",
+  Wallets: "Wallets & Small Goods",
+  Purses: "Purses",
+  "Card Holders": "Wallets & Small Goods",
+  "Key Holders": "Wallets & Small Goods",
+  "Gift Sets": "Gift Sets",
+  "Other Accessories": "Wallets & Small Goods",
+};
+
+/** Browsing group for an exact product type (null when unknown). */
+export function groupForType(categorySlug: string, type: string): string | null {
+  const group = TYPE_GROUPS[type];
+  if (!group) return null;
+  return (GROUP_ORDER[categorySlug] ?? []).includes(group) ? group : null;
+}
 
 export function productGroup(categorySlug: string, subcategory: string | null | undefined): string | null {
   const sub = subcategory ?? "";

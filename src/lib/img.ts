@@ -75,3 +75,18 @@ export function isPosterArtwork(url: string | null | undefined): boolean {
   const file = url.split("/").pop() ?? "";
   return POSTER_FILES.has(file);
 }
+
+/**
+ * Display fit for a product image. Product and catalogue photography shows
+ * the WHOLE piece ("contain") — toes, heels, soles, handles, straps and
+ * buckles are never cropped. Lifestyle/editorial scenes may crop ("cover"),
+ * and the admin's per-product imageFit can force "cover".
+ */
+export function displayFit(
+  kind: string | null | undefined,
+  productFit: string | null | undefined,
+): "cover" | "contain" {
+  if (kind === "lifestyle") return "cover";
+  if (productFit === "cover") return "cover";
+  return "contain";
+}

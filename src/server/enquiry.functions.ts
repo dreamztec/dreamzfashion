@@ -16,6 +16,10 @@ const EnquirySchema = z.object({
   presence: z.enum(["store", "online", "both"]),
   productInterest: z.string().min(2).max(80),
   orderVolume: z.string().min(1).max(80),
+  // SELL DREAMZ programme: bulk (A) | credit (B) | commission (C) | undecided
+  partnershipCategory: z
+    .enum(["bulk", "credit", "commission", "undecided"])
+    .default("undecided"),
   message: z.string().max(1200).optional().or(z.literal("")),
 });
 
@@ -33,6 +37,7 @@ export const submitPartnershipEnquiry = createServerFn({ method: "POST" })
       presence: data.presence,
       productInterest: data.productInterest,
       orderVolume: data.orderVolume,
+      partnershipCategory: data.partnershipCategory,
       message: data.message || null,
     });
     return { ok: true };

@@ -12,7 +12,7 @@ import {
 } from "../src/lib/attribution";
 import { DESIGN_TEMPLATES, defaultSelection, validateSelection, selectionSummary } from "../src/lib/design-templates";
 import { detectImageType, precheckFile, REFERENCE_LIMITS } from "../src/lib/reference-upload";
-import { groupCounts, productGroup } from "../src/lib/taxonomy";
+import { groupCounts, groupForType, productGroup } from "../src/lib/taxonomy";
 
 const settings = { defaultFee: 3500, freeThreshold: 150000 }; // admin enters naira
 
@@ -122,10 +122,18 @@ describe("shop structure", () => {
     expect(productGroup("footwear", "Monk Straps")).toBe("Shoes");
     expect(productGroup("footwear", "Loafers")).toBe("Loafers");
     expect(productGroup("footwear", "Boots")).toBe("Boots");
-    expect(productGroup("footwear", "Mules")).toBe("Slides");
-    expect(productGroup("bags", "Briefcases")).toBe("Briefcases");
+    expect(productGroup("footwear", "Mules")).toBe("Slides & Sandals");
+    expect(productGroup("footwear", "Sneakers")).toBe("Sneakers");
+    expect(productGroup("footwear", "Heels")).toBe("Heels & Wedges");
+    expect(productGroup("bags", "Briefcases")).toBe("Briefcases & Laptop Bags");
+    expect(productGroup("bags", "Duffle Bags")).toBe("Duffle & Travel");
+    expect(productGroup("bags", "Crossbody Bags")).toBe("Crossbody");
     expect(productGroup("bags", "Wrist Pouches")).toBe("Wrist Pouches");
     expect(productGroup("accessories", "Belts")).toBe("Belts");
+    expect(productGroup("accessories", "Card Holders")).toBe("Wallets & Small Goods");
+    expect(productGroup("accessories", "Purses")).toBe("Purses");
+    expect(groupForType("footwear", "Sneakers")).toBe("Sneakers");
+    expect(groupForType("accessories", "Key Holders")).toBe("Wallets & Small Goods");
     expect(
       groupCounts("footwear", [
         { categorySlug: "footwear", subcategory: "Boots" },

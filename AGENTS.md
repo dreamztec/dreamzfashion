@@ -46,11 +46,24 @@ but intentionally not built yet.
 
 ## Critical Conventions
 
-- **Commercial tiers** — products carry `tier`: `essentials | signature |
-  bespoke` (DREAMZ Essentials / Signature / Bespoke), editable in admin and
-  separate from packaging ("Complete Package"). Legacy `product_line`
-  (essentials|originals|royale) still exists for data compatibility; map it
-  via `tierFromProductLine()`.
+- **Commercial collections** — products carry `tier`:
+  `essentials | originals | royale` (DREAMZ Essentials / Originals / Royale).
+  Legacy stored values (`signature`, `bespoke`) are presented under the new
+  names by `normalizeTier()` and were migrated in
+  `20261026082530_collection_structure_hero_flag_image_kind`. The customer
+  label is `resolveCollection()` in `src/server/catalog.server.ts`: an
+  admin-set `collection` string wins, otherwise the tier label. Automatic
+  classification (`src/lib/collection.ts`) only SUGGESTS — ambiguous products
+  (exactly 3 colours, exactly ₦50,000, missing colour data) are flagged
+  "Needs Category Confirmation" in the admin review queue and are NEVER
+  guessed or relabelled. The admin's manual choice always overrides.
+- **Homepage hero** — an explicit `homepage_hero` product flag chosen in the
+  admin (never a hard-coded SKU); fallbacks: bestseller flag, then the Boot
+  of Many Colours SKU.
+- **Product imagery** — clean product photography displays `contain`
+  (whole product visible; per-product `image_fit='cover'` is only for
+  lifestyle/editorial). Images go through `img()` / `imgSrcSet()` at
+  640/960/1280/1600 via the Netlify Image CDN.
 - **Quote-only products** — `price = 0` or `checkout_ready = false` means the
   storefront shows "Request a quote" and the server REJECTS the line at
   checkout. Never invent prices.

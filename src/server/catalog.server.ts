@@ -9,9 +9,10 @@ import {
 } from "../../db/schema";
 import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
 import { isDisplayableImageUrl } from "../lib/img";
+import { TIER_LABELS, normalizeTier } from "../lib/format";
 
 export type ProductWithMedia = Product & {
-  images: Array<{ url: string; altText: string | null }>;
+  images: Array<{ url: string; altText: string | null; kind: string }>;
   variants: Array<{ id: number; color: string | null; size: string | null; stockQuantity: number; price: number | null }>;
 };
 
@@ -25,42 +26,35 @@ export type { Product } from "../../db/schema";
  * neutral "Image coming soon" placeholder.
  */
 function displayableImages(
-  rows: Array<{ url: string; altText: string | null }>,
-): Array<{ url: string; altText: string | null }> {
+  rows: Array<{ url: string; altText: string | null; kind?: string | null }>,
+): Array<{ url: string; altText: string | null; kind: string }> {
   return rows
     .filter((i) => isDisplayableImageUrl(i.url))
-    .map((i) => ({ url: i.url, altText: i.altText }));
+    .map((i) => ({ url: i.url, altText: i.altText, kind: i.kind || "product" }));
 }
 
 /**
- * Apply the house collection rules:
- * - One or two design colours: Essentials
- * - More than two design colours (or explicit multicolour/rainbow): Essentials Pro
- * Each `colors` entry is a separate colourway ("Black / Brown" = one colourway
- * with two design colours), so colours are counted per colourway — a bag
- * offered in Brown, Black or Grey is still a one-colour Essentials design.
- * Explicit collections (e.g. DREAMZ Originals, DREAMZ Exeutez Collection) are preserved.
+ * Customer-facing collection label for a product.
+ *
+ * The three primary DREAMZ collections are Essentials, Originals and Royale.
+ * The admin's stored choices always win:
+ * 1. An explicit curated `collection` string (e.g. "DREAMZ Originals") set
+ *    in the admin dashboard is preserved verbatim — automatic rules NEVER
+ *    move or rename a product, including the Boot of Many Colours.
+ * 2. Otherwise the label comes from the admin-managed commercial tier
+ *    (Essentials / Originals / Royale), which also accepts the legacy
+ *    "signature"/"bespoke" values and presents them under the new names.
+ *
+ * The old automatic "Essentials Pro" generation is gone: ambiguous products
+ * are surfaced in the admin "Needs Category Confirmation" review queue
+ * (src/lib/collection.ts) instead of being silently relabelled.
  */
 export function resolveCollection(p: {
   collection?: string | null;
-  colors?: string[] | null;
-  name?: string;
+  tier?: string | null;
 }): string {
-  if (p.collection && p.collection.trim().length > 0) return p.collection;
-  const colourways = p.colors ?? [];
-  const maxDesignColours = Math.max(
-    0,
-    ...colourways.map(
-      (c) => new Set(c.split(/[\/,+&]/).map((part) => part.trim().toLowerCase()).filter(Boolean)).size,
-    ),
-  );
-  const hasMulticolour =
-    colourways.some((c) => /multi|rainbow/i.test(c)) ||
-    Boolean(p.name && /multi|rainbow/i.test(p.name));
-  if (maxDesignColours >= 3 || hasMulticolour) {
-    return "Essentials Pro";
-  }
-  return "Essentials";
+  if (p.collection && p.collection.trim().length > 0) return p.collection.trim();
+  return TIER_LABELS[normalizeTier(p.tier)];
 }
 
 async function attachMedia(rows: Product[]): Promise<ProductWithMedia[]> {
@@ -198,7 +192,7 @@ export async function searchProducts(query: string): Promise<ProductWithMedia[]>
   const media = await attachMedia(rows);
   // Also include products whose resolved collection matches the query
   const queryLower = query.toLowerCase();
-  if (queryLower.includes("pro") || queryLower.includes("essential") || queryLower.includes("original")) {
+  if (queryLower.includes("essential") || queryLower.includes("original") || queryLower.includes("royale")) {
     const allPublished = await db.select().from(products).where(eq(products.status, "published")).limit(100);
     const allMedia = await attachMedia(allPublished);
     const matched = allMedia.filter(

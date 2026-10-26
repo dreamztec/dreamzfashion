@@ -6,21 +6,29 @@ import { CONTACT, REGISTERED_BUSINESS_LINE } from "@/lib/contact";
 
 const YEAR = new Date().getFullYear();
 
-const COLUMNS: Array<{ title: string; links: Array<{ label: string; to: string }> }> = [
+const COLUMNS: Array<{
+  title: string;
+  links: Array<{ label: string; to: string; shop?: boolean }>;
+}> = [
   {
     title: "Shop",
     links: [
-      { label: "All Pieces", to: "/shop" },
-      { label: "Footwear", to: "/shop/footwear" },
-      { label: "Bags", to: "/shop/bags" },
-      { label: "Accessories", to: "/shop/accessories" },
-      { label: "Design Yours", to: "/custom" },
+      { label: "All Pieces", to: "/shop", shop: true },
+      { label: "Essentials", to: "/shop/essentials", shop: true },
+      { label: "Originals", to: "/shop/originals", shop: true },
+      { label: "Royale", to: "/shop/royale", shop: true },
+      { label: "Footwear", to: "/shop/footwear", shop: true },
+      { label: "Bags", to: "/shop/bags", shop: true },
+      { label: "Accessories", to: "/shop/accessories", shop: true },
+      { label: "Design Yours", to: "/custom", shop: true },
     ],
   },
   {
     title: "The House",
     links: [
       { label: "About DREAMZ", to: "/about" },
+      { label: "Creators — apply free", to: "/creators" },
+      { label: "Sell DREAMZ — retail partners", to: "/partnerships" },
       { label: "Earn with DREAMZ", to: "/earn" },
       { label: "Corporate Orders", to: "/corporate" },
       { label: "Anniversary Collection", to: "/dreamz-5" },
@@ -77,7 +85,11 @@ export function Footer({
                   <li key={link.to}>
                     <Link
                       to={link.to as "/shop"}
-                      search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }}
+                      search={
+                        link.to === "/shop"
+                          ? { q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }
+                          : undefined
+                      }
                       className="text-sm text-ivory/80 hover:text-ivory transition-colors"
                     >
                       {link.label}

@@ -1,5 +1,5 @@
 import { Link, createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getProduct, getRelated, getSiteSettings } from "@/server/catalog.functions";
 import type { ProductWithMedia } from "@/server/catalog.server";
 import { ProductGrid } from "@/components/ProductCard";
@@ -7,12 +7,11 @@ import { ImageComingSoon } from "@/components/brand";
 import { ProductWhatsAppCTA, WhatsAppCTAButton } from "@/components/whatsapp";
 import { useCart } from "@/store/cart";
 import { formatNaira, normalizeTier, TIER_LABELS } from "@/lib/format";
-import { isPosterArtwork } from "@/lib/img";
+import { displayFit, img } from "@/lib/img";
 import { templateForSku } from "@/lib/design-templates";
 import { availabilityOf } from "@/lib/availability";
 import { BRAND, SITE_URL } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
-import { img } from "@/lib/img";
 
 function logEvent(name: string, data: Record<string, unknown>) {
   try {
@@ -113,6 +112,7 @@ function ProductPage() {
   const [added, setAdded] = useState(false);
   const [sizeError, setSizeError] = useState(false);
   const [zoomed, setZoomed] = useState(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     logEvent("view_product", { slug: product.slug, sku: product.sku });
@@ -226,47 +226,130 @@ function ProductPage() {
       </nav>
 
       <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-        {/* Gallery */}
+        {/* Mobile-only summary: the first phone viewport shows what the piece
+            is and what it costs before the gallery. */}
+        <div className="lg:hidden mb-1">
+          <p className="tier-badge mb-2">{product.collection ?? TIER_LABELS[tier]}</p>
+          <h1 className="font-editorial text-2xl leading-tight">{product.name}</h1>
+          <p className="mt-2 font-editorial text-xl">
+            {quoteOnly
+              ? "Request a quote"
+              : `${formatNaira(productOnlyPrice)}${packagePrice ? " · Complete Package available" : ""}`}
+          </p>
+        </div>
+        {/* Gallery — the whole product is visible at first glance; swipe on
+            mobile, thumbnails, next/previous and full-screen zoom. */}
         <div>
-          {image ? (
-            <button
-              type="button"
-              className="img-frame aspect-[4/5] w-full relative cursor-zoom-in"
-              onClick={() => setZoomed(true)}
-              aria-label="View image fullscreen"
-            >
-              <img
-                src={img(image, { w: 1000, fit: product.imageFit === "contain" || isPosterArtwork(image) ? "contain" : undefined })}
-                style={product.imageFit === "contain" || isPosterArtwork(image) ? { objectFit: "contain" } : undefined}
-                alt={product.images[selectedImage]?.altText ?? product.name}
-                fetchPriority={selectedImage === 0 ? "high" : undefined}
-              />
-            </button>
-          ) : (
-            <ImageComingSoon aspect="aspect-[4/5]" label={`${product.name} — image coming soon`} />
-          )}
-          {product.images.length > 1 && (
-            <div className="flex gap-3 mt-3">
-              {product.images.map((im, i) => (
-                <button
-                  key={i}
-                  onClick={() => setSelectedImage(i)}
-                  aria-label={`View image ${i + 1} of ${product.name}`}
-                  aria-pressed={selectedImage === i}
-                  className={`w-20 aspect-[4/5] img-frame border ${
-                    selectedImage === i ? "border-gold" : "border-transparent opacity-70 hover:opacity-100"
-                  }`}
+          {(() => {
+            const current = product.images[selectedImage];
+            const fit = displayFit(current?.kind, product.imageFit);
+            const many = product.images.length > 1;
+            const step = (delta: number) => {
+              if (!many) return;
+              setSelectedImage((i) => (i + delta + product.images.length) % product.images.length);
+            };
+            return (
+              <>
+                <div
+                  className="relative"
+                  onTouchStart={(e) => {
+                    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                  }}
+                  onTouchEnd={(e) => {
+                    const start = touchStart.current;
+                    if (!start) return;
+                    touchStart.current = null;
+                    const dx = e.changedTouches[0].clientX - start.x;
+                    const dy = e.changedTouches[0].clientY - start.y;
+                    // Horizontal swipe when it clearly dominates vertical scroll.
+                    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+                  }}
                 >
-                  <img
-                    src={img(im.url, { w: 160, fit: product.imageFit === "contain" || isPosterArtwork(im.url) ? "contain" : undefined })}
-                    style={product.imageFit === "contain" || isPosterArtwork(im.url) ? { objectFit: "contain" } : undefined}
-                    alt=""
-                    loading="lazy"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+                  {current ? (
+                    <button
+                      type="button"
+                      className="img-frame aspect-[4/5] w-full relative cursor-zoom-in"
+                      data-fit={fit}
+                      onClick={() => setZoomed(true)}
+                      aria-label="View image fullscreen"
+                    >
+                      <img
+                        src={img(current.url, { w: 1280, fit })}
+                        srcSet={[640, 960, 1280, 1600]
+                          .map((w) => `${img(current.url, { w, fit })} ${w}w`)
+                          .join(", ")}
+                        sizes="(max-width: 1023px) 92vw, 46vw"
+                        style={fit === "contain" ? { objectFit: "contain" } : undefined}
+                        alt={current.altText ?? product.name}
+                        fetchPriority={selectedImage === 0 ? "high" : undefined}
+                      />
+                      {many && (
+                        <>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Previous image"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              step(-1);
+                            }}
+                            onKeyDown={(e) => e.key === "Enter" && step(-1)}
+                            className="hidden sm:flex absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center bg-ivory/90 text-ink border border-ink/15 hover:bg-ivory"
+                          >
+                            ‹
+                          </span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            aria-label="Next image"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              step(1);
+                            }}
+                            onKeyDown={(e) => e.key === "Enter" && step(1)}
+                            className="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 items-center justify-center bg-ivory/90 text-ink border border-ink/15 hover:bg-ivory"
+                          >
+                            ›
+                          </span>
+                          <span className="absolute bottom-3 right-3 bg-ink/70 text-ivory text-[0.6rem] px-2 py-1 tracking-btn">
+                            {selectedImage + 1} / {product.images.length} · swipe
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  ) : (
+                    <ImageComingSoon aspect="aspect-[4/5]" label={`${product.name} — image coming soon`} />
+                  )}
+                </div>
+                {many && (
+                  <div className="flex gap-3 mt-3 overflow-x-auto pb-1">
+                    {product.images.map((im, i) => {
+                      const thumbFit = displayFit(im.kind, product.imageFit);
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setSelectedImage(i)}
+                          aria-label={`View image ${i + 1} of ${product.name}`}
+                          aria-pressed={selectedImage === i}
+                          className={`w-20 shrink-0 aspect-[4/5] img-frame border ${
+                            selectedImage === i ? "border-gold" : "border-transparent opacity-70 hover:opacity-100"
+                          }`}
+                          data-fit={thumbFit}
+                        >
+                          <img
+                            src={img(im.url, { w: 240, fit: thumbFit })}
+                            style={thumbFit === "contain" ? { objectFit: "contain" } : undefined}
+                            alt=""
+                            loading="lazy"
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {/* Details */}
@@ -527,7 +610,7 @@ function ProductPage() {
               Design Something Similar
             </Link>
           ) : null}
-          {tier === "bespoke" && !quoteOnly && (
+          {tier === "royale" && !quoteOnly && (
             <Link
               to="/royale/request"
               className="btn-lux text-ink border border-ink/30 hover:border-ink w-full mt-3"

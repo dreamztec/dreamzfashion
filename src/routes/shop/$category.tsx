@@ -6,10 +6,10 @@ import { groupCounts, productGroup } from "@/lib/taxonomy";
 import { BRAND } from "@/lib/config";
 import { PRODUCT_TIERS, TIER_LABELS, TIER_TAGLINES, TIER_DESCRIPTIONS, formatNaira, type ProductTier } from "@/lib/format";
 
-/** Legacy brand-line slugs map onto the customer-facing tiers. */
+/** Old collection URLs keep working under the new names. */
 const LEGACY_TIER_SLUGS: Record<string, ProductTier> = {
-  originals: "signature",
-  royale: "bespoke",
+  signature: "originals",
+  bespoke: "royale",
 };
 
 export const Route = createFileRoute("/shop/$category")({
@@ -422,7 +422,7 @@ function parseNairaInput(input: string): number | null {
   return value * 100;
 }
 
-/** Tier landing (Essentials / Signature / Bespoke) rendered by /shop/$category. */
+/** Collection landing (Essentials / Originals / Royale) rendered by /shop/$category. */
 function TierLanding({
   tier,
   products,

@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { submitRoyaleRequest } from "@/server/royale.functions";
 import { WhatsAppCTAButton } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
+import { precheckFile } from "@/lib/reference-upload";
 
 export const Route = createFileRoute("/royale/request")({
   head: () => ({
@@ -26,12 +27,54 @@ function RoyaleRequestForm() {
   const [noMax, setNoMax] = useState(false);
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
+  // Optional inspiration image, uploaded to the private design-references
+  // store; the request carries only the random reference id.
+  const [uploadedRef, setUploadedRef] = useState<{ refId: string; name: string; preview: string } | null>(null);
+  const [refError, setRefError] = useState<string | null>(null);
+  const [refUploading, setRefUploading] = useState(false);
+  const refFileInput = useRef<HTMLInputElement>(null);
+
+  async function onReferenceFile(file: File | undefined | null) {
+    if (!file) return;
+    setRefError(null);
+    const problem = precheckFile(file);
+    if (problem) {
+      setRefError(problem);
+      return;
+    }
+    setRefUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/design-references/upload", { method: "POST", body });
+      const json = (await res.json().catch(() => ({}))) as { refId?: string; error?: string };
+      if (!res.ok || !json.refId) {
+        setRefError(json.error || "Upload failed — please try again.");
+        return;
+      }
+      setUploadedRef({
+        refId: json.refId,
+        name: file.name,
+        preview: URL.createObjectURL(file),
+      });
+    } catch {
+      setRefError("Upload failed — check your connection and try again.");
+    } finally {
+      setRefUploading(false);
+      if (refFileInput.current) refFileInput.current.value = "";
+    }
+  }
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setStatus("sending");
     setError(null);
     const data = new FormData(e.currentTarget);
+    // An uploaded inspiration image takes precedence over a pasted link.
+    const referenceUrl =
+      uploadedRef
+        ? `/api/design-references/${uploadedRef.refId}`
+        : String(data.get("referenceUrl") ?? "");
     try {
       const res = await submitRoyaleRequest({
         data: {
@@ -51,7 +94,7 @@ function RoyaleRequestForm() {
           budgetMin: noMax || !budgetMin ? null : budgetMin,
           budgetMax: noMax ? null : budgetMax || null,
           deadline: String(data.get("deadline") ?? ""),
-          referenceUrl: String(data.get("referenceUrl") ?? ""),
+          referenceUrl,
           inspirationNotes: String(data.get("inspirationNotes") ?? ""),
         },
       });
@@ -212,6 +255,40 @@ function RoyaleRequestForm() {
         <div>
           <label htmlFor="r-reference" className="input-lux-label">Inspiration link (optional)</label>
           <input id="r-reference" name="referenceUrl" type="url" maxLength={400} className="input-lux" placeholder="https://…" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="input-lux-label" htmlFor="r-ref-upload">Inspiration image (optional)</label>
+          {uploadedRef ? (
+            <div className="flex items-center gap-3 border border-ink/15 px-4 py-3">
+              <img src={uploadedRef.preview} alt="" className="h-14 w-14 object-cover bg-linen" />
+              <p className="text-sm flex-1 truncate">{uploadedRef.name}</p>
+              <button
+                type="button"
+                className="text-xs uppercase tracking-btn text-oxblood"
+                onClick={() => setUploadedRef(null)}
+              >
+                Remove
+              </button>
+            </div>
+          ) : (
+            <label className="btn-lux btn-lux-outline !py-2.5 !px-5 cursor-pointer inline-flex" htmlFor="r-ref-upload">
+              {refUploading ? "Uploading…" : "Upload a reference image"}
+              <input
+                id="r-ref-upload"
+                ref={refFileInput}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif"
+                className="hidden"
+                onChange={(e) => void onReferenceFile(e.target.files?.[0])}
+              />
+            </label>
+          )}
+          {refError && (
+            <p role="alert" className="mt-2 text-xs text-oxblood">{refError}</p>
+          )}
+          <p className="mt-1 text-xs text-stone">
+            JPG, PNG, WebP or HEIC up to 5 MB — visible only to the DREAMZ atelier.
+          </p>
         </div>
         <div className="sm:col-span-2">
           <label htmlFor="r-notes" className="input-lux-label">Special instructions</label>

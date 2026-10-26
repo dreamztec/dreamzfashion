@@ -86,7 +86,16 @@ export function ImageComingSoon({
 /**
  * Product media with graceful fallback: renders uploaded media when a real
  * URL exists (Blobs uploads, external CDN), otherwise the neutral placeholder.
+ *
+ * Defaults follow the house photography rule: the ENTIRE product stays
+ * visible ("contain") — toes, heels, soles, handles, straps and buckles are
+ * never cropped. Lifestyle/editorial callers may opt into "cover".
+ *
+ * Responsive widths suit Retina phones without shipping huge originals:
+ * 640 / 960 / 1280 / 1600 through the Netlify Image CDN.
  */
+const MEDIA_WIDTHS = [640, 960, 1280, 1600];
+
 export function ProductMedia({
   url,
   alt,
@@ -95,7 +104,8 @@ export function ProductMedia({
   width,
   sizes,
   eager = false,
-  fit = "cover",
+  fetchPriorityHint = false,
+  fit = "contain",
 }: {
   url?: string | null;
   alt: string;
@@ -104,26 +114,27 @@ export function ProductMedia({
   width?: number;
   sizes?: string;
   eager?: boolean;
+  /** Mark as the LCP image (fetchpriority=high). */
+  fetchPriorityHint?: boolean;
   fit?: "cover" | "contain";
 }) {
   if (!isDisplayableImageUrl(url)) {
     return <ImageComingSoon aspect={aspect} className={className} />;
   }
   return (
-    <div className={`img-frame ${aspect} ${className}`}>
+    <div className={`img-frame ${aspect} ${className}`} data-fit={fit}>
       <img
-        src={img(url, { w: width ?? 760, fit })}
+        src={img(url, { w: width ?? 960, fit })}
         srcSet={
           sizes
-            ? [480, 760, 1080]
-                .map((w) => `${img(url, { w, fit })} ${w}w`)
-                .join(", ")
+            ? MEDIA_WIDTHS.map((w) => `${img(url, { w, fit })} ${w}w`).join(", ")
             : undefined
         }
         sizes={sizes}
         alt={alt}
         loading={eager ? "eager" : "lazy"}
-        decoding="async"
+        fetchPriority={fetchPriorityHint ? "high" : undefined}
+        decoding={eager ? "sync" : "async"}
         style={fit === "contain" ? { objectFit: "contain" } : undefined}
       />
     </div>
