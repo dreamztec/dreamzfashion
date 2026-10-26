@@ -10,10 +10,9 @@ export function img(
 ): string {
   const params = new URLSearchParams();
   params.set("url", url);
-  // Auto format negotiation (AVIF/WebP per Accept header) and an explicit
-  // photographic quality — originals are JPEG, so without these every image
-  // re-serves in its source format at full quality.
-  params.set("fm", "auto");
+  // No `fm` parameter: the Image CDN negotiates WebP/AVIF automatically from
+  // the browser's Accept header. Explicit fm values (including "auto") are
+  // rejected with a 400, which would blank every image on the site.
   params.set("q", String(opts.q ?? 80));
   if (opts.w) params.set("w", String(opts.w));
   if (opts.h) params.set("h", String(opts.h));
