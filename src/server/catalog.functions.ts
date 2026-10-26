@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import {
   getCategories,
+  getHomeSelection,
   getProductBySlug,
   getPublishedProducts,
   getRelatedProducts,
@@ -40,6 +41,21 @@ async function safeSeed() {
   } catch (err) {
     seedFailed = true;
     console.error("First-run catalogue seed skipped (read-only fallback):", err);
+  }
+}
+
+/**
+ * Settings backfill is one-time migration maintenance, not request work:
+ * single-flight per process so page views never pay for it repeatedly.
+ */
+let settingsBackfillDone = false;
+async function safeBackfillSettings() {
+  if (settingsBackfillDone) return;
+  try {
+    await backfillSiteSettings();
+    settingsBackfillDone = true;
+  } catch (err) {
+    console.error("Settings backfill skipped:", err);
   }
 }
 
@@ -90,12 +106,13 @@ export const searchCatalog = createServerFn({ method: "GET" })
 
 export const getSiteSettings = createServerFn({ method: "GET" }).handler(async () => {
   await safeSeed();
-  try {
-    await backfillSiteSettings();
-  } catch (err) {
-    console.error("Settings backfill skipped:", err);
-  }
+  await safeBackfillSettings();
   return getSetting<Record<string, string | boolean>>("site", {});
+});
+
+export const getHomeSelectionFn = createServerFn({ method: "GET" }).handler(async () => {
+  await safeSeed();
+  return getHomeSelection();
 });
 
 export const getShippingConfig = createServerFn({ method: "GET" }).handler(async () => {

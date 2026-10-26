@@ -9,6 +9,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/jost": "^5.3.0",
     "@netlify/database": "^2.0.1",
     "@netlify/identity": "^2.0.0",
     "@tailwindcss/vite": "4.2.2",

@@ -7,7 +7,7 @@ import {
   settings,
   type Product,
 } from "../../db/schema";
-import { and, asc, eq, inArray, ne, or, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, like, ne, or, sql } from "drizzle-orm";
 import { isDisplayableImageUrl } from "../lib/img";
 import { TIER_LABELS, normalizeTier } from "../lib/format";
 
@@ -209,4 +209,123 @@ export async function getSetting<T>(key: string, fallback: T): Promise<T> {
   const rows = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
   if (rows.length === 0) return fallback;
   return rows[0].value as T;
+}
+
+export type HomeProductSummary = Pick<
+  Product,
+  "id" | "slug" | "name" | "sku" | "tier" | "price" | "checkoutReady" | "categorySlug"
+> & {
+  images: Array<{ url: string; altText: string | null; kind: string }>;
+};
+
+/**
+ * Homepage selection without the full catalogue: slim product columns and a
+ * displayable-images-only query (no variants, no description payloads), then
+ * the same hero / per-collection / accessories picks the page renders.
+ */
+export async function getHomeSelection(): Promise<{
+  hero: HomeProductSummary | null;
+  collectionPreviews: {
+    essentials: HomeProductSummary | null;
+    originals: HomeProductSummary | null;
+    royale: HomeProductSummary | null;
+  };
+  accessoriesPreview: HomeProductSummary | null;
+  total: number;
+}> {
+  const rows = await db
+    .select({
+      id: products.id,
+      slug: products.slug,
+      name: products.name,
+      sku: products.sku,
+      tier: products.tier,
+      price: products.price,
+      checkoutReady: products.checkoutReady,
+      categorySlug: products.categorySlug,
+      homepageHero: products.homepageHero,
+      bestseller: products.bestseller,
+    })
+    .from(products)
+    .where(eq(products.status, "published"))
+    .orderBy(asc(products.id))
+    .limit(200);
+
+  const total = rows.length;
+  if (total === 0) {
+    return {
+      hero: null,
+      collectionPreviews: { essentials: null, originals: null, royale: null },
+      accessoriesPreview: null,
+      total,
+    };
+  }
+
+  const imgRows = await db
+    .select({
+      productId: productImages.productId,
+      url: productImages.url,
+      altText: productImages.altText,
+      kind: productImages.kind,
+    })
+    .from(productImages)
+    .where(
+      and(
+        inArray(
+          productImages.productId,
+          rows.map((r) => r.id),
+        ),
+        or(
+          like(productImages.url, "/api/media/%"),
+          like(productImages.url, "/img/products/%"),
+          like(productImages.url, "https://%"),
+        ),
+      ),
+    )
+    .orderBy(asc(productImages.position));
+
+  const imagesByProduct = new Map<number, Array<{ url: string; altText: string | null; kind: string }>>();
+  for (const row of imgRows) {
+    const list = imagesByProduct.get(row.productId) ?? [];
+    list.push({ url: row.url, altText: row.altText, kind: row.kind || "product" });
+    imagesByProduct.set(row.productId, list);
+  }
+
+  const withImages: Array<HomeProductSummary & { homepageHero: boolean; bestseller: boolean }> =
+    rows.map((r) => ({
+    id: r.id,
+    slug: r.slug,
+    name: r.name,
+    sku: r.sku,
+    tier: r.tier,
+    price: r.price,
+    checkoutReady: r.checkoutReady,
+    categorySlug: r.categorySlug,
+    homepageHero: r.homepageHero,
+    bestseller: r.bestseller,
+    images: imagesByProduct.get(r.id) ?? [],
+  }));
+
+  // Homepage hero: explicit admin flag, then bestseller, then the Boot of
+  // Many Colours SKU. Automatic rules never move the hero.
+  const hero =
+    withImages.find((p) => p.homepageHero) ??
+    withImages.find((p) => p.bestseller) ??
+    withImages.find((p) => p.sku === "DFK-FTW-001") ??
+    null;
+  const rest = withImages.filter((p) => p.id !== hero?.id);
+  const pick = (tier: string) =>
+    rest.find((p) => p.tier === tier && p.images[0]) ?? rest.find((p) => p.tier === tier) ?? null;
+
+  return {
+    hero,
+    collectionPreviews: {
+      essentials: pick("essentials"),
+      originals: pick("originals"),
+      royale: pick("royale"),
+    },
+    accessoriesPreview:
+      rest.find((p) => p.categorySlug === "accessories" && p.images[0]) ?? null,
+    total,
+  };
 }

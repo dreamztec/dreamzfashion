@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { getCatalog, getSiteSettings } from "@/server/catalog.functions";
+import { getHomeSelectionFn, getSiteSettings } from "@/server/catalog.functions";
 import { ProductMedia, RainbowRule } from "@/components/brand";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
@@ -8,26 +8,8 @@ import { WaitlistSignup } from "@/components/WaitlistSignup";
 
 export const Route = createFileRoute("/")({
   loader: async () => {
-    const [settings, all] = await Promise.all([getSiteSettings(), getCatalog({ data: { limit: 200 } })]);
-    // The homepage hero is an explicit admin decision (Homepage Hero flag),
-    // with the Bestseller flag and the Boot of Many Colours as fallbacks.
-    // Automatic rules never move the hero.
-    const hero =
-      all.find((p) => p.homepageHero) ??
-      all.find((p) => p.bestseller) ??
-      all.find((p) => p.sku === "DFK-FTW-001") ??
-      null;
-    const rest = all.filter((p) => p.id !== hero?.id);
-    // One representative published piece per collection, photography first.
-    const pick = (tier: string) =>
-      rest.find((p) => p.tier === tier && p.images[0]) ?? rest.find((p) => p.tier === tier) ?? null;
-    const collectionPreviews = {
-      essentials: pick("essentials"),
-      originals: pick("originals"),
-      royale: pick("royale"),
-    };
-    const accessoriesPreview = rest.find((p) => p.categorySlug === "accessories" && p.images[0]) ?? null;
-    return { settings, hero, collectionPreviews, accessoriesPreview, total: all.length };
+    const [settings, selection] = await Promise.all([getSiteSettings(), getHomeSelectionFn()]);
+    return { settings, ...selection };
   },
   head: () => ({
     meta: [
@@ -43,14 +25,14 @@ const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefi
 /** /shop/$category takes its own search params (no `q`). */
 const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
 
-type HomeProduct = Awaited<ReturnType<typeof getCatalog>>[number];
+type HomeProduct = Awaited<ReturnType<typeof getHomeSelectionFn>>["hero"];
 
 function Home() {
   const { settings, hero, collectionPreviews, accessoriesPreview, total } = Route.useLoaderData() as {
     settings: Record<string, unknown>;
-    hero: HomeProduct | null;
-    collectionPreviews: { essentials: HomeProduct | null; originals: HomeProduct | null; royale: HomeProduct | null };
-    accessoriesPreview: HomeProduct | null;
+    hero: HomeProduct;
+    collectionPreviews: { essentials: HomeProduct; originals: HomeProduct; royale: HomeProduct };
+    accessoriesPreview: HomeProduct;
     total: number;
   };
   const whatsappNumber =
@@ -63,7 +45,10 @@ function Home() {
       {/* ── Opening: the offer first, then the hero product ─── */}
       <section className="bg-ivory pt-36 sm:pt-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 pb-10 sm:pb-16 text-center">
-          <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.02] uppercase tracking-tight fade-up">
+          {/* No fade-up on the H1 or hero image: the LCP element must paint
+              at full opacity immediately (transparent elements are skipped
+              as LCP candidates, so the entrance animation delayed it). */}
+          <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.02] uppercase tracking-tight">
             Design Your Dream Outfit
           </h1>
           <p className="mt-6 max-w-xl mx-auto text-stone leading-relaxed sm:text-lg fade-up fade-up-1">
@@ -85,7 +70,7 @@ function Home() {
         {/* The Boot of Many Colours — principal hero product, shown whole. */}
         {hero && (
           <div className="mx-auto max-w-5xl px-5 sm:px-8 pb-16 sm:pb-24">
-            <figure className="fade-up fade-up-2">
+            <figure>
               <Link
                 to="/product/$slug"
                 params={{ slug: hero.slug }}
