@@ -26,6 +26,7 @@ import {
 } from "../../db/schema";
 import { desc, eq, sql } from "drizzle-orm";
 import { isDisplayableImageUrl } from "../lib/img";
+import { getPartnerPlan } from "../lib/partner-plans";
 
 // ── Auth gate ────────────────────────────────────────────────────────
 
@@ -1557,6 +1558,13 @@ export const adminListPartners = createServerFn({ method: "GET" }).handler(async
       school: r.school,
       socialProfile: r.socialProfile,
       agreedTerms: r.agreedTerms,
+      sellingMode: r.sellingMode,
+      partnerPlan: r.partnerPlan,
+      physicalModel: r.physicalModel,
+      membershipPaymentStatus: r.membershipPaymentStatus,
+      membershipStartsAt: r.membershipStartsAt?.toISOString() ?? null,
+      membershipExpiresAt: r.membershipExpiresAt?.toISOString() ?? null,
+      introducerCode: r.introducerCode,
       createdAt: r.createdAt?.toISOString() ?? null,
       profile: profiles
         .filter((p) => p.referrerId === r.id)
@@ -1598,6 +1606,7 @@ export const adminUpdatePartner = createServerFn({ method: "POST" })
     z.object({
       id: z.number().int(),
       status: z.enum(["pending", "approved", "rejected", "suspended"]).optional(),
+      membershipPaymentStatus: z.enum(["not_required", "payment_requested", "paid", "waived"]).optional(),
       storefront: z
         .object({
           storeName: z.string().max(120).optional().or(z.literal("")),
@@ -1611,20 +1620,45 @@ export const adminUpdatePartner = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     await requireAdminRole(["owner", "sales"]);
+    const [currentPartner] = await db.select().from(referrers).where(eq(referrers.id, data.id)).limit(1);
+    if (!currentPartner) throw new Error("Partner not found.");
+
+    const nextPaymentStatus = data.membershipPaymentStatus ?? currentPartner.membershipPaymentStatus;
+    const plan = getPartnerPlan(currentPartner.partnerPlan);
+
     if (data.status === "approved") {
       // A creator/trade partner can only be activated once the owner has set
       // a real commission rate — no partner is approved onto unknown terms.
-      const [r] = await db.select({ track: referrers.track }).from(referrers).where(eq(referrers.id, data.id)).limit(1);
       const { getPartnerSettingsFull } = await import("./order-pricing.server");
       const terms = await getPartnerSettingsFull();
-      if (r && ["creator", "trade"].includes(r.track) && terms.commissionBps <= 0) {
-        throw new Error("Set the creator commission rate in Settings → Partner commissions before approving creators.");
+      if (["creator", "trade"].includes(currentPartner.track) && terms.commissionBps <= 0) {
+        throw new Error("Set the partner commission rate in Settings → Partner commissions before approving this seller.");
+      }
+      if (plan.feeKobo > 0 && !["paid", "waived"].includes(nextPaymentStatus)) {
+        throw new Error("Confirm the annual plan payment before approving this paid partner.");
       }
     }
-    if (data.status) {
+
+    const paymentJustActivated =
+      plan.feeKobo > 0 &&
+      ["paid", "waived"].includes(nextPaymentStatus) &&
+      !["paid", "waived"].includes(currentPartner.membershipPaymentStatus);
+    const now = new Date();
+    const expires = paymentJustActivated
+      ? new Date(now.getTime() + 365 * 86_400_000)
+      : currentPartner.membershipExpiresAt;
+
+    if (data.status || data.membershipPaymentStatus) {
       await db
         .update(referrers)
-        .set({ status: data.status, updatedAt: new Date() })
+        .set({
+          ...(data.status ? { status: data.status } : {}),
+          ...(data.membershipPaymentStatus ? { membershipPaymentStatus: data.membershipPaymentStatus } : {}),
+          ...(paymentJustActivated
+            ? { membershipStartsAt: now, membershipExpiresAt: expires }
+            : {}),
+          updatedAt: now,
+        })
         .where(eq(referrers.id, data.id));
     }
     if (data.storefront) {
@@ -1686,6 +1720,15 @@ export const adminUpdatePayoutRequest = createServerFn({ method: "POST" })
     await requireAdminRole(["owner", "sales"]);
     if (data.status === "paid" && !(data.adminReference ?? "").trim()) {
       throw new Error("Record the actual transfer reference before marking a payout paid.");
+    }
+    if (data.status === "paid") {
+      const weekday = new Intl.DateTimeFormat("en-US", {
+        weekday: "long",
+        timeZone: "Africa/Lagos",
+      }).format(new Date());
+      if (weekday !== "Wednesday") {
+        throw new Error("DREAMZ Payday is Wednesday. Approve the request now and mark it paid on Wednesday after the transfer.");
+      }
     }
     await db
       .update(payoutRequests)
