@@ -12,3 +12,21 @@
   for = "/img/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Baseline security headers for every response.
+# CSP notes: the app loads no third-party scripts, fonts or stylesheets
+# (fonts are self-hosted via Fontsource, imagery goes through the same-origin
+# Netlify Image CDN, Paystack checkout is a full redirect — not an iframe).
+# 'unsafe-inline' stays for script/style because TanStack Start ships
+# hydration data as inline scripts and React emits inline style attributes.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self'; media-src 'self'; worker-src 'self' blob:; manifest-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'self'; object-src 'none'; upgrade-insecure-requests"
+    Cross-Origin-Opener-Policy = "same-origin"
+    X-Robots-Tag = "index, follow"

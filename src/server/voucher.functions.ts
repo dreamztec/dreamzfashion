@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { claimVoucherToCustomer, lookupVoucher } from "./vouchers.server";
 import { getCurrentCustomer } from "./auth.server";
 import { appendLedger } from "./rewards-ledger.server";
+import { consumeRateLimit, clientIp } from "./rate-limit.server";
 
 /**
  * Voucher endpoints for the storefront. Codes are validated server-side;
@@ -16,10 +17,20 @@ const CodeSchema = z.object({
   code: z.string().min(4).max(40),
 });
 
+/** Shared throttle: codes are checked unauthenticated, so attempts must be
+ * rate-limited or the endpoint becomes a brute-forceable free-money oracle. */
+async function voucherThrottle() {
+  return consumeRateLimit("voucher-lookup", clientIp(), 10, 5 * 60);
+}
+
 /** Validate a printed voucher code and return a customer-safe projection. */
 export const validateVoucherCode = createServerFn({ method: "POST" })
   .inputValidator(CodeSchema)
   .handler(async ({ data }) => {
+    const limit = await voucherThrottle();
+    if (!limit.ok) {
+      return { ok: false as const, reason: "Too many voucher checks. Please try again shortly." };
+    }
     const check = await lookupVoucher(data.code);
     if (!check.ok || !check.voucher) {
       return { ok: false as const, reason: check.reason ?? "We couldn't validate this voucher." };
@@ -47,6 +58,10 @@ export const validateVoucherCode = createServerFn({ method: "POST" })
 export const claimVoucherCode = createServerFn({ method: "POST" })
   .inputValidator(CodeSchema)
   .handler(async ({ data }) => {
+    const limit = await voucherThrottle();
+    if (!limit.ok) {
+      return { ok: false as const, reason: "Too many voucher checks. Please try again shortly." };
+    }
     const customer = await getCurrentCustomer();
     if (!customer) {
       return {

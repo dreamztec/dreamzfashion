@@ -1,7 +1,15 @@
+import { timingSafeEqual } from "node:crypto";
 import { getRequest, getCookie, getRequestHeader } from "@tanstack/react-start/server";
 import { db } from "../../db/index";
 import { adminUsers } from "../../db/schema";
 import { sql } from "drizzle-orm";
+
+/** Constant-time comparison so token checks never leak length/prefix timing. */
+function secretsMatch(provided: string, secret: string): boolean {
+  const a = Buffer.from(provided, "utf8");
+  const b = Buffer.from(secret, "utf8");
+  return a.length === b.length && timingSafeEqual(a, b);
+}
 
 /**
  * Server-only admin authentication. This module is NEVER imported by client
@@ -30,7 +38,7 @@ export async function resolveAdminRole(): Promise<AdminRole | null> {
     token = "";
   }
   const secret = process.env.ADMIN_SECRET;
-  if (secret && token && token === secret) return "owner";
+  if (secret && token && secretsMatch(token, secret)) return "owner";
 
   // Identity path.
   const authorization = getRequestHeader("authorization");
@@ -72,7 +80,7 @@ export function requireAdmin() {
   } catch {
     token = "";
   }
-  if (!token || token !== secret) {
+  if (!token || !secretsMatch(token, secret)) {
     throw new Error("Admin authentication failed. Please sign in again.");
   }
 }

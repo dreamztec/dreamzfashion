@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { consumeRateLimit, clientIpFromRequest } from "@/server/rate-limit.server";
 
 /**
  * Customer inspiration images for the design workspace.
@@ -21,6 +22,15 @@ export const Route = createFileRoute("/api/design-references/$")({
     handlers: {
       POST: async ({ request }) => {
         try {
+          // Anonymous uploads are validated hard (magic bytes, 5 MB cap) but
+          // must also be throttled so Blob storage cannot be filled at will.
+          const limit = await consumeRateLimit("design-ref-upload", clientIpFromRequest(request), 10, 60 * 60);
+          if (!limit.ok) {
+            return json(
+              { error: "You have uploaded several images recently. Please try again in about an hour." },
+              429,
+            );
+          }
           const form = await request.formData();
           const file = form.get("file");
           if (!file || typeof file === "string") return json({ error: "Choose an image to upload." }, 400);
