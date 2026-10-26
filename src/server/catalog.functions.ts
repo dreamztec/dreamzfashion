@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   getCategories,
   getHomeSelection,
+  getFrontOriginals,
   getProductBySlug,
   getPublishedProducts,
   getRelatedProducts,
@@ -113,6 +114,11 @@ export const getSiteSettings = createServerFn({ method: "GET" }).handler(async (
 export const getHomeSelectionFn = createServerFn({ method: "GET" }).handler(async () => {
   await safeSeed();
   return getHomeSelection();
+});
+
+export const getFrontOriginalsFn = createServerFn({ method: "GET" }).handler(async () => {
+  await safeSeed();
+  return getFrontOriginals();
 });
 
 export const getShippingConfig = createServerFn({ method: "GET" }).handler(async () => {
