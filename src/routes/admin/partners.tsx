@@ -74,6 +74,16 @@ function AdminPartners() {
                     {p.socialProfile ? ` · ${p.socialProfile}` : ""}
                     {p.agreedTerms ? " · terms accepted" : " · terms NOT accepted"}
                   </p>
+                  <p className="text-xs text-stone mt-1">
+                    {p.sellingMode} · {p.partnerPlan} · payment: {p.membershipPaymentStatus}
+                    {p.physicalModel !== "undecided" ? ` · stock model: ${p.physicalModel}` : ""}
+                    {p.introducerCode ? ` · introduced by ${p.introducerCode}` : ""}
+                  </p>
+                  {p.membershipExpiresAt && (
+                    <p className="text-xs text-stone mt-1">
+                      Membership expires {new Date(p.membershipExpiresAt).toLocaleDateString("en-NG")}
+                    </p>
+                  )}
                   {p.profile && (
                     <p className="text-xs mt-1">
                       Storefront: {p.profile.storeName ?? "—"} ({p.profile.storefrontStatus})
@@ -82,6 +92,20 @@ function AdminPartners() {
                   )}
                 </div>
                 <div className="flex flex-col gap-2 items-end">
+                  <select
+                    className="input-lux !py-2 text-xs w-40"
+                    value={p.membershipPaymentStatus}
+                    onChange={(e) =>
+                      adminCall(adminUpdatePartner, { id: p.id, membershipPaymentStatus: e.target.value })
+                        .then(load)
+                        .catch((err: unknown) => alert(err instanceof Error ? err.message : "Payment update failed"))
+                    }
+                    aria-label={`Membership payment for ${p.displayName}`}
+                  >
+                    {["not_required", "payment_requested", "paid", "waived"].map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
                   <select
                     className="input-lux !py-2 text-xs w-40"
                     value={p.status}
