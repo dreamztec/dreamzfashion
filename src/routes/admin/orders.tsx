@@ -191,6 +191,12 @@ function AdminOrders() {
                             {item.customization && (
                               <p className="text-xs text-gold uppercase tracking-wide">Custom piece</p>
                             )}
+                            {item.messageSnapshot && (
+                              <p className="text-xs text-stone mt-0.5" dir={(item.messageSnapshot as { rtl?: boolean }).rtl ? "rtl" : "ltr"}>
+                                Meaning: “{(item.messageSnapshot as { text?: string }).text}” —{" "}
+                                {(item.messageSnapshot as { placementLabel?: string }).placementLabel ?? ""}
+                              </p>
+                            )}
                             <p className="text-xs text-stone">Qty {item.quantity}</p>
                           </div>
                           <span className="whitespace-nowrap">

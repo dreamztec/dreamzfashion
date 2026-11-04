@@ -2,13 +2,14 @@ import { db } from "../../db/index";
 import {
   categories,
   productImages,
+  productSlugAliases,
   productVariants,
   products,
   settings,
   type Product,
 } from "../../db/schema";
 import { and, asc, eq, inArray, isNotNull, like, ne, or, sql } from "drizzle-orm";
-import { isDisplayableImageUrl } from "../lib/img";
+import { isDisplayableImageUrl, isPosterArtwork } from "../lib/img";
 import { TIER_LABELS, normalizeTier } from "../lib/format";
 
 export type ProductWithMedia = Product & {
@@ -24,12 +25,22 @@ export type { Product } from "../../db/schema";
  * (/img/products/…) and external https URLs display. Legacy root-level
  * /img/*.jpg placeholders are dropped so those surfaces fall back to the
  * neutral "Image coming soon" placeholder.
+ *
+ * Poster artwork (price/name/promotional text baked into the image) and any
+ * image the admin classified as "catalogue" NEVER enters a public product
+ * gallery — storefront imagery is clean product photography only. The rows
+ * stay in the media library as archived campaign assets.
  */
 function displayableImages(
   rows: Array<{ url: string; altText: string | null; kind?: string | null }>,
 ): Array<{ url: string; altText: string | null; kind: string }> {
   return rows
-    .filter((i) => isDisplayableImageUrl(i.url))
+    .filter(
+      (i) =>
+        isDisplayableImageUrl(i.url) &&
+        (i.kind ?? "product") !== "catalogue" &&
+        !isPosterArtwork(i.url),
+    )
     .map((i) => ({ url: i.url, altText: i.altText, kind: i.kind || "product" }));
 }
 
@@ -142,7 +153,25 @@ export async function getProductBySlug(slug: string): Promise<ProductWithMedia |
     .from(products)
     .where(and(eq(products.slug, slug), eq(products.status, "published")))
     .limit(1);
-  if (rows.length === 0) return null;
+  if (rows.length === 0) {
+    // Renamed products keep their old links alive through permanent aliases
+    // — the caller redirects to the canonical slug; no duplicate product row
+    // is ever created for a rename.
+    const [alias] = await db
+      .select({ productId: productSlugAliases.productId })
+      .from(productSlugAliases)
+      .where(eq(productSlugAliases.alias, slug))
+      .limit(1);
+    if (!alias) return null;
+    const aliasRows = await db
+      .select()
+      .from(products)
+      .where(and(eq(products.id, alias.productId), eq(products.status, "published")))
+      .limit(1);
+    if (aliasRows.length === 0) return null;
+    const [withMedia] = await attachMedia(aliasRows);
+    return withMedia;
+  }
   const [withMedia] = await attachMedia(rows);
   return withMedia;
 }
@@ -232,6 +261,7 @@ export type HomeProductSummary = Pick<
   Product,
   "id" | "slug" | "name" | "sku" | "tier" | "price" | "checkoutReady" | "categorySlug"
 > & {
+  theme: string | null;
   images: Array<{ url: string; altText: string | null; kind: string }>;
 };
 
@@ -262,6 +292,7 @@ export async function getHomeSelection(): Promise<{
       categorySlug: products.categorySlug,
       homepageHero: products.homepageHero,
       bestseller: products.bestseller,
+      theme: products.theme,
     })
     .from(products)
     .where(eq(products.status, "published"))
@@ -297,12 +328,15 @@ export async function getHomeSelection(): Promise<{
           like(productImages.url, "/img/products/%"),
           like(productImages.url, "https://%"),
         ),
+        // Poster artwork never leads the storefront (see displayableImages).
+        ne(productImages.kind, "catalogue"),
       ),
     )
     .orderBy(asc(productImages.position));
 
   const imagesByProduct = new Map<number, Array<{ url: string; altText: string | null; kind: string }>>();
   for (const row of imgRows) {
+    if (isPosterArtwork(row.url)) continue;
     const list = imagesByProduct.get(row.productId) ?? [];
     list.push({ url: row.url, altText: row.altText, kind: row.kind || "product" });
     imagesByProduct.set(row.productId, list);
@@ -320,6 +354,7 @@ export async function getHomeSelection(): Promise<{
     categorySlug: r.categorySlug,
     homepageHero: r.homepageHero,
     bestseller: r.bestseller,
+    theme: r.theme,
     images: imagesByProduct.get(r.id) ?? [],
   }));
 

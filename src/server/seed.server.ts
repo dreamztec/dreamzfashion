@@ -1,5 +1,5 @@
 import { db } from "../../db/index";
-import { categories, productVariants, products, referralPrograms, settings } from "../../db/schema";
+import { categories, inspirationMessages, productVariants, products, referralPrograms, settings } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { tierFromProductLine } from "../lib/format";
 
@@ -103,7 +103,10 @@ async function runSeed() {
         newArrival: true,
         bestseller: true,
         homepageHero: true,
-        customizable: true,
+        // Fixed DREAMZ signature design — never customisable.
+        customizable: false,
+        theme: "Vision",
+        universalMeaning: "See beyond where you are. Walk toward what you can become.",
         deliveryInformation:
           "Complete Package includes fast-track production and doorstep delivery anywhere in Nigeria within 7 days.",
       },
@@ -699,6 +702,84 @@ async function runSeed() {
     .onConflictDoNothing({ target: referralPrograms.track });
 
   await ensureCatalogueDrafts();
+  await ensureInspirationMessages();
+}
+
+/**
+ * MAKE IT MEANINGFUL — starter message catalogue.
+ *
+ * DREAMZ Quotes are house-written and ship APPROVED; they work
+ * independently of any scripture. Bible and Qur'an entries are inserted as
+ * DRAFT research references ONLY: exact wording, translation, reputable
+ * source URL and commercial reproduction permission must be verified by a
+ * human before any scripture is approved — nothing is published
+ * automatically, nothing is invented, and paraphrases are never labelled as
+ * scripture.
+ */
+const DREAMZ_QUOTES: Array<{ theme: string; text: string }> = [
+  { theme: "Vision", text: "Give your dream a direction." },
+  { theme: "Faith", text: "Take the next step with courage." },
+  { theme: "Peace", text: "Walk with peace. Act with purpose." },
+  { theme: "Joy", text: "Make room for joy along the journey." },
+  { theme: "Love", text: "Let love shape what you leave behind." },
+  { theme: "Hope", text: "Your next chapter still holds possibility." },
+  { theme: "Purpose", text: "Let your steps serve something meaningful." },
+];
+
+// Research references only — DRAFT until a human verifies wording,
+// translation, source URL and reproduction permission.
+const SCRIPTURE_RESEARCH: Array<{ theme: string; source: "bible" | "quran"; reference: string }> = [
+  { theme: "Vision", source: "bible", reference: "Habakkuk 2:2" },
+  { theme: "Vision", source: "quran", reference: "59:18" },
+  { theme: "Faith", source: "bible", reference: "Hebrews 11:1" },
+  { theme: "Faith", source: "quran", reference: "65:3" },
+  { theme: "Peace", source: "bible", reference: "John 14:27" },
+  { theme: "Peace", source: "quran", reference: "13:28" },
+  { theme: "Joy", source: "bible", reference: "Psalm 16:11" },
+  { theme: "Joy", source: "quran", reference: "10:58" },
+  { theme: "Love", source: "bible", reference: "1 Corinthians 16:14" },
+  { theme: "Love", source: "quran", reference: "30:21" },
+  { theme: "Hope", source: "bible", reference: "Romans 15:13" },
+  { theme: "Hope", source: "quran", reference: "39:53" },
+  { theme: "Purpose", source: "bible", reference: "Ephesians 2:10" },
+  { theme: "Purpose", source: "quran", reference: "53:39" },
+];
+
+async function ensureInspirationMessages() {
+  const values = [
+    ...DREAMZ_QUOTES.map((q, i) => ({
+      messageId: `DQ-${q.theme.toUpperCase().slice(0, 6)}-${String(i + 1).padStart(2, "0")}`,
+      version: 1,
+      theme: q.theme,
+      source: "dreamz",
+      text: q.text,
+      reference: null,
+      translation: null,
+      attribution: "DREAMZ",
+      verificationUrl: null,
+      reproductionPermission: "verified",
+      status: "approved",
+      rtl: false,
+      eligiblePlacements: [],
+    })),
+    ...SCRIPTURE_RESEARCH.map((r) => ({
+      messageId: `${r.source === "bible" ? "SB" : "SQ"}-${r.theme.toUpperCase().slice(0, 6)}-01`,
+      version: 1,
+      theme: r.theme,
+      source: r.source,
+      text: "",
+      reference: r.reference,
+      translation: null,
+      attribution: null,
+      verificationUrl: null,
+      reproductionPermission: "unverified",
+      status: "draft",
+      rtl: r.source === "quran",
+      eligiblePlacements: [],
+    })),
+  ];
+  if (values.length === 0) return;
+  await db.insert(inspirationMessages).values(values).onConflictDoNothing();
 }
 
 /**
@@ -850,8 +931,26 @@ export async function backfillSiteSettings() {
           enabled: true,
           dailyRequestCap: 200,
           maxTurnsPerSession: 6,
-          conceptEnabled: true,
-          conceptDailyCap: 25,
+          // Customer-facing AI image generation was retired with the old
+          // concept-sketch flow; the atelier composes prompts, not images.
+          conceptEnabled: false,
+          conceptDailyCap: 0,
+        },
+      },
+      {
+        // MAKE IT MEANINGFUL placement pricing (naira). Explicit 0 =
+        // complimentary (shown as such); null/missing = priced after review
+        // → the line becomes a quote line. Nothing is silently free.
+        key: "meaning",
+        value: {
+          placements: {
+            message_card: 0,
+            gift_note: 0,
+            inside_label: null,
+            inside_lining: null,
+            embossing: null,
+            engraving: null,
+          },
         },
       },
     ])

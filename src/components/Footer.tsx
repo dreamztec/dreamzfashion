@@ -20,7 +20,7 @@ const COLUMNS: Array<{
       { label: "Footwear", to: "/shop/footwear", shop: true },
       { label: "Bags", to: "/shop/bags", shop: true },
       { label: "Accessories", to: "/shop/accessories", shop: true },
-      { label: "Design Yours", to: "/custom", shop: true },
+      { label: "Leather Atelier", to: "/custom", shop: true },
     ],
   },
   {

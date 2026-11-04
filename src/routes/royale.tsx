@@ -18,12 +18,12 @@ export const Route = createFileRoute("/royale")({
     };
   },
   head: () => ({
-    meta: [
-      { title: `DREAMZ Royale — ${BRAND.name}` },
+        meta: [
+      { title: `DREAMZ Royale — Private Client Leather Service — ${BRAND.name}` },
       {
         name: "description",
         content:
-          "DREAMZ Royale — premium customisation and bespoke client work. Created for one client. Created around one vision.",
+          "DREAMZ Royale — Private Client Leather Service. One-off footwear, personal leather collections, wedding and executive sets. Created for one client. Created around one vision.",
       },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/royale` }],
@@ -77,13 +77,16 @@ function RoyalePage() {
             Created for one client. Created around one vision.
           </h1>
           <p className="mt-6 max-w-xl text-ivory/85 leading-relaxed fade-up fade-up-2">
-            Royale is our premium client service — a piece designed around you,
-            from first sketch to final finish. Not a price band. A
-            collaboration with the atelier.
+            Royale is Private Client Leather Service — not merely
+            “more customisation”. A completely new brief, a one-off pair of
+            footwear, a personal leather collection, a wedding or executive
+            set, a travel set or a gift commission, designed around you from
+            first sketch to final finish. Every Royale brief ends with human
+            atelier review.
           </p>
           <div className="mt-9 flex flex-wrap gap-4 fade-up fade-up-3">
-            <Link to="/royale/request" className="btn-lux btn-lux-gold">
-              Start a Design
+            <Link to="/custom" search={{ design: undefined, t: undefined }} className="btn-lux btn-lux-gold">
+              Begin with the Dream-to-Leather Consultation
             </Link>
             <Link to="/royale/request" className="btn-lux text-ivory border border-ivory/40 hover:border-ivory">
               Request a Consultation
@@ -141,8 +144,9 @@ function RoyalePage() {
             Your consultation begins with a conversation
           </h2>
           <p className="text-stone leading-relaxed max-w-xl mx-auto mb-10">
-            Submit a Royale request and our team will reach out to shape the
-            brief with you. Every request receives a reference and a personal
+            Submit a Royale request — or begin with the Dream-to-Leather
+            consultation in the Leather Atelier, which hands the house your
+            full brief. Every request receives a reference and a personal
             response — no automated quotes, no obligation.
           </p>
           <div className="flex flex-wrap justify-center gap-4">

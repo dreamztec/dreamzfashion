@@ -11,7 +11,7 @@ const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> 
   { label: "Originals", to: "/shop/originals", shopCategory: true },
   { label: "Royale", to: "/shop/royale", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
-  { label: "Design Yours", to: "/custom" },
+  { label: "Leather Atelier", to: "/custom" },
 ];
 
 const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
@@ -20,7 +20,7 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Originals", to: "/shop/originals", shopCategory: true },
   { label: "Royale", to: "/shop/royale", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
-  { label: "Design Yours", to: "/custom" },
+  { label: "Leather Atelier", to: "/custom" },
   { label: "Creators", to: "/creators" },
   { label: "Partnerships", to: "/partnerships" },
 ];

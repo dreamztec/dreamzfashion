@@ -10,6 +10,7 @@ import {
 import { adminUploadMedia, adminListMedia } from "@/server/media.functions";
 import { adminCall } from "@/lib/admin-client";
 import { formatNaira } from "@/lib/format";
+import { MESSAGE_PLACEMENTS, PLACEMENT_LABELS } from "@/lib/meaning";
 import { isDisplayableImageUrl } from "@/lib/img";
 import { PRODUCT_TYPES } from "@/lib/taxonomy";
 import {
@@ -86,6 +87,11 @@ const EMPTY: {
   imageUrl: string;
   careInformation: string;
   deliveryInformation: string;
+  // MAKE IT MEANINGFUL
+  theme: string;
+  universalMeaning: string;
+  inspirationEligible: boolean;
+  allowedMessagePlacements: string[];
 } = {
   id: undefined,
   sku: "",
@@ -123,6 +129,10 @@ const EMPTY: {
   imageUrl: "",
   careInformation: "",
   deliveryInformation: "",
+  theme: "",
+  universalMeaning: "",
+  inspirationEligible: true,
+  allowedMessagePlacements: [],
 };
 
 /** Product photography should be at least this many pixels on its short side. */
@@ -234,6 +244,10 @@ function AdminProducts() {
       imageUrl: p.image ?? "",
       careInformation: p.careInformation ?? "",
       deliveryInformation: p.deliveryInformation ?? "",
+      theme: p.theme ?? "",
+      universalMeaning: p.universalMeaning ?? "",
+      inspirationEligible: p.inspirationEligible,
+      allowedMessagePlacements: p.allowedMessagePlacements ?? [],
     });
     setGallery(
       (p.gallery ?? [])
@@ -386,6 +400,10 @@ function AdminProducts() {
         imageUrl: gallery[0]?.url ?? editing.imageUrl,
         careInformation: editing.careInformation,
         deliveryInformation: editing.deliveryInformation,
+        theme: editing.theme,
+        universalMeaning: editing.universalMeaning,
+        inspirationEligible: editing.inspirationEligible,
+        allowedMessagePlacements: editing.inspirationEligible && editing.allowedMessagePlacements.length > 0 ? editing.allowedMessagePlacements : null,
         images: gallery.map((g) => ({ url: g.url, altText: g.altText, kind: g.kind })),
       });
       setShowForm(false);
@@ -1048,6 +1066,64 @@ function AdminProducts() {
                 {label}
               </label>
             ))}
+          </div>
+
+          <div className="sm:col-span-2 border-t border-ink/10 pt-4">
+            <p className="text-[0.7rem] uppercase tracking-luxe text-stone mb-3">Make It Meaningful</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="input-lux-label">Theme / Meaning Word</label>
+                <input
+                  className="input-lux"
+                  value={editing.theme}
+                  onChange={(e) => setEditing((v) => ({ ...v, theme: e.target.value }))}
+                  placeholder="Vision, Faith, Ambition…"
+                  maxLength={60}
+                />
+              </div>
+              <div>
+                <label className="input-lux-label">Universal Statement (shown to everyone)</label>
+                <input
+                  className="input-lux"
+                  value={editing.universalMeaning}
+                  onChange={(e) => setEditing((v) => ({ ...v, universalMeaning: e.target.value }))}
+                  placeholder="See beyond where you are."
+                  maxLength={300}
+                />
+              </div>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={editing.inspirationEligible}
+                  onChange={(e) => setEditing((v) => ({ ...v, inspirationEligible: e.target.checked }))}
+                />
+                Inspiration message eligible
+              </label>
+            </div>
+            <fieldset className="mt-3">
+              <legend className="text-xs text-stone mb-1">
+                Allowed placements (none selected = house default: Message Card + Gift Note)
+              </legend>
+              <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs">
+                {MESSAGE_PLACEMENTS.map((p) => (
+                  <label key={p} className="flex items-center gap-1.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={editing.allowedMessagePlacements.includes(p)}
+                      onChange={(e) =>
+                        setEditing((v) => ({
+                          ...v,
+                          allowedMessagePlacements: e.target.checked
+                            ? [...v.allowedMessagePlacements, p]
+                            : v.allowedMessagePlacements.filter((x) => x !== p),
+                        }))
+                      }
+                    />
+                    {PLACEMENT_LABELS[p]}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
           </div>
 
           <div>

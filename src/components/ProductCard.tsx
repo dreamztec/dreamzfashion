@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ProductWithMedia } from "@/server/catalog.server";
-import { formatNaira } from "@/lib/format";
+import { formatNaira, normalizeTier } from "@/lib/format";
 import { displayFit, isPosterArtwork } from "@/lib/img";
 import { ProductMedia } from "@/components/brand";
 import { availabilityOf } from "@/lib/availability";
@@ -44,39 +44,27 @@ export function ProductCard({
             {info.label}
           </span>
         )}
-        {quoteOnly && (
-          <span className="absolute top-4 right-4 bg-ivory/95 text-ink border border-ink/20 text-[0.6rem] uppercase tracking-btn px-3 py-1.5">
-            Request a Quote
-          </span>
-        )}
-        {info.purchasable && !quoteOnly && !product.newArrival && product.customizable && (
-          <span className="absolute top-4 right-4 bg-ink/85 text-ivory text-[0.6rem] uppercase tracking-btn px-3 py-1.5">
-            Custom
-          </span>
-        )}
       </div>
       <div className="pt-4 pb-2 text-center flex flex-col">
         {/* Collection only — service tier and packaging are shown on the product page. */}
         {product.collection && <p className="tier-badge mb-1 justify-center">{product.collection}</p>}
         <h3 className="font-editorial text-lg leading-snug">{product.name}</h3>
+        {product.theme && (
+          <p className="overline-label !text-gold-soft mt-0.5">{product.theme}</p>
+        )}
         {product.subcategory && (
           <p className="text-xs text-stone mt-0.5">{product.subcategory}</p>
         )}
         {quoteOnly ? (
-          <p className="mt-1.5 text-sm text-stone italic">Priced after review</p>
+          <p className="mt-1.5 text-sm text-stone italic">
+            {normalizeTier(product.tier) === "royale" ? "Private commission" : "Request a quote"}
+          </p>
         ) : (
-          <>
-            <p className="mt-1.5 text-sm">
-              <span className="text-stone">Product Only </span>
-              <span className="text-ink">{formatNaira(product.price)}</span>
-            </p>
-            {product.completePackagePrice ? (
-              <p className="mt-0.5 text-sm">
-                <span className="text-stone">Complete Package </span>
-                <span className="text-ink">{formatNaira(product.completePackagePrice)}</span>
-              </p>
-            ) : null}
-          </>
+          /* One principal price per card — the Product Only price. The
+             Complete Package is presented on the product page only. */
+          <p className="mt-1.5 text-sm">
+            <span className="text-ink">{formatNaira(product.price)}</span>
+          </p>
         )}
       </div>
     </Link>

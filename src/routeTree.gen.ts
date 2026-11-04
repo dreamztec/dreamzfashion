@@ -47,6 +47,7 @@ import { Route as AdminCorporateRouteImport } from './routes/admin/corporate'
 import { Route as AdminDesignRequestsRouteImport } from './routes/admin/design-requests'
 import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
+import { Route as AdminMessagesRouteImport } from './routes/admin/messages'
 import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminOverviewRouteImport } from './routes/admin/overview'
 import { Route as AdminPartnersRouteImport } from './routes/admin/partners'
@@ -263,6 +264,11 @@ const AdminMediaRoute = AdminMediaRouteImport.update({
   path: '/admin/media',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminMessagesRoute = AdminMessagesRouteImport.update({
+  id: '/admin/messages',
+  path: '/admin/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminOrdersRoute = AdminOrdersRouteImport.update({
   id: '/admin/orders',
   path: '/admin/orders',
@@ -428,6 +434,7 @@ export interface FileRoutesByFullPath {
   '/admin/design-requests': typeof AdminDesignRequestsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -492,6 +499,7 @@ export interface FileRoutesByTo {
   '/admin/design-requests': typeof AdminDesignRequestsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -558,6 +566,7 @@ export interface FileRoutesById {
   '/admin/design-requests': typeof AdminDesignRequestsRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/media': typeof AdminMediaRoute
+  '/admin/messages': typeof AdminMessagesRoute
   '/admin/orders': typeof AdminOrdersRoute
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/partners': typeof AdminPartnersRoute
@@ -625,6 +634,7 @@ export interface FileRouteTypes {
     | '/admin/design-requests'
     | '/admin/feedback'
     | '/admin/media'
+    | '/admin/messages'
     | '/admin/orders'
     | '/admin/overview'
     | '/admin/partners'
@@ -689,6 +699,7 @@ export interface FileRouteTypes {
     | '/admin/design-requests'
     | '/admin/feedback'
     | '/admin/media'
+    | '/admin/messages'
     | '/admin/orders'
     | '/admin/overview'
     | '/admin/partners'
@@ -754,6 +765,7 @@ export interface FileRouteTypes {
     | '/admin/design-requests'
     | '/admin/feedback'
     | '/admin/media'
+    | '/admin/messages'
     | '/admin/orders'
     | '/admin/overview'
     | '/admin/partners'
@@ -810,6 +822,7 @@ export interface RootRouteChildren {
   AdminDesignRequestsRoute: typeof AdminDesignRequestsRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminMediaRoute: typeof AdminMediaRoute
+  AdminMessagesRoute: typeof AdminMessagesRoute
   AdminOrdersRoute: typeof AdminOrdersRoute
   AdminOverviewRoute: typeof AdminOverviewRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
@@ -1104,6 +1117,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminMediaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/messages': {
+      id: '/admin/messages'
+      path: '/admin/messages'
+      fullPath: '/admin/messages'
+      preLoaderRoute: typeof AdminMessagesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/orders': {
       id: '/admin/orders'
       path: '/admin/orders'
@@ -1363,6 +1383,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminDesignRequestsRoute: AdminDesignRequestsRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminMediaRoute: AdminMediaRoute,
+  AdminMessagesRoute: AdminMessagesRoute,
   AdminOrdersRoute: AdminOrdersRoute,
   AdminOverviewRoute: AdminOverviewRoute,
   AdminPartnersRoute: AdminPartnersRoute,

@@ -10,7 +10,7 @@ import {
   isSelfPurchase,
   normalizePartnerCode,
 } from "../src/lib/attribution";
-import { DESIGN_TEMPLATES, defaultSelection, validateSelection, selectionSummary } from "../src/lib/design-templates";
+import { DESIGN_TEMPLATES, templateForModel, templateForSku } from "../src/lib/design-templates";
 import { detectImageType, precheckFile, REFERENCE_LIMITS } from "../src/lib/reference-upload";
 import { groupCounts, groupForType, productGroup } from "../src/lib/taxonomy";
 
@@ -75,26 +75,11 @@ describe("attribution rules", () => {
   });
 });
 
-describe("design template", () => {
-  const t = DESIGN_TEMPLATES[0];
-  it("Boot of Many Colours is the first template and is honestly not 3D yet", () => {
-    expect(t.productSku).toBe("DFK-FTW-001");
-    expect(t.has3d).toBe(false);
-    expect(t.model3d).toBeNull();
-  });
-  it("defaults are valid and changing one part leaves every other part unchanged", () => {
-    const s = defaultSelection(t);
-    expect(validateSelection(t, s)).toEqual([]);
-    const next = { ...s, parts: { ...s.parts, toe_cap: "Emerald" } as Record<string, string> };
-    for (const p of t.parts) if (p.key !== "toe_cap") expect(next.parts[p.key]).toBe(s.parts[p.key]);
-    expect(selectionSummary(t, next)["Toe cap"]).toBe("Emerald — Smooth leather");
-  });
-  it("rejects unlisted colours, materials, parts and sizes", () => {
-    const s = defaultSelection(t);
-    expect(validateSelection(t, { ...s, parts: { ...s.parts, toe_cap: "Neon" } })).not.toEqual([]);
-    expect(validateSelection(t, { ...s, materials: { ...s.materials, toe_cap: "Suede" } })).not.toEqual([]); // toe cap: no suede
-    expect(validateSelection(t, { ...s, parts: { ...s.parts, heel_height: "Black" } })).not.toEqual([]);
-    expect(validateSelection(t, { ...s, size: "39" })).not.toEqual([]);
+describe("design templates retired", () => {
+  it("the Boot of Many Colours has no design template and can never be customised", () => {
+    expect(DESIGN_TEMPLATES).toEqual([]);
+    expect(templateForSku("DFK-FTW-001")).toBeNull();
+    expect(templateForModel("boot-of-many-colours")).toBeNull();
   });
 });
 

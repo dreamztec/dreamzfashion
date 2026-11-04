@@ -1,19 +1,16 @@
 /**
  * Design templates for the "Design Your Dream Outfit" workspace.
  *
- * A template lists the named, independently choosable parts of a real
- * DREAMZ design and the options the workshop can make. Server-side design
- * validation uses the same definition, so a saved design can only contain
- * options listed here.
+ * RETIRED: the Boot of Many Colours panel template was the only template and
+ * the Boot is now a fixed DREAMZ signature design — it can never be
+ * customised (see the 2026-11 leather-house migration). Physical design
+ * customisation for other pieces is served by the DREAMZ Leather Atelier
+ * consultation (/custom), not by a panel configurator. The array is kept
+ * (empty) so historic saved designs still load their stored specification
+ * via the template-less fallback in designs.server.
  *
  * 3D status: no authored GLB/glTF model with separately named meshes exists
- * for any DREAMZ product yet, so every template is `has3d: false` and the
- * workspace presents an honestly labelled written specification. When a
- * faithful model arrives, set `model3d` (URL + mesh name per part) and bump
- * `modelVersion`; saved briefs keep their version.
- *
- * Geometry (shaft height, heel height) is deliberately NOT offered: those
- * changes need authored geometry variants, not stretched imagery.
+ * for any DREAMZ product, so nothing on the site pretends to be 3D.
  */
 
 export type DesignPart = { key: string; label: string; defaultColour: string; materials: string[] };
@@ -50,36 +47,11 @@ export const LEATHER_PALETTE: Array<{ name: string; hex: string }> = [
   { name: "Black", hex: "#141414" },
 ];
 
-const LEATHERS = ["Smooth leather", "Pebbled leather", "Suede"];
-
-export const DESIGN_TEMPLATES: DesignTemplate[] = [
-  {
-    productSku: "DFK-FTW-001",
-    modelId: "boot-of-many-colours",
-    modelVersion: "brief-1",
-    has3d: false,
-    model3d: null,
-    title: "Boot of Many Colours",
-    // Panels as photographed on the approved product image (left boot).
-    parts: [
-      { key: "toe_cap", label: "Toe cap", defaultColour: "Burnt Orange", materials: LEATHERS.slice(0, 2) },
-      { key: "front_vamp", label: "Front vamp panel", defaultColour: "Sky Blue", materials: LEATHERS.slice(0, 2) },
-      { key: "cross_vamp", label: "Cross-vamp panel", defaultColour: "Burgundy", materials: LEATHERS.slice(0, 2) },
-      { key: "instep_panel", label: "Instep panel", defaultColour: "Mustard", materials: LEATHERS.slice(0, 2) },
-      { key: "rear_vamp", label: "Rear vamp panel", defaultColour: "Chocolate Brown", materials: LEATHERS.slice(0, 2) },
-      { key: "heel_quarter", label: "Heel quarter", defaultColour: "Navy", materials: LEATHERS.slice(0, 2) },
-      { key: "shaft", label: "Shaft", defaultColour: "Charcoal Black", materials: LEATHERS },
-      { key: "eyestay", label: "Eyestay (lacing panel)", defaultColour: "Plum Brown", materials: LEATHERS.slice(0, 2) },
-      { key: "collar", label: "Padded collar", defaultColour: "Tan", materials: LEATHERS.slice(0, 2) },
-    ],
-    components: [
-      { key: "sole", label: "Sole", options: ["Tan lug sole (as photographed)", "Black lug sole"] },
-      { key: "laces", label: "Laces", options: ["Tan waxed (as photographed)", "Chocolate brown waxed", "Black waxed"] },
-      { key: "hardware", label: "Eyelet hardware", options: ["Brass (as photographed)", "Gunmetal", "Black"] },
-    ],
-    sizes: ["40", "41", "42", "43", "44", "45", "46"],
-  },
-];
+/**
+ * No design templates remain: the Boot of Many Colours is a fixed signature
+ * piece and no other product has an authored panel template.
+ */
+export const DESIGN_TEMPLATES: DesignTemplate[] = [];
 
 export function templateForSku(sku: string | null | undefined): DesignTemplate | null {
   return DESIGN_TEMPLATES.find((t) => t.productSku === sku) ?? null;

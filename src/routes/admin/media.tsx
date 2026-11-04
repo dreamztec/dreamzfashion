@@ -18,6 +18,10 @@ export const Route = createFileRoute("/admin/media")({
 
 const CATEGORIES = [
   "PRODUCT",
+  "LIFESTYLE",
+  "CAMPAIGN_ART",
+  "ANNIVERSARY",
+  "ARCHIVED_POSTER",
   "CAMPAIGN",
   "LOOKBOOK",
   "HOMEPAGE",
@@ -42,7 +46,7 @@ function AdminMedia() {
   const [search, setSearch] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [uploadCat, setUploadCat] = useState<string>("PRODUCT");
+  const [uploadCat, setUploadCat] = useState<string>("PRODUCT_PHOTO");
   const [uploadLifestyle, setUploadLifestyle] = useState(false);
   const [matchPanelId, setMatchPanelId] = useState<number | null>(null);
   const [suggestions, setSuggestions] = useState<Record<number, SuggestionState>>({});
@@ -65,8 +69,9 @@ function AdminMedia() {
   const visible = assets.filter((a) => {
     if (filter === "UNASSIGNED") {
       // Uploaded product photography waiting for a product assignment —
-      // never silently lost, always reviewable here.
-      if (a.category !== "PRODUCT" || a.productId) return false;
+      // never silently lost, always reviewable here. PRODUCT is the legacy
+      // value of PRODUCT_PHOTO.
+      if (!["PRODUCT", "PRODUCT_PHOTO"].includes(a.category) || a.productId) return false;
     } else if (filter !== "ALL" && a.category !== filter) {
       return false;
     }
@@ -272,7 +277,7 @@ function AdminMedia() {
           }`}
         >
           Unassigned (
-            {assets.filter((a) => a.category === "PRODUCT" && !a.productId).length})
+            {assets.filter((a) => ["PRODUCT", "PRODUCT_PHOTO"].includes(a.category) && !a.productId).length})
         </button>
         {CATEGORIES.map((c) => {
           const n = assets.filter((a) => a.category === c).length;

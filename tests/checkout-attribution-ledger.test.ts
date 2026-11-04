@@ -229,37 +229,32 @@ describe("commission ledger", () => {
   });
 });
 
-describe("saved designs", () => {
-  it("saves a validated design, reopens it identically and prices it as a quote line", async () => {
-    const { saveDesign, loadDesign } = await import("../src/server/designs.server");
-    const { defaultSelection, DESIGN_TEMPLATES } = await import("../src/lib/design-templates");
-    await q(`UPDATE products SET sku = 'DFK-FTW-001' WHERE id = $1`, [bootId]);
-    const selection = defaultSelection(DESIGN_TEMPLATES[0]);
-    selection.parts.toe_cap = "Emerald";
-    selection.materials.shaft = "Suede";
-    selection.size = "43";
-    const saved = await saveDesign({ productId: bootId, selection, referenceIds: [], notes: "Wedding in March" });
-    expect(saved.designId).toMatch(/^DZD-[A-Z0-9]{8}$/);
-    const reopened = await loadDesign(saved.designId, saved.editToken);
-    expect(reopened?.selection).toEqual(selection);
-    expect(reopened?.notes).toBe("Wedding in March");
-    expect(await loadDesign(saved.designId, "WRONGTOKENWRONGTOKENWRON")).toBeNull();
+describe("saved designs (retired workspace)", () => {
+  it("the Boot of Many Colours is a fixed signature piece — saved designs can no longer be priced or created", async () => {
+    const { saveDesign } = await import("../src/server/designs.server");
+    await expect(
+      saveDesign({
+        productId: bootId,
+        selection: { parts: {}, materials: {}, components: {}, size: null },
+        referenceIds: [],
+      }),
+    ).rejects.toThrow(/fixed signature|Leather Atelier/i);
 
+    // A historic saved design row exists; the server refuses to price it.
+    await q(
+      `INSERT INTO custom_designs (design_id, edit_token, product_id, model_id, model_version, parts, materials, geometry, size)
+       VALUES ('DZD-TEST0001', 'AAAAbbbbCCCCddddEEEEffff', $1, 'boot-of-many-colours', 'brief-1', '{}', '{}', '{}', '43')`,
+      [bootId],
+    );
     const { priceOrder } = await import("../src/server/order-pricing.server");
-    const res = await priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", designId: saved.designId, quantity: 1 }], state: "Lagos", buyer });
-    expect(res.hasQuoteLines).toBe(true);
-    expect(res.lines[0]).toMatchObject({ unitPrice: 0, quoteRequired: true, designId: saved.designId, size: "43" });
-    expect(res.lines[0].customization?.["Toe cap"]).toBe("Emerald — Smooth leather");
-    expect(res.lines[0].customization?.["Shaft"]).toBe("Charcoal Black — Suede");
+    await expect(
+      priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", designId: "DZD-TEST0001", quantity: 1 }], state: "Lagos", buyer }),
+    ).rejects.toThrow(/fixed DREAMZ signature design/);
   });
 
-  it("rejects options that are not in the template", async () => {
-    const { saveDesign } = await import("../src/server/designs.server");
-    const { defaultSelection, DESIGN_TEMPLATES } = await import("../src/lib/design-templates");
-    const bad = defaultSelection(DESIGN_TEMPLATES[0]);
-    bad.parts.toe_cap = "Neon Pink";
-    await expect(saveDesign({ productId: bootId, selection: bad, referenceIds: [] })).rejects.toThrow(/Toe cap/);
-    const unknownRef = defaultSelection(DESIGN_TEMPLATES[0]);
-    await expect(saveDesign({ productId: bootId, selection: unknownRef, referenceIds: ["ref_AAAAAAAAAAAAAAAAAAAA"] })).rejects.toThrow(/reference/);
+  it("purchase still works normally without any saved design", async () => {
+    const { priceOrder } = await import("../src/server/order-pricing.server");
+    const res = await priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", quantity: 1 }], state: "Lagos", buyer });
+    expect(res.lines[0]).toMatchObject({ unitPrice: 9_000_000, quoteRequired: false });
   });
 });

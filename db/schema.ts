@@ -91,6 +91,15 @@ export const products = pgTable(
     // is never cropped); "cover" fills the frame for lifestyle/editorial
     // imagery or poster artwork the admin chooses to fill with.
     imageFit: text("image_fit").notNull().default("contain"),
+    // Meaning/theme word (Vision, Faith, Ambition…) and the short
+    // brand-neutral statement shown to everyone ("MAKE IT MEANINGFUL").
+    theme: text("theme"),
+    universalMeaning: text("universal_meaning"),
+    // When true the product can carry a Make It Meaningful inspiration
+    // message. allowedMessagePlacements null = the house default placements;
+    // otherwise an explicit allow-list the admin set for this product.
+    inspirationEligible: boolean("inspiration_eligible").notNull().default(true),
+    allowedMessagePlacements: jsonb("allowed_message_placements").$type<string[] | null>(),
     status: text("status").notNull().default("published"), // draft | published | archived
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
@@ -205,6 +214,10 @@ export const orderItems = pgTable(
     size: text("size"),
     purchaseOption: text("purchase_option").notNull().default("product_only"),
     customization: jsonb("customization").$type<Record<string, string>>(),
+    // Immutable Make It Meaningful snapshot: exact wording, reference,
+    // translation, attribution, version, source and placement captured at
+    // order time. Future catalogue edits never alter old order wording.
+    messageSnapshot: jsonb("message_snapshot").$type<Record<string, unknown>>(),
     imageUrl: text("image_url"),
     unitPrice: integer("unit_price").notNull(),
     // Snapshot of the product's private internal cost at order time (kobo).
@@ -278,7 +291,7 @@ export const payments = pgTable(
   (t) => [index("payments_order_idx").on(t.orderId), index("payments_status_idx").on(t.status)],
 );
 
-// ── Design requests (Design Lab leads) ───────────────────────────────
+// ── Design requests (Leather Atelier briefs) ─────────────────────────
 
 export const designRequests = pgTable(
   "design_requests",
@@ -286,20 +299,94 @@ export const designRequests = pgTable(
     id: serial("id").primaryKey(),
     requestNumber: text("request_number").notNull().unique(),
     sessionId: text("session_id"),
+    // Set when the request came from a signed-in customer (verified JWT).
+    customerId: integer("customer_id"),
     customerName: text("customer_name"),
     email: text("email"),
     phone: text("phone"),
     specification: jsonb("specification").$type<Record<string, unknown>>().notNull().default({}),
+    // DREAMZ DREAM-TO-LEATHER METHOD outputs. aiSummary keeps the earlier
+    // design-lab advice for historic rows; the atelier adds the three
+    // structured deliverables below.
     aiSummary: text("ai_summary"),
+    category: text("category"),
+    renderPrompt: text("render_prompt"),
+    artisanBrief: text("artisan_brief"),
     recommendedProductIds: jsonb("recommended_product_ids").$type<number[]>().notNull().default([]),
     referenceImageUrl: text("reference_image_url"),
     conceptImageUrl: text("concept_image_url"),
     budgetMin: integer("budget_min"),
     budgetMax: integer("budget_max"),
+    deadline: text("deadline"),
     status: text("status").notNull().default("new"), // new | contacted | quoted | won | archived
     createdAt: timestamp("created_at").defaultNow(),
   },
   (t) => [index("design_requests_status_idx").on(t.status)],
+);
+
+// ── Product slug aliases (renames never break old links) ─────────────
+
+/**
+ * Permanent aliases from previous public slugs to the product that now owns
+ * them. Renames preserve the database product ID; old links resolve through
+ * this table with a redirect instead of duplicating the product row.
+ */
+export const productSlugAliases = pgTable(
+  "product_slug_aliases",
+  {
+    id: serial("id").primaryKey(),
+    alias: text("alias").notNull().unique(),
+    productId: integer("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+);
+
+// ── Inspiration messages (Make It Meaningful catalogue) ──────────────
+
+/**
+ * Admin-controlled message catalogue. Only APPROVED messages appear
+ * publicly; archived messages stay visible on historic orders through the
+ * immutable snapshot stored on the order line. Scripture is published only
+ * after wording, reference, translation, source URL and reproduction
+ * permission are verified — until then it stays in draft.
+ */
+export const inspirationMessages = pgTable(
+  "inspiration_messages",
+  {
+    id: serial("id").primaryKey(),
+    // Stable public identifier, e.g. "VZ-VISION-01".
+    messageId: text("message_id").notNull(),
+    version: integer("version").notNull().default(1),
+    theme: text("theme").notNull(),
+    // bible | quran | dreamz
+    source: text("source").notNull(),
+    text: text("text").notNull(),
+    reference: text("reference"),
+    translation: text("translation"),
+    attribution: text("attribution"),
+    verificationUrl: text("verification_url"),
+    // unverified | verified | not_permitted — commercial reproduction
+    // permission status for the exact wording.
+    reproductionPermission: text("reproduction_permission").notNull().default("unverified"),
+    isExcerpt: boolean("is_excerpt").notNull().default(false),
+    // draft | approved | archived
+    status: text("status").notNull().default("draft"),
+    // RTL script (e.g. Arabic Qur’an text) — the storefront renders it
+    // right-to-left with correct shaping.
+    rtl: boolean("rtl").notNull().default(false),
+    // Placement keys this message may be applied to; empty list = the house
+    // default (message card and other respectful placements for its source).
+    eligiblePlacements: jsonb("eligible_placements").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("inspiration_messages_uidx").on(t.messageId, t.version),
+    index("inspiration_messages_status_idx").on(t.status),
+    index("inspiration_messages_theme_idx").on(t.theme),
+  ],
 );
 
 // ── Custom designs (Design Your Dream workspace) ─────────────────────
@@ -1110,3 +1197,5 @@ export type Commission = typeof commissions.$inferSelect;
 export type PayoutRequest = typeof payoutRequests.$inferSelect;
 export type WaitlistEntry = typeof waitlist.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type ProductSlugAlias = typeof productSlugAliases.$inferSelect;
+export type InspirationMessage = typeof inspirationMessages.$inferSelect;

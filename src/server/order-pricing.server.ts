@@ -26,6 +26,8 @@ export type CartLineInput = {
   purchaseOption: "product_only" | "complete_package";
   customization?: Record<string, string> | null;
   designId?: string | null;
+  /** Optional Make It Meaningful selection — re-validated server-side. */
+  message?: { messageId: string; version: number; placement: string } | null;
   quantity: number;
 };
 
@@ -44,6 +46,10 @@ export type PricedLine = {
   quantity: number;
   /** Quote lines (custom designs awaiting a price) have unitPrice 0. */
   quoteRequired: boolean;
+  /** Immutable Make It Meaningful snapshot resolved from the catalogue. */
+  messageSnapshot: Record<string, unknown> | null;
+  /** Placement charge (kobo) computed server-side; null = costing unset. */
+  messageChargeKobo: number | null;
 };
 
 export type PartnerResult = {
@@ -94,6 +100,9 @@ async function priceLine(item: CartLineInput): Promise<PricedLine> {
       price: products.price,
       completePackagePrice: products.completePackagePrice,
       checkoutReady: products.checkoutReady,
+      customizable: products.customizable,
+      inspirationEligible: products.inspirationEligible,
+      allowedMessagePlacements: products.allowedMessagePlacements,
       internalCostKobo: products.internalCostKobo,
       image: sql<string | null>`(SELECT url FROM product_images pi WHERE pi.product_id = ${products.id} ORDER BY position LIMIT 1)`,
     })
@@ -112,8 +121,17 @@ async function priceLine(item: CartLineInput): Promise<PricedLine> {
     if (!design || design.productId !== p.id) {
       throw new PricingError("Your saved design could not be found. Please reopen it and add it again.");
     }
+    // The Boot of Many Colours (and any piece the house has fixed) can no
+    // longer be customised. Old saved designs are handled gracefully — the
+    // customer is pointed at the product page or the Leather Atelier.
+    if (!p.customizable) {
+      throw new PricingError(
+        `${p.name} is now a fixed DREAMZ signature design and can no longer be customised. View the piece as designed, or start a new leather brief in the atelier.`,
+      );
+    }
     const quoted = design.priceStatus === "quoted" && (design.quotedPriceKobo ?? 0) > 0;
     const { selectionFromDesignRow } = await import("./designs.server");
+    const resolvedMessage = await resolveMessage(item, p);
     return {
       productId: p.id,
       sku: p.sku,
@@ -128,6 +146,8 @@ async function priceLine(item: CartLineInput): Promise<PricedLine> {
       unitCostKobo: p.internalCostKobo,
       quantity: item.quantity,
       quoteRequired: !quoted,
+      messageSnapshot: resolvedMessage?.snapshot ?? null,
+      messageChargeKobo: resolvedMessage?.chargeKobo ?? null,
     };
   }
 
@@ -152,6 +172,8 @@ async function priceLine(item: CartLineInput): Promise<PricedLine> {
     }
     if (item.purchaseOption === "product_only" && variant.price) unitPrice = variant.price;
   }
+  const resolvedMessage = await resolveMessage(item, p);
+  const messageQuoteRequired = !!resolvedMessage && resolvedMessage.chargeKobo == null && resolvedMessage.quoteRequired;
   return {
     productId: p.id,
     sku: p.sku,
@@ -165,7 +187,32 @@ async function priceLine(item: CartLineInput): Promise<PricedLine> {
     unitPrice,
     unitCostKobo: p.internalCostKobo,
     quantity: item.quantity,
-    quoteRequired: false,
+    quoteRequired: messageQuoteRequired,
+    messageSnapshot: resolvedMessage?.snapshot ?? null,
+    messageChargeKobo: resolvedMessage?.chargeKobo ?? null,
+  };
+}
+
+/**
+ * Validate and resolve the Make It Meaningful selection for a cart line.
+ * Wording always comes from the catalogue (approved rows only); the
+ * placement charge is computed server-side from admin settings.
+ */
+async function resolveMessage(
+  item: CartLineInput,
+  p: { id: number; name: string; inspirationEligible: boolean; allowedMessagePlacements: string[] | null },
+): Promise<{ snapshot: Record<string, unknown>; chargeKobo: number | null; quoteRequired: boolean } | null> {
+  if (!item.message || !item.message.messageId) return null;
+  const { resolveMessageForCheckout } = await import("./meaning.server");
+  const resolved = await resolveMessageForCheckout({
+    product: p,
+    message: item.message,
+  });
+  if (!resolved.ok) throw new PricingError(resolved.reason);
+  return {
+    snapshot: { ...resolved.snapshot, chargeKobo: resolved.chargeKobo } as unknown as Record<string, unknown>,
+    chargeKobo: resolved.chargeKobo,
+    quoteRequired: resolved.quoteRequired,
   };
 }
 
@@ -234,7 +281,13 @@ export async function priceOrder(input: {
   if (input.items.length === 0) throw new PricingError("Your cart is empty.");
   const lines: PricedLine[] = [];
   for (const item of input.items) lines.push(await priceLine(item));
-  const subtotal = lines.reduce((s, l) => s + l.unitPrice * l.quantity, 0);
+  // The message placement charge is part of the line's unit price — it is
+  // charged per piece and computed server-side, never trusted from the
+  // browser.
+  const subtotal = lines.reduce(
+    (s, l) => s + (l.unitPrice + (l.messageChargeKobo ?? 0)) * l.quantity,
+    0,
+  );
   const hasQuoteLines = lines.some((l) => l.quoteRequired);
 
   const shipping = await getSetting<ShippingSettings>("shipping", { defaultFee: 3500, freeThreshold: 150000 });
