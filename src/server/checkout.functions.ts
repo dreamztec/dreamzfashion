@@ -16,12 +16,24 @@ import {
   ORDER_STATUS_LABELS,
 } from "@/lib/format";
 
+const MessageSelectionSchema = z
+  .object({
+    messageId: z.string().min(2).max(60),
+    version: z.number().int().min(1).max(99),
+    placement: z.string().min(2).max(40),
+  })
+  .nullable()
+  .optional();
+
 const CheckoutItemSchema = z.object({
   productId: z.number().int().positive(),
   variantLabel: z.string().max(120).nullable().optional(),
   purchaseOption: z.enum(["product_only", "complete_package"]).default("product_only"),
   customization: z.record(z.string().max(80), z.string().max(400)).nullable().optional(),
   designId: z.string().regex(/^DZD-[A-Z0-9]{8}$/).nullable().optional(),
+  // Make It Meaningful — the server re-resolves wording, eligibility and
+  // charge from the database; nothing here is trusted from the browser.
+  message: MessageSelectionSchema,
   quantity: z.number().int().min(1).max(10),
 });
 
@@ -88,6 +100,7 @@ function publicPricing(priced: PricedOrder) {
       purchaseOption: l.purchaseOption,
       designId: l.designId,
       unitPrice: l.unitPrice,
+      messageChargeKobo: l.messageChargeKobo,
       quantity: l.quantity,
       quoteRequired: l.quoteRequired,
     })),
@@ -279,6 +292,12 @@ export const initializeCheckout = createServerFn({ method: "POST" })
           purchaseOption: item.purchaseOption === "complete_package" ? "Complete Package" : "Product Only",
           ...(item.quoteRequired ? { pricing: "Quote required" } : {}),
         },
+        // Immutable Make It Meaningful snapshot: the exact wording and the
+        // server-computed placement charge travel with the order, immune to
+        // later catalogue edits.
+        messageSnapshot: item.messageSnapshot
+          ? { ...item.messageSnapshot, chargeKobo: item.messageChargeKobo }
+          : null,
         imageUrl: item.imageUrl,
         unitPrice: item.unitPrice,
         unitCostKobo: item.unitCostKobo,
@@ -605,6 +624,7 @@ export const trackOrder = createServerFn({ method: "POST" })
           size: i.size,
           purchaseOption: i.purchaseOption,
           customization: i.customization ?? null,
+          messageSnapshot: (i.messageSnapshot ?? null) as Record<string, string | number | boolean | null> | null,
           unitPrice: i.unitPrice,
           quantity: i.quantity,
         })),
@@ -637,17 +657,22 @@ export const lookupMyOrderNumber = createServerFn({ method: "GET" })
       .where(eq(orders.orderNumber, data.trim().toUpperCase()))
       .limit(1);
     if (!order) return { found: false as const };
-    const items = await db
+    const itemRows = await db
       .select({
         productName: orderItems.productName,
         variantLabel: orderItems.variantLabel,
         purchaseOption: orderItems.purchaseOption,
         customization: orderItems.customization,
+        messageSnapshot: orderItems.messageSnapshot,
         unitPrice: orderItems.unitPrice,
         quantity: orderItems.quantity,
       })
       .from(orderItems)
       .where(eq(orderItems.orderId, order.id));
+    const items = itemRows.map((i) => ({
+      ...i,
+      messageSnapshot: (i.messageSnapshot ?? null) as Record<string, string | number | boolean | null> | null,
+    }));
     return {
       found: true as const,
       order: {

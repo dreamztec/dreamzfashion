@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { getFrontOriginalsFn, getHomeSelectionFn, getSiteSettings } from "@/server/catalog.functions";
 import { ProductMedia, RainbowRule } from "@/components/brand";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
+import { AnniversaryBanner } from "@/components/AnniversaryBanner";
 import { BRAND } from "@/lib/config";
 import { formatNaira } from "@/lib/format";
 import { WaitlistSignup } from "@/components/WaitlistSignup";
@@ -20,7 +21,8 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-const HERO_BODY = "Custom-made and ready-to-wear leather footwear, bags and accessories, crafted around you.";
+const HERO_BODY =
+  "Ready-to-wear and custom leather footwear, bags, accessories and wearable pieces, crafted around your story.";
 const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
 /** /shop/$category takes its own search params (no `q`). */
 const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
@@ -56,11 +58,11 @@ function Home() {
             {HERO_BODY}
           </p>
           <div className="mt-9 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 fade-up fade-up-2">
-            <Link to="/custom" className="btn-lux btn-lux-primary">
-              Design Your Dream Outfit
+            <Link to="/custom" search={{ design: undefined, t: undefined }} className="btn-lux btn-lux-primary">
+              Design Your Dream Leather Piece
             </Link>
             <Link to="/shop" search={SHOP_SEARCH} className="btn-lux btn-lux-outline">
-              See Samples
+              Shop the Collection
             </Link>
           </div>
           <p className="mt-7 text-xs text-stone tracking-wide fade-up fade-up-3">
@@ -91,6 +93,14 @@ function Home() {
                 <figcaption className="mt-5 text-center">
                   <p className="overline-label mb-2">DREAMZ ORIGINALS</p>
                   <span className="font-editorial text-2xl sm:text-3xl block">{hero.name}</span>
+                  {(hero.theme || hero.sku === "DFK-FTW-001") && (
+                    <span className="overline-label block mt-2 !text-gold-soft">{hero.theme ?? "Vision"}</span>
+                  )}
+                  {hero.sku === "DFK-FTW-001" && (
+                    <span className="block mt-2 text-xs text-stone italic max-w-md mx-auto">
+                      “See beyond where you are. Walk toward what you can become.”
+                    </span>
+                  )}
                   <span className="inline-block mt-3 bg-ink text-ivory text-[0.6rem] uppercase tracking-btn px-3 py-1.5">
                     Bestseller
                   </span>
@@ -103,6 +113,9 @@ function Home() {
           </div>
         )}
       </section>
+
+      {/* ── DREAMZ 5-Year Experience announcement (dismissible) ── */}
+      <AnniversaryBanner />
 
       {/* ── Curated Originals — explicit house order, never inferred ── */}
       {frontOriginals.length > 0 && (
@@ -184,8 +197,8 @@ function Home() {
                 {
                   tier: "royale" as const,
                   title: "Royale",
-                  copy: "The premium design and customization service. Priced after a considered quote.",
-                  cta: "Design Yours",
+                  copy: "Private Client Leather Service — commissions designed around you, priced after a considered quote.",
+                  cta: "Discover Royale",
                   product: collectionPreviews.royale,
                 },
               ]
@@ -269,15 +282,16 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Anniversary early access (free waitlist) ───────── */}
+      {/* ── Anniversary: the DREAMZ 5-Year Experience ───────── */}
       <section className="bg-ivory-deep">
         <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16 lg:py-24 text-center">
-          <p className="overline-label mb-4">12 June 2027</p>
-          <h2 className="font-editorial text-3xl sm:text-5xl leading-tight">The Fifth Anniversary Collection</h2>
+          <p className="overline-label mb-4">The DREAMZ 5-Year Experience · 12 June 2027</p>
+          <h2 className="font-editorial text-3xl sm:text-5xl leading-tight">The Billion-Naira Collection.</h2>
           <div className="rule-gold mx-auto mt-6 mb-6" />
           <p className="text-stone leading-relaxed max-w-xl mx-auto">
-            Join the free early-access list — waitlist members see each piece
-            first. No payment, no obligation.
+            Five years of DREAMZ, building toward our most ambitious collection
+            yet. Join the free early-access list — waitlist members see each
+            piece first. No payment, no obligation.
           </p>
           <div className="mt-8 max-w-md mx-auto text-left">
             <WaitlistSignup />

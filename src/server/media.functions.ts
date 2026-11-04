@@ -24,13 +24,18 @@ function requireAdmin() {
 }
 
 const MEDIA_CATEGORIES = [
-  "PRODUCT",
+  "PRODUCT_PHOTO",
+  "LIFESTYLE",
+  "CAMPAIGN_ART",
+  "ANNIVERSARY",
+  "ARCHIVED_POSTER",
   "CAMPAIGN",
   "LOOKBOOK",
   "HOMEPAGE",
   "PARTNERSHIPS",
   "SOCIAL",
   "BRAND",
+  "PRODUCT",
   "OTHER",
 ] as const;
 

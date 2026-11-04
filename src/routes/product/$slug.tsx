@@ -1,4 +1,4 @@
-import { Link, createFileRoute, notFound } from "@tanstack/react-router";
+import { Link, createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getProduct, getRelated, getSiteSettings } from "@/server/catalog.functions";
 import type { ProductWithMedia } from "@/server/catalog.server";
@@ -8,8 +8,9 @@ import { ProductWhatsAppCTA, WhatsAppCTAButton } from "@/components/whatsapp";
 import { useCart } from "@/store/cart";
 import { formatNaira, normalizeTier, TIER_LABELS } from "@/lib/format";
 import { displayFit, img } from "@/lib/img";
-import { templateForSku } from "@/lib/design-templates";
 import { availabilityOf } from "@/lib/availability";
+import { MakeItMeaningful } from "@/components/MakeItMeaningful";
+import type { MessageSnapshot } from "@/lib/meaning";
 import { BRAND, SITE_URL } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
 
@@ -43,6 +44,11 @@ export const Route = createFileRoute("/product/$slug")({
   loader: async ({ params }) => {
     const product = await getProduct({ data: params.slug });
     if (!product) throw notFound();
+    // Old links resolve through permanent slug aliases — redirect to the
+    // canonical URL so search engines and shares converge on one address.
+    if (product.slug !== params.slug) {
+      throw redirect({ to: "/product/$slug", params: { slug: product.slug }, replace: true });
+    }
     const [related, settings] = await Promise.all([
       getRelated({ data: { slug: params.slug, limit: 4 } }),
       getSiteSettings(),
@@ -127,6 +133,7 @@ function ProductPage() {
   const [purchaseOption, setPurchaseOption] = useState<"product_only" | "complete_package">(
     "product_only",
   );
+  const [message, setMessage] = useState<MessageSnapshot | null>(null);
   const [added, setAdded] = useState(false);
   const [sizeError, setSizeError] = useState(false);
   const [zoomed, setZoomed] = useState(false);
@@ -183,6 +190,7 @@ function ProductPage() {
       variantLabel,
       purchaseOption,
       customization: null,
+      message,
       imageUrl: product.images[0]?.url ?? null,
       unitPrice: price,
       quantity: 1,
@@ -386,7 +394,9 @@ function ProductPage() {
           {quoteOnly ? (
             /* Quote-only: an honest price conversation, never a fake checkout. */
             <div className="mt-6 border border-ink/15 px-5 py-5">
-              <p className="font-editorial text-2xl">Request a quote</p>
+              <p className="font-editorial text-2xl">
+                {tier === "royale" ? "Private commission" : "Request a quote"}
+              </p>
               <p className="text-sm text-stone mt-2 leading-relaxed">
                 This piece is priced after a short review of your requirements —
                 materials, sizing and delivery are confirmed before anything is
@@ -557,6 +567,29 @@ function ProductPage() {
             </div>
           )}
 
+          {/* MAKE IT MEANINGFUL — optional inspiration message, after the
+              physical choices. Never preselected; buying normally is always
+              possible without any message. */}
+          {!quoteOnly && (
+            <MakeItMeaningful
+              productTheme={product.theme ?? null}
+              inspirationEligible={product.inspirationEligible}
+              allowedPlacements={product.allowedMessagePlacements ?? null}
+              onMessageChange={(m) => setMessage(m)}
+            />
+          )}
+          {message && (
+            <p className="mt-3 text-xs text-stone leading-relaxed">
+              Inspiration: “{message.text}” — {message.placementLabel}
+              {message.chargeKobo != null && message.chargeKobo > 0
+                ? ` (+${formatNaira(message.chargeKobo)}, confirmed at checkout)`
+                : message.chargeKobo === 0
+                  ? " (complimentary)"
+                  : " (priced after review)"}
+              . The exact wording is recorded with your order.
+            </p>
+          )}
+
           {/* Availability */}
           <p className="mt-5 text-xs uppercase tracking-btn" aria-live="polite">
             {info.state === "available" ? (
@@ -611,15 +644,7 @@ function ProductPage() {
               </>
             ) : null}
           </div>
-          {templateForSku(product.sku) ? (
-            <Link
-              to="/custom"
-              search={{ design: undefined, t: undefined }}
-              className="btn-lux btn-lux-gold w-full mt-3"
-            >
-              Design Your Own Version
-            </Link>
-          ) : !quoteOnly && product.customizable ? (
+          {product.customizable ? (
             <Link
               to="/custom"
               search={{ design: undefined, t: undefined }}

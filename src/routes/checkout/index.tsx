@@ -485,9 +485,17 @@ function Checkout() {
                     {item.designId && (
                       <p className="text-xs text-gold mt-0.5">Custom design {item.designId}</p>
                     )}
+                    {item.message && (
+                      <p className="text-xs text-stone mt-0.5" dir={item.message.rtl ? "rtl" : "ltr"}>
+                        “{item.message.text.length > 60 ? `${item.message.text.slice(0, 60)}…` : item.message.text}” · {item.message.placementLabel}
+                      </p>
+                    )}
                     <p className="text-xs text-stone mt-1">
                       Qty {item.quantity}
                       {line && line.unitPrice > 0 ? ` × ${formatNaira(line.unitPrice)}` : ""}
+                      {line?.messageChargeKobo != null && line.messageChargeKobo > 0
+                        ? ` + ${formatNaira(line.messageChargeKobo)} message placement`
+                        : ""}
                     </p>
                   </div>
                   <span className="whitespace-nowrap">
@@ -606,6 +614,11 @@ function toLines(items: ReturnType<typeof useCart.getState>["items"]) {
     purchaseOption: i.purchaseOption,
     customization: i.designId ? null : i.customization,
     designId: i.designId ?? null,
+    // Only the selection identity travels to the server — wording, charges
+    // and eligibility are re-resolved from the catalogue there.
+    message: i.message
+      ? { messageId: i.message.messageId, version: i.message.version, placement: i.message.placement }
+      : null,
     quantity: i.quantity,
   }));
 }

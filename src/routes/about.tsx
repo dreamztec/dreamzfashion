@@ -41,8 +41,15 @@ function About() {
               {BRAND.shortName} began with a simple conviction: that world-class
               leather craftsmanship belongs to Africa, and that a Nigerian house
               can dress confidence without apology. From our workshop, we cut,
-              stitch and finish each piece by hand — footwear, bags, belts and
-              the small details that complete a person.
+              stitch and finish each piece by hand — leather footwear, bags,
+              belts, accessories and wearable leather pieces that complete a
+              person.
+            </p>
+            <p className="text-stone leading-relaxed mt-4">
+              The DREAMZ brand marks five years on 12 June 2027 — a journey
+              that began on 12 June 2022. The legal entity behind the house,
+              {COMPANY.legalName}, was incorporated later; the two dates are
+              kept separate and accurate.
             </p>
           </section>
 

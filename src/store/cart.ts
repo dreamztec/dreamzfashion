@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { messageLineKey, type MessageSnapshot } from "../lib/meaning";
 
 export interface CartItem {
   id: string;
@@ -14,6 +15,8 @@ export interface CartItem {
   designId?: string | null;
   /** True when the line awaits the house's quote (custom designs). */
   quoteRequired?: boolean;
+  /** Optional Make It Meaningful selection — re-priced and re-validated server-side. */
+  message?: MessageSnapshot | null;
   imageUrl: string | null;
   unitPrice: number; // kobo — display only; the server re-prices at checkout
   quantity: number;
@@ -53,8 +56,10 @@ export const useCart = create<CartState>()(
         const customizationKey = item.customization
           ? JSON.stringify(item.customization)
           : "";
-        // Different sizes, packages and designs are always distinct lines.
-        const id = `${item.productId}::${item.variantLabel ?? ""}::${item.purchaseOption}::${item.designId ?? ""}::${customizationKey}`;
+        // Different sizes, packages, designs, placements and inspiration
+        // messages are always distinct lines — two personalisations of the
+        // same base product never merge.
+        const id = `${item.productId}::${item.variantLabel ?? ""}::${item.purchaseOption}::${item.designId ?? ""}::${customizationKey}::${messageLineKey(item.message)}`;
         const existing = get().items.find((i) => i.id === id);
         if (existing) {
           set({
@@ -79,7 +84,11 @@ export const useCart = create<CartState>()(
             .filter((i) => i.quantity > 0),
         }),
       clear: () => set({ items: [] }),
-      subtotal: () => get().items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
+      subtotal: () =>
+        get().items.reduce(
+          (sum, i) => sum + (i.unitPrice + (i.message?.chargeKobo ?? 0)) * i.quantity,
+          0,
+        ),
       count: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
     }),
     {

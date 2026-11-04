@@ -87,7 +87,11 @@ export async function saveDesign(input: SaveDesignInput) {
     .limit(1);
   if (!p || p.status !== "published") throw new Error("This product is not available to customise.");
   const template = templateForSku(p.sku);
-  if (!template) throw new Error("This product is not available in the design workspace yet.");
+  if (!template) {
+    throw new Error(
+      "Panel-by-panel design has retired — the Boot of Many Colours is a fixed signature piece and new custom pieces are designed through the DREAMZ Leather Atelier consultation.",
+    );
+  }
   const errors = validateSelection(template, input.selection);
   if (errors.length) throw new Error(errors[0]);
 

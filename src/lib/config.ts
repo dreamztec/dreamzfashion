@@ -4,7 +4,7 @@ export const BRAND = {
   initials: "DFK",
   tagline: "YOUR DREAM OUTFIT",
   description:
-    "Bespoke and ready-to-wear leather footwear and accessories created for people who want to express their identity through what they wear.",
+    "A Nigerian leather fashion house — ready-to-wear and bespoke leather footwear, bags, accessories and wearable leather pieces, crafted around your story.",
 } as const;
 
 export const SITE_URL: string =

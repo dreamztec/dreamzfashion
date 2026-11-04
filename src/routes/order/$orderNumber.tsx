@@ -73,6 +73,14 @@ function OrderConfirmed() {
               {i.customization?.["Design ID"] && (
                 <p className="text-xs text-stone">Design {i.customization["Design ID"]}</p>
               )}
+              {i.messageSnapshot && (
+                <p className="text-xs text-stone mt-0.5" dir={(i.messageSnapshot as { rtl?: boolean }).rtl ? "rtl" : "ltr"}>
+                  Meaning: “{(i.messageSnapshot as { text?: string }).text}”
+                  {(i.messageSnapshot as { placementLabel?: string }).placementLabel
+                    ? ` — ${(i.messageSnapshot as { placementLabel?: string }).placementLabel}`
+                    : ""}
+                </p>
+              )}
             </div>
             <span className="whitespace-nowrap">
               {i.unitPrice > 0 ? formatNaira(i.unitPrice * i.quantity) : "Quote to follow"}

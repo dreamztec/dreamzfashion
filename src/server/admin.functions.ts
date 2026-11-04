@@ -10,6 +10,7 @@ import {
   corporateQuotes,
   designRequests,
   feedback,
+  inspirationMessages,
   mediaAssets,
   orderEvents,
   orderItems,
@@ -325,7 +326,15 @@ const ProductInputSchema = z.object({
   availability: z
     .enum(["available", "made_to_order", "on_request", "out_of_stock", "sold_out"])
     .default("available"),
+  // "contain" shows the whole product (default — clean product photography
+  // is never cropped); "cover" fills the frame for lifestyle/editorial.
   imageFit: z.enum(["cover", "contain"]).default("contain"),
+  // MAKE IT MEANINGFUL: theme word, universal statement, eligibility and the
+  // explicit placement allow-list (null = house default placements).
+  theme: z.string().max(60).optional().or(z.literal("")),
+  universalMeaning: z.string().max(300).optional().or(z.literal("")),
+  inspirationEligible: z.boolean().default(true),
+  allowedMessagePlacements: z.array(z.string().max(40)).max(8).nullable().optional(),
   featured: z.boolean().default(false),
   newArrival: z.boolean().default(false),
   bestseller: z.boolean().default(false),
@@ -388,6 +397,10 @@ export const adminSaveProduct = createServerFn({ method: "POST" })
       depositPercent: values.depositPercent ?? null,
       personalizationLabel: values.personalizationLabel || null,
       personalizationChargeKobo: values.personalizationChargeKobo ?? null,
+      theme: values.theme || null,
+      universalMeaning: values.universalMeaning || null,
+      inspirationEligible: values.inspirationEligible,
+      allowedMessagePlacements: values.allowedMessagePlacements ?? null,
       sizeGuide: values.sizeGuide || null,
       returnsTerms: values.returnsTerms || null,
       careInformation: values.careInformation || null,
@@ -635,6 +648,7 @@ export const adminListOrders = createServerFn({ method: "GET" }).handler(async (
         productName: i.productName,
         variantLabel: i.variantLabel,
         customization: i.customization ?? null,
+        messageSnapshot: (i.messageSnapshot ?? null) as Record<string, string | number | boolean | null> | null,
         unitPrice: i.unitPrice,
         quantity: i.quantity,
       })),
@@ -830,6 +844,22 @@ const SettingsSchema = z.object({
       label: z.string().max(120),
     })
     .default({ enabled: true, date: "2027-06-12", label: "The Fifth Anniversary Collection" }),
+  // MAKE IT MEANINGFUL placement pricing (naira). null = priced after
+  // review; 0 = explicitly complimentary; >0 = stated charge.
+  meaning: z
+    .object({
+      placements: z
+        .object({
+          message_card: z.number().min(0).nullable(),
+          gift_note: z.number().min(0).nullable(),
+          inside_label: z.number().min(0).nullable(),
+          inside_lining: z.number().min(0).nullable(),
+          embossing: z.number().min(0).nullable(),
+          engraving: z.number().min(0).nullable(),
+        })
+        .default({ message_card: 0, gift_note: 0, inside_label: null, inside_lining: null, embossing: null, engraving: null }),
+    })
+    .default({ placements: { message_card: 0, gift_note: 0, inside_label: null, inside_lining: null, embossing: null, engraving: null } }),
   rewards: z
     .object({
       enabled: z.boolean(),
@@ -864,6 +894,7 @@ export const adminGetSettings = createServerFn({ method: "GET" }).handler(async 
   const depositsRow = rows.find((r) => r.key === "deposits")?.value as Record<string, unknown> | undefined;
   const partnersRow = rows.find((r) => r.key === "partners")?.value as Record<string, unknown> | undefined;
   const anniversaryRow = rows.find((r) => r.key === "anniversary")?.value as Record<string, unknown> | undefined;
+  const meaningRow = rows.find((r) => r.key === "meaning")?.value as { placements?: Record<string, number | null> } | undefined;
   const rewardsRow = rows.find((r) => r.key === "rewards")?.value;
   const aiRow = rows.find((r) => r.key === "ai")?.value;
   const rewards = {
@@ -921,6 +952,16 @@ export const adminGetSettings = createServerFn({ method: "GET" }).handler(async 
       date: typeof anniversaryRow?.date === "string" ? anniversaryRow.date : "2027-06-12",
       label: typeof anniversaryRow?.label === "string" ? anniversaryRow.label : "The Fifth Anniversary Collection",
     },
+    meaning: {
+      placements: {
+        message_card: meaningRow?.placements?.message_card ?? 0,
+        gift_note: meaningRow?.placements?.gift_note ?? 0,
+        inside_label: meaningRow?.placements?.inside_label ?? null,
+        inside_lining: meaningRow?.placements?.inside_lining ?? null,
+        embossing: meaningRow?.placements?.embossing ?? null,
+        engraving: meaningRow?.placements?.engraving ?? null,
+      },
+    },
     rewards,
     ai,
     paymentConfigured: Boolean(process.env.PAYSTACK_SECRET_KEY),
@@ -931,7 +972,7 @@ export const adminSaveSettings = createServerFn({ method: "POST" })
   .inputValidator(SettingsSchema)
   .handler(async ({ data }) => {
     await requireAdminRole(["owner"]);
-    const { defaultFee, freeThreshold, rewards, ai, deposits, partners, anniversary, ...site } = data;
+    const { defaultFee, freeThreshold, rewards, ai, deposits, partners, anniversary, meaning, ...site } = data;
     // The hero image is gone: the rebuilt site presents the wordmark in type
     // and shows "Image coming soon" placeholders until approved uploads land.
     const { heroImage: _dropped, ...cleanSite } = site as Record<string, unknown>;
@@ -955,6 +996,7 @@ export const adminSaveSettings = createServerFn({ method: "POST" })
         { key: "deposits", value: deposits },
         { key: "partners", value: partners },
         { key: "anniversary", value: anniversary },
+        { key: "meaning", value: meaning },
       ])
       .onConflictDoUpdate({
         target: settings.key,
@@ -963,7 +1005,7 @@ export const adminSaveSettings = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// ── Design requests (Design Lab leads) ───────────────────────────────
+// ── Design requests (Leather Atelier briefs) ─────────────────────────
 
 export const adminListDesignRequests = createServerFn({ method: "GET" }).handler(async () => {
   requireAdmin();
@@ -976,16 +1018,21 @@ export const adminListDesignRequests = createServerFn({ method: "GET" }).handler
     id: r.id,
     requestNumber: r.requestNumber,
     sessionId: r.sessionId,
+    customerId: r.customerId,
     customerName: r.customerName,
     email: r.email,
     phone: r.phone,
-    specification: (r.specification ?? {}) as Record<string, string>,
+    specification: (r.specification ?? {}) as Record<string, string | number | string[] | null>,
     aiSummary: r.aiSummary,
+    category: r.category,
+    renderPrompt: r.renderPrompt,
+    artisanBrief: r.artisanBrief,
     recommendedProductIds: r.recommendedProductIds ?? [],
     referenceImageUrl: r.referenceImageUrl,
     conceptImageUrl: r.conceptImageUrl,
     budgetMin: r.budgetMin,
     budgetMax: r.budgetMax,
+    deadline: r.deadline,
     status: r.status,
     createdAt: r.createdAt?.toISOString() ?? null,
   }));
@@ -1898,3 +1945,109 @@ export const adminExportWaitlistCsv = createServerFn({ method: "GET" }).handler(
   );
   return { csv: [header, ...lines].join("\n") };
 });
+
+// ── Inspiration messages (MAKE IT MEANINGFUL catalogue) ──────────────
+
+export const adminListMessages = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdminRole(["owner", "operations"]);
+  const rows = await db.select().from(inspirationMessages).orderBy(desc(inspirationMessages.id)).limit(500);
+  return rows.map((m) => ({
+    id: m.id,
+    messageId: m.messageId,
+    version: m.version,
+    theme: m.theme,
+    source: m.source,
+    text: m.text,
+    reference: m.reference,
+    translation: m.translation,
+    attribution: m.attribution,
+    verificationUrl: m.verificationUrl,
+    reproductionPermission: m.reproductionPermission,
+    isExcerpt: m.isExcerpt,
+    status: m.status,
+    rtl: m.rtl,
+    eligiblePlacements: m.eligiblePlacements ?? [],
+  }));
+});
+
+const MessageInputSchema = z.object({
+  id: z.number().int().optional(),
+  messageId: z.string().min(2).max(60).regex(/^[A-Z0-9-]+$/, "Uppercase letters, numbers and dashes only"),
+  version: z.number().int().min(1).max(99),
+  theme: z.string().min(2).max(60),
+  source: z.enum(["bible", "quran", "dreamz"]),
+  text: z.string().max(600),
+  reference: z.string().max(120).optional().or(z.literal("")),
+  translation: z.string().max(120).optional().or(z.literal("")),
+  attribution: z.string().max(120).optional().or(z.literal("")),
+  verificationUrl: z.string().max(400).optional().or(z.literal("")),
+  reproductionPermission: z.enum(["unverified", "verified", "not_permitted"]).default("unverified"),
+  isExcerpt: z.boolean().default(false),
+  status: z.enum(["draft", "approved", "archived"]),
+  rtl: z.boolean().default(false),
+  eligiblePlacements: z.array(z.string().max(40)).max(8).default([]),
+});
+
+/**
+ * Scripture discipline enforced server-side: a Bible/Qur'an message cannot
+ * be approved unless exact wording, translation, a reputable verification
+ * URL and verified reproduction permission are all recorded. Paraphrases
+ * must be marked as excerpts. Archived versions stay on historic orders
+ * through the immutable order snapshot — approval history is never erased.
+ */
+export const adminSaveMessage = createServerFn({ method: "POST" })
+  .inputValidator(MessageInputSchema)
+  .handler(async ({ data }) => {
+    await requireAdminRole(["owner"]);
+    const isScripture = data.source !== "dreamz";
+    if (data.status === "approved") {
+      const problems: string[] = [];
+      if (!data.text.trim()) problems.push("Exact wording is required before approval.");
+      if (isScripture) {
+        if (!data.reference?.trim()) problems.push("A scripture reference is required before approval.");
+        if (!data.translation?.trim()) problems.push("The translation must be recorded before approval.");
+        if (!data.verificationUrl?.trim()) problems.push("A reputable source URL is required before approval.");
+        if (data.reproductionPermission !== "verified") {
+          problems.push("Commercial reproduction permission must be verified before approval.");
+        }
+        if (!data.isExcerpt && data.text.length > 300) {
+          problems.push("Long passages must be marked as an excerpt.");
+        }
+      }
+      if (problems.length) throw new Error(problems.join(" "));
+    }
+
+    const values = {
+      messageId: data.messageId,
+      version: data.version,
+      theme: data.theme,
+      source: data.source,
+      text: data.text,
+      reference: data.reference || null,
+      translation: data.translation || null,
+      attribution: data.attribution || null,
+      verificationUrl: data.verificationUrl || null,
+      reproductionPermission: data.reproductionPermission,
+      isExcerpt: data.isExcerpt,
+      status: data.status,
+      rtl: data.rtl,
+      eligiblePlacements: data.eligiblePlacements,
+      updatedAt: new Date(),
+    };
+    if (data.id) {
+      await db.update(inspirationMessages).set(values).where(eq(inspirationMessages.id, data.id));
+    } else {
+      await db.insert(inspirationMessages).values(values).onConflictDoNothing();
+    }
+    return { ok: true };
+  });
+
+export const adminDeleteMessage = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.number().int() }))
+  .handler(async ({ data }) => {
+    await requireAdminRole(["owner"]);
+    // Historic order snapshots are immutable — deleting a catalogue row
+    // never changes wording already saved on an order.
+    await db.delete(inspirationMessages).where(eq(inspirationMessages.id, data.id));
+    return { ok: true };
+  });

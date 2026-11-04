@@ -97,10 +97,33 @@ function AdminDesignRequests() {
                   </select>
                 </div>
                 <p className="mt-3 text-sm leading-relaxed">{describeSpec(spec)}</p>
+                {r.category && (
+                  <p className="mt-2 text-xs uppercase tracking-btn text-stone">Category: {r.category}</p>
+                )}
+                {r.deadline && (
+                  <p className="mt-1 text-sm text-stone">Deadline: {r.deadline}</p>
+                )}
                 {r.aiSummary && (
                   <p className="mt-2 text-sm text-stone leading-relaxed">
-                    <span className="uppercase tracking-btn text-[0.65rem]">Assistant summary: </span>
+                    <span className="uppercase tracking-btn text-[0.65rem]">Design summary: </span>
                     {r.aiSummary}
+                  </p>
+                )}
+                {r.renderPrompt && (
+                  <details className="mt-3">
+                    <summary className="text-xs uppercase tracking-btn cursor-pointer">Render prompt</summary>
+                    <pre className="whitespace-pre-wrap text-xs leading-relaxed border border-ink/10 p-3 mt-2 max-h-72 overflow-y-auto">{r.renderPrompt}</pre>
+                  </details>
+                )}
+                {r.artisanBrief && (
+                  <details className="mt-2">
+                    <summary className="text-xs uppercase tracking-btn cursor-pointer">Artisan production brief</summary>
+                    <pre className="whitespace-pre-wrap text-xs leading-relaxed border border-ink/10 p-3 mt-2 max-h-72 overflow-y-auto">{r.artisanBrief}</pre>
+                  </details>
+                )}
+                {Array.isArray(spec.referenceImageUrls) && spec.referenceImageUrls.length > 1 && (
+                  <p className="mt-2 text-sm text-stone">
+                    {spec.referenceImageUrls.length} inspiration images attached (first shown above).
                   </p>
                 )}
                 {r.referenceImageUrl && (

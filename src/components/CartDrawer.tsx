@@ -106,6 +106,13 @@ export function CartDrawer() {
                           Custom piece
                         </p>
                       ) : null}
+                      {item.message && (
+                        <p className="text-xs text-stone mt-1" dir={item.message.rtl ? "rtl" : "ltr"}>
+                          <span className="uppercase tracking-wide text-gold-soft">Meaning · </span>
+                          “{item.message.text.length > 48 ? `${item.message.text.slice(0, 48)}…` : item.message.text}” — {item.message.placementLabel}
+                          {item.message.chargeKobo != null && item.message.chargeKobo > 0 && ` (+${formatNaira(item.message.chargeKobo)})`}
+                        </p>
+                      )}
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center border border-ink/20">
                           <button

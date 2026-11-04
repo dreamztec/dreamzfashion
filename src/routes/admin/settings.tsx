@@ -50,6 +50,13 @@ function AdminSettings() {
     anniversaryEnabled: true,
     anniversaryDate: "2027-06-12",
     anniversaryLabel: "The Fifth Anniversary Collection",
+    // MAKE IT MEANINGFUL placement pricing (naira; empty = priced after review)
+    meaningMessageCard: "0",
+    meaningGiftNote: "0",
+    meaningInsideLabel: "",
+    meaningInsideLining: "",
+    meaningEmbossing: "",
+    meaningEngraving: "",
     // Integration status (read-only)
     paymentConfigured: false,
   });
@@ -112,6 +119,19 @@ function AdminSettings() {
           anniversaryEnabled: anniversary.enabled !== false,
           anniversaryDate: String(anniversary.date ?? "2027-06-12"),
           anniversaryLabel: String(anniversary.label ?? "The Fifth Anniversary Collection"),
+          ...((): Record<string, string> => {
+            const meaning = (loaded.meaning ?? {}) as { placements?: Record<string, number | null> };
+            const p = meaning.placements ?? {};
+            const naira = (v: number | null | undefined) => (v == null ? "" : String(v));
+            return {
+              meaningMessageCard: naira(p.message_card ?? 0),
+              meaningGiftNote: naira(p.gift_note ?? 0),
+              meaningInsideLabel: naira(p.inside_label),
+              meaningInsideLining: naira(p.inside_lining),
+              meaningEmbossing: naira(p.embossing),
+              meaningEngraving: naira(p.engraving),
+            };
+          })(),
           paymentConfigured: loaded.paymentConfigured === true,
         }));
       })
@@ -179,6 +199,16 @@ function AdminSettings() {
           enabled: form.anniversaryEnabled,
           date: form.anniversaryDate,
           label: form.anniversaryLabel,
+        },
+        meaning: {
+          placements: {
+            message_card: form.meaningMessageCard === "" ? null : Number(form.meaningMessageCard) || 0,
+            gift_note: form.meaningGiftNote === "" ? null : Number(form.meaningGiftNote) || 0,
+            inside_label: form.meaningInsideLabel === "" ? null : Number(form.meaningInsideLabel) || 0,
+            inside_lining: form.meaningInsideLining === "" ? null : Number(form.meaningInsideLining) || 0,
+            embossing: form.meaningEmbossing === "" ? null : Number(form.meaningEmbossing) || 0,
+            engraving: form.meaningEngraving === "" ? null : Number(form.meaningEngraving) || 0,
+          },
         },
       });
       setMessage("Settings saved. Changes are live on the site.");
@@ -390,6 +420,39 @@ function AdminSettings() {
           <div className="sm:col-span-2">
             <label className="input-lux-label">Collection Label</label>
             <input className="input-lux" value={form.anniversaryLabel} onChange={set("anniversaryLabel")} />
+          </div>
+        </div>
+
+        <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Make It Meaningful — Placement Pricing</h2>
+        <p className="text-xs text-stone -mt-2">
+          Charges shown before Add to Bag, in naira. Leave a field empty for
+          “priced after review” (the line becomes a quote); enter 0 for an
+          explicitly complimentary placement. Nothing is silently free.
+        </p>
+        <div className="grid gap-5 sm:grid-cols-3">
+          <div>
+            <label className="input-lux-label">Message Card (₦)</label>
+            <input className="input-lux" value={form.meaningMessageCard} onChange={set("meaningMessageCard")} inputMode="numeric" placeholder="0 = complimentary" />
+          </div>
+          <div>
+            <label className="input-lux-label">Gift Note (₦)</label>
+            <input className="input-lux" value={form.meaningGiftNote} onChange={set("meaningGiftNote")} inputMode="numeric" />
+          </div>
+          <div>
+            <label className="input-lux-label">Inside Label (₦)</label>
+            <input className="input-lux" value={form.meaningInsideLabel} onChange={set("meaningInsideLabel")} inputMode="numeric" placeholder="empty = after review" />
+          </div>
+          <div>
+            <label className="input-lux-label">Inside Lining (₦)</label>
+            <input className="input-lux" value={form.meaningInsideLining} onChange={set("meaningInsideLining")} inputMode="numeric" />
+          </div>
+          <div>
+            <label className="input-lux-label">Embossing (₦)</label>
+            <input className="input-lux" value={form.meaningEmbossing} onChange={set("meaningEmbossing")} inputMode="numeric" />
+          </div>
+          <div>
+            <label className="input-lux-label">Engraving (₦)</label>
+            <input className="input-lux" value={form.meaningEngraving} onChange={set("meaningEngraving")} inputMode="numeric" />
           </div>
         </div>
 
