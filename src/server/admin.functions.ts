@@ -40,6 +40,7 @@ import { getPartnerPlan } from "../lib/partner-plans";
  */
 import { requireAdmin, requireAdminRole } from "./admin-auth.server";
 import { consumeRateLimit, clientIp } from "./rate-limit.server";
+import { getActivePaymentProvider, getActivePaymentProviderId } from "./payments.server";
 import { timingSafeEqual } from "node:crypto";
 
 export type AdminRole = "owner" | "sales" | "operations";
@@ -288,6 +289,8 @@ export const adminReadiness = createServerFn({ method: "GET" }).handler(async ()
   return {
     // Configuration booleans only — a key's PRESENCE, never its value.
     paystackConfigured: Boolean(process.env.PAYSTACK_SECRET_KEY),
+    flutterwaveConfigured: Boolean(process.env.FLW_SECRET_KEY && process.env.FLW_WEBHOOK_SECRET_HASH),
+    activePaymentProvider: getActivePaymentProviderId(),
     aiTextConfigured: Boolean(
       process.env.NETLIFY_AI_GATEWAY_KEY && process.env.NETLIFY_AI_GATEWAY_BASE_URL,
     ),
@@ -964,7 +967,7 @@ export const adminGetSettings = createServerFn({ method: "GET" }).handler(async 
     },
     rewards,
     ai,
-    paymentConfigured: Boolean(process.env.PAYSTACK_SECRET_KEY),
+    paymentConfigured: getActivePaymentProvider() !== null,
   };
 });
 

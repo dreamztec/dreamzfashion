@@ -8,65 +8,82 @@ import { CONTACT } from "@/lib/contact";
 
 export const Route = createFileRoute("/checkout/callback")({
   validateSearch: (search: Record<string, unknown>) => ({
+    // Paystack redirect params
     orderNumber: typeof search.orderNumber === "string" ? search.orderNumber : undefined,
     reference: typeof search.reference === "string" ? search.reference : undefined,
     trxref: typeof search.trxref === "string" ? search.trxref : undefined,
+    // Flutterwave redirect params — status/tx_ref/transaction_id
+    status: typeof search.status === "string" ? search.status : undefined,
+    tx_ref: typeof search.tx_ref === "string" ? search.tx_ref : undefined,
+    transaction_id: typeof search.transaction_id === "string" ? search.transaction_id : undefined,
   }),
   head: () => ({ meta: [{ title: `Confirming payment — ${BRAND.name}`, name: "robots", content: "noindex" }] }),
   component: PaymentCallback,
 });
 
 function PaymentCallback() {
-  const { orderNumber, reference, trxref } = Route.useSearch();
+  const { orderNumber, reference, trxref, tx_ref, transaction_id } = Route.useSearch();
   const clearCart = useCart((s) => s.clear);
+  const [resolvedOrderNumber, setResolvedOrderNumber] = useState<string | undefined>(orderNumber);
   const [state, setState] = useState<"verifying" | "success" | "partial" | "failed" | "missing">(
-    orderNumber ? "verifying" : "missing",
+    orderNumber || tx_ref ? "verifying" : "missing",
   );
   const [balanceKobo, setBalanceKobo] = useState(0);
   const [payingBalance, setPayingBalance] = useState(false);
   const [rechecking, setRechecking] = useState(false);
   const attempted = useRef(false);
 
+  const applyResult = (result: Awaited<ReturnType<typeof verifyPayment>>) => {
+    if (result.verified) {
+      if (result.orderNumber) setResolvedOrderNumber(result.orderNumber);
+      clearCart();
+      if ("fullyPaid" in result && result.fullyPaid === false) {
+        setBalanceKobo((result as { balanceKobo?: number }).balanceKobo ?? 0);
+        setState("partial");
+      } else {
+        setState("success");
+      }
+    } else {
+      setState("failed");
+    }
+  };
+
   useEffect(() => {
-    if (!orderNumber || attempted.current) return;
+    if ((!orderNumber && !tx_ref) || attempted.current) return;
     attempted.current = true;
 
-    // The cart is cleared only after successful verification
+    // The cart is cleared only after successful verification. The gateway's
+    // status parameter is never trusted — the server re-verifies.
     const run = async () => {
       try {
-        const result = await verifyPayment({ data: { orderNumber } });
-        if (result.verified) {
-          clearCart();
-          if ("fullyPaid" in result && result.fullyPaid === false) {
-            setBalanceKobo((result as { balanceKobo?: number }).balanceKobo ?? 0);
-            setState("partial");
-          } else {
-            setState("success");
-          }
-        } else {
-          setState("failed");
-        }
+        const result = await verifyPayment({
+          data: {
+            ...(orderNumber ? { orderNumber } : {}),
+            ...(tx_ref ? { reference: tx_ref } : {}),
+            ...(transaction_id ? { transactionId: transaction_id } : {}),
+          },
+        });
+        applyResult(result);
       } catch {
         setState("failed");
       }
     };
     run();
-  }, [orderNumber, clearCart]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderNumber, tx_ref, transaction_id, clearCart]);
 
   const recheck = async () => {
-    if (!orderNumber) return;
+    if (!orderNumber && !tx_ref) return;
     setRechecking(true);
     try {
-      const result = await verifyPayment({ data: { orderNumber } });
-      if (result.verified) {
-        clearCart();
-        if ("fullyPaid" in result && result.fullyPaid === false) {
-          setBalanceKobo((result as { balanceKobo?: number }).balanceKobo ?? 0);
-          setState("partial");
-        } else {
-          setState("success");
-        }
-      }
+      const result = await verifyPayment({
+        data: {
+          ...(orderNumber ? { orderNumber } : {}),
+          ...(tx_ref ? { reference: tx_ref } : {}),
+          ...(transaction_id ? { transactionId: transaction_id } : {}),
+        },
+      });
+      applyResult(result);
     } catch {
       // remain in failed state — no raw errors shown
     } finally {
@@ -75,10 +92,10 @@ function PaymentCallback() {
   };
 
   const payBalance = async () => {
-    if (!orderNumber) return;
+    if (!resolvedOrderNumber) return;
     setPayingBalance(true);
     try {
-      const res = await initializeBalancePayment({ data: { orderNumber } });
+      const res = await initializeBalancePayment({ data: { orderNumber: resolvedOrderNumber } });
       if (res.fullyPaid) {
         setState("success");
       } else if ("authorizationUrl" in res) {
@@ -89,9 +106,10 @@ function PaymentCallback() {
     }
   };
 
-  const paystackRef = reference || trxref;
-  const supportMessage = orderNumber
-    ? `Hello ${BRAND.shortName}, I need help with payment for order ${orderNumber}.`
+  const displayOrderNumber = resolvedOrderNumber ?? orderNumber ?? tx_ref;
+  const paymentRef = reference || trxref || tx_ref;
+  const supportMessage = displayOrderNumber
+    ? `Hello ${BRAND.shortName}, I need help with payment for order ${displayOrderNumber}.`
     : `Hello ${BRAND.shortName}, I need help with a payment.`;
 
   return (
@@ -113,7 +131,7 @@ function PaymentCallback() {
             reserved with our workshop.
           </p>
           <p className="text-sm text-ink mb-2">
-            Order <strong>{orderNumber}</strong>
+            Order <strong>{displayOrderNumber}</strong>
           </p>
           <p className="text-sm text-stone mb-8 max-w-md mx-auto">
             Outstanding balance:{" "}
@@ -126,7 +144,7 @@ function PaymentCallback() {
               {payingBalance ? "Connecting…" : "Pay Balance Now"}
             </button>
             <WhatsAppCTAButton
-              message={`Hello ${BRAND.shortName}, I have paid the deposit for order ${orderNumber}.`}
+              message={`Hello ${BRAND.shortName}, I have paid the deposit for order ${displayOrderNumber}.`}
               whatsappNumber={CONTACT.whatsappNumber}
               label="WhatsApp Support"
             />
@@ -151,7 +169,7 @@ function PaymentCallback() {
             with our workshop.
           </p>
           <p className="text-sm text-ink mb-2">
-            Order <strong>{orderNumber}</strong>
+            Order <strong>{displayOrderNumber}</strong>
           </p>
           <p className="text-sm text-stone mb-8">
             Keep this number — you will use it to track your order. We will
@@ -167,7 +185,7 @@ function PaymentCallback() {
           </div>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <WhatsAppCTAButton
-              message={`Hello ${BRAND.shortName}, I have just paid for order ${orderNumber}.`}
+              message={`Hello ${BRAND.shortName}, I have just paid for order ${displayOrderNumber}.`}
               whatsappNumber={CONTACT.whatsappNumber}
               label="WhatsApp Support"
             />
@@ -187,7 +205,7 @@ function PaymentCallback() {
           <p className="text-oxblood text-4xl mb-6" aria-hidden="true">✕</p>
           <h1 className="font-editorial text-3xl mb-4">Payment not completed</h1>
           <p className="text-stone mb-8 max-w-md mx-auto leading-relaxed">
-            Your order <strong>{orderNumber}</strong> is saved, but we could not
+            Your order <strong>{displayOrderNumber}</strong> is saved, but we could not
             confirm the payment. You have not been charged for an incomplete
             payment. You can retry the payment, return to your cart, or chat
             with us and we will sort it out.
@@ -211,7 +229,7 @@ function PaymentCallback() {
               {CONTACT.phoneDisplay}
             </a>
           </p>
-          {paystackRef && <p className="mt-6 text-xs text-stone">Reference: {paystackRef}</p>}
+          {paymentRef && <p className="mt-6 text-xs text-stone">Reference: {paymentRef}</p>}
           <button
             type="button"
             onClick={recheck}

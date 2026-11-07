@@ -5,7 +5,7 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "../../db/index";
 import { corporateEnquiries, corporateQuotes, payments } from "../../db/schema";
 import { generateCorporateNumber, isValidNigerianPhone } from "@/lib/format";
-import { getPaymentProvider } from "./payments.server";
+import { getActivePaymentProvider } from "./payments.server";
 
 /**
  * Corporate & bulk orders — public enquiry intake with rate limiting, and
@@ -154,8 +154,9 @@ export const acceptCorporateQuote = createServerFn({ method: "POST" })
 
 /**
  * Pay a quote milestone (or the full amount when no milestones are set) via
- * Paystack. The chargeable amount is computed server-side from the quote's
- * milestone percentages — the browser only picks which milestone to settle.
+ * the active gateway. The chargeable amount is computed server-side from the
+ * quote's milestone percentages — the browser only picks which milestone to
+ * settle.
  */
 export const initializeQuotePayment = createServerFn({ method: "POST" })
   .inputValidator(
@@ -166,7 +167,7 @@ export const initializeQuotePayment = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
-    const provider = getPaymentProvider("paystack");
+    const provider = getActivePaymentProvider();
     if (!provider) {
       throw new Error(
         "Online payment is not yet active. Please contact us to arrange payment.",
@@ -204,7 +205,7 @@ export const initializeQuotePayment = createServerFn({ method: "POST" })
     }
 
     const amountKobo = Math.round((quote.totalKobo * milestone.percent) / 100);
-    const reference = `PSKQ-${quote.quoteNumber}-${milestoneIndex + 1}`;
+    const reference = `${provider.refPrefix}Q-${quote.quoteNumber}-${milestoneIndex + 1}`;
     await db.insert(payments).values({
       orderId: 0, // quote payments are tracked against the quote, not a shop order
       reference,
@@ -213,11 +214,13 @@ export const initializeQuotePayment = createServerFn({ method: "POST" })
       kind: "quote_milestone",
       corporateQuoteId: quote.id,
       status: "initialized",
+      gateway: provider.id,
     });
 
     const siteUrl = process.env.SITE_URL || "http://localhost:3000";
     const init = await provider.initialize({
       email: quote.email,
+      name: quote.companyName,
       amountKobo,
       reference,
       callbackUrl: `${siteUrl}/corporate/quote/${encodeURIComponent(quote.quoteNumber)}?t=${encodeURIComponent(data.token)}`,

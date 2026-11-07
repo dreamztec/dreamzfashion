@@ -126,7 +126,7 @@ function Checkout() {
           }
         })
         .catch(() => {
-          if (!cancelled) setPreview({ ok: false, paymentAvailable: false, error: "We couldn't calculate your total just now. Please refresh to try again." });
+          if (!cancelled) setPreview({ ok: false, paymentAvailable: false, paymentProviderLabel: null, error: "We couldn't calculate your total just now. Please refresh to try again." });
         })
         .finally(() => !cancelled && setPreviewBusy(false));
     }, 250);
@@ -428,14 +428,14 @@ function Checkout() {
           >
             {submitting
               ? paymentOnline
-                ? "Connecting to Paystack…"
+                ? "Connecting to secure payment…"
                 : "Sending your request…"
               : !pricing || pricing.total === null
                 ? "Select your state to continue"
                 : paymentOnline
                   ? payDeposit && canDeposit
-                    ? `Pay ${depositTerms.percent}% Deposit with Paystack`
-                    : "Pay with Paystack"
+                    ? `Pay ${depositTerms.percent}% Deposit — Secure Payment`
+                    : "Proceed to Secure Payment"
                   : "Send Order Request"}
           </button>
           {paymentOnline && pricing?.total != null && (
@@ -460,8 +460,11 @@ function Checkout() {
           )}
           {paymentOnline && (
             <p className="mt-4 text-center text-xs text-stone">
-              Card, bank transfer and USSD are handled by Paystack — card
-              details never touch our servers.
+              {preview && "paymentProviderLabel" in preview && preview.paymentProviderLabel
+                ? `Secure payment powered by ${preview.paymentProviderLabel}`
+                : "Secure payment powered by our payment partner"}
+              {" — "}card, bank transfer and USSD; card details never touch our
+              servers.
             </p>
           )}
         </form>
