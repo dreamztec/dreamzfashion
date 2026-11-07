@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "../../db/index";
 import { orderEvents, orderItems, orders, payments, voucherRedemptions } from "../../db/schema";
 import { eq, sql } from "drizzle-orm";
-import { getPaymentProvider } from "./payments.server";
+import { getActivePaymentProvider, getPaymentProvider, type PaymentProvider } from "./payments.server";
 import { getSetting } from "./catalog.server";
 import { getCurrentCustomer } from "./auth.server";
 import { holdVoucherForOrder } from "./vouchers.server";
@@ -88,7 +88,7 @@ export type CheckoutInput = z.infer<typeof CheckoutSchema>;
 
 /** Whether online payment can actually be taken right now. */
 function paymentAvailable(): boolean {
-  return getPaymentProvider("paystack") !== null;
+  return getActivePaymentProvider() !== null;
 }
 
 function publicPricing(priced: PricedOrder) {
@@ -140,9 +140,9 @@ export const previewCheckout = createServerFn({ method: "POST" })
         referralSessionId: data.referralSessionId || null,
         buyer: { customerId: customer?.id ?? null, email: data.email || customer?.email || null, phone: data.phone || null },
       });
-      return { ok: true as const, paymentAvailable: paymentAvailable(), pricing: publicPricing(priced) };
+      return { ok: true as const, paymentAvailable: paymentAvailable(), paymentProviderLabel: getActivePaymentProvider()?.label ?? null, pricing: publicPricing(priced) };
     } catch (err) {
-      if (err instanceof PricingError) return { ok: false as const, paymentAvailable: paymentAvailable(), error: err.message };
+      if (err instanceof PricingError) return { ok: false as const, paymentAvailable: paymentAvailable(), paymentProviderLabel: null, error: err.message };
       throw err;
     }
   });
@@ -192,7 +192,7 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     const discountKobo = priced.discountKobo;
     const total = priced.total;
 
-    const provider = getPaymentProvider("paystack");
+    const provider = getActivePaymentProvider();
     // Unpaid order request: payment unavailable, customer chose it, or a
     // custom design still needs the house's quote.
     const isRequest = data.mode === "request" || !provider || priced.hasQuoteLines;
@@ -228,7 +228,7 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     const balanceKobo = paymentPlan === "deposit" ? total - depositKobo : 0;
 
     const orderNumber = generateOrderNumber();
-    const reference = isRequest ? null : `PSK-${orderNumber}`;
+    const reference = isRequest ? null : `${provider!.refPrefix}-${orderNumber}`;
     const now = new Date().toISOString();
     const firstStatus = isRequest ? "order_requested" : "order_received";
 
@@ -337,6 +337,7 @@ export const initializeCheckout = createServerFn({ method: "POST" })
       currency: "NGN",
       kind: paymentPlan === "deposit" ? "deposit" : "full",
       status: "initialized",
+      gateway: provider!.id,
     });
 
     if (priced.voucherId != null) {
@@ -350,29 +351,68 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     }
 
     const siteUrl = process.env.SITE_URL || process.env.URL || "http://localhost:3000";
-    const init = await provider!.initialize({
-      email: data.email || `${orderNumber}@dreamzfk.order`,
-      amountKobo: paymentPlan === "deposit" ? depositKobo : total,
-      reference: reference!,
-      callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(orderNumber)}`,
-      metadata: {
-        order_number: orderNumber,
+    try {
+      const init = await provider!.initialize({
+        email: data.email || `${orderNumber}@dreamzfk.order`,
+        name: data.name,
         phone: data.phone,
-        payment_plan: paymentPlan,
-        ...(paymentPlan === "deposit" ? { deposit_kobo: depositKobo, balance_kobo: balanceKobo } : {}),
-      },
-    });
+        amountKobo: paymentPlan === "deposit" ? depositKobo : total,
+        reference: reference!,
+        callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(orderNumber)}`,
+        metadata: {
+          order_number: orderNumber,
+          phone: data.phone,
+          payment_plan: paymentPlan,
+          ...(paymentPlan === "deposit" ? { deposit_kobo: depositKobo, balance_kobo: balanceKobo } : {}),
+        },
+      });
 
-    return {
-      orderNumber,
-      requested: false,
-      duplicate: false,
-      authorizationUrl: init.authorizationUrl,
-      reference,
-      paymentPlan,
-      depositKobo,
-      balanceKobo,
-    };
+      return {
+        orderNumber,
+        requested: false,
+        duplicate: false,
+        authorizationUrl: init.authorizationUrl,
+        reference,
+        paymentPlan,
+        depositKobo,
+        balanceKobo,
+      };
+    } catch {
+      // The gateway is unreachable or misconfigured. The DREAMZ order already
+      // exists — the customer must never lose it — so the order degrades to
+      // the same unpaid-order-request flow the house already works from, and
+      // checkout hands the customer to WhatsApp. Nothing is ever faked.
+      await db
+        .update(payments)
+        .set({ status: "failed", updatedAt: new Date() })
+        .where(eq(payments.reference, reference!));
+      await db
+        .update(orders)
+        .set({ paymentStatus: "requested", status: "order_requested", updatedAt: new Date() })
+        .where(eq(orders.id, order.id));
+      // The voucher hold taken for this attempt goes back to the wallet.
+      const { releaseVoucherForOrder } = await import("./vouchers.server");
+      const [held] = await db
+        .select({ voucherId: voucherRedemptions.voucherId })
+        .from(voucherRedemptions)
+        .where(
+          sql`${voucherRedemptions.orderId} = ${order.id} AND ${voucherRedemptions.status} = 'held'`,
+        )
+        .limit(1);
+      if (held) await releaseVoucherForOrder(held.voucherId, order.id).catch(() => undefined);
+      await db.insert(orderEvents).values({
+        orderId: order.id,
+        status: "order_requested",
+        note: `The ${provider!.label} payment session could not be started — order kept as an unpaid request.`,
+      });
+      return {
+        orderNumber,
+        requested: true,
+        duplicate: false,
+        orderUrl: `/order/${orderNumber}`,
+        reason: "payment_unavailable",
+      };
+    }
   });
 
 /**
@@ -383,7 +423,7 @@ export const initializeCheckout = createServerFn({ method: "POST" })
 export const initializeRequestPayment = createServerFn({ method: "POST" })
   .inputValidator(z.object({ orderNumber: z.string().min(4).max(40), contact: z.string().min(5).max(120) }))
   .handler(async ({ data }) => {
-    const provider = getPaymentProvider("paystack");
+    const provider = getActivePaymentProvider();
     if (!provider) throw new Error("Online payment is not active yet — the DREAMZ team will send you a payment link.");
     const [order] = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber.trim().toUpperCase())).limit(1);
     if (!order) throw new Error("We could not find that order");
@@ -398,8 +438,8 @@ export const initializeRequestPayment = createServerFn({ method: "POST" })
     if (items.some((i) => i.unitPrice <= 0)) throw new Error("Part of this order is still being quoted by the house.");
     if (order.total <= 0) throw new Error("Nothing to pay on this order.");
 
-    const reference = `PSK-${order.orderNumber}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    await db.insert(payments).values({ orderId: order.id, reference, amountKobo: order.total, currency: "NGN", kind: "full", status: "initialized" });
+    const reference = `${provider.refPrefix}-${order.orderNumber}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    await db.insert(payments).values({ orderId: order.id, reference, amountKobo: order.total, currency: "NGN", kind: "full", status: "initialized", gateway: provider.id });
     await db
       .update(orders)
       .set({ paymentStatus: "pending_payment", paymentReference: reference, updatedAt: new Date() })
@@ -407,6 +447,8 @@ export const initializeRequestPayment = createServerFn({ method: "POST" })
     const siteUrl = process.env.SITE_URL || process.env.URL || "http://localhost:3000";
     const init = await provider.initialize({
       email: order.email || `${order.orderNumber}@dreamzfk.order`,
+      name: order.customerName,
+      phone: order.phone,
       amountKobo: order.total,
       reference,
       callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(order.orderNumber)}`,
@@ -416,23 +458,38 @@ export const initializeRequestPayment = createServerFn({ method: "POST" })
   });
 
 /**
- * Verify a payment reference and, on success, credit the order.
+ * Verify a payment and, on success, credit the order.
  * Called from the callback page — safe to re-run (idempotent).
- * The verified amount must match the ledger row's expected charge exactly;
+ *
+ * The redirect's own status parameter is never trusted: the gateway's
+ * transaction is re-verified server-side. When the gateway supplies a
+ * transaction id (Flutterwave), verification is done against that
+ * transaction and it must belong to the expected DREAMZ reference. The
+ * verified amount must be at least the ledger row's expected charge and
  * the currency must be NGN. A deposit moves the order to deposit_paid; only
  * the final balance clears it to paid.
  */
 export const verifyPayment = createServerFn({ method: "POST" })
-  .inputValidator((data: { orderNumber: string }) => data)
+  .inputValidator((data: { orderNumber?: string; reference?: string; transactionId?: string }) => data)
   .handler(async ({ data }) => {
-    const provider = getPaymentProvider("paystack");
-    if (!provider) throw new Error("Payment service is not active");
-
-    const [order] = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.orderNumber, data.orderNumber))
-      .limit(1);
+    // Resolve the order either directly (order number) or through the
+    // payment ledger (Flutterwave's redirect carries tx_ref, not the order
+    // number). The ledger row is authoritative for the reference↔order link.
+    const [order] = data.orderNumber
+      ? await db
+          .select()
+          .from(orders)
+          .where(eq(orders.orderNumber, data.orderNumber))
+          .limit(1)
+      : data.reference
+        ? await db
+            .select({ order: orders })
+            .from(payments)
+            .innerJoin(orders, eq(orders.id, payments.orderId))
+            .where(eq(payments.reference, data.reference))
+            .limit(1)
+            .then((rows) => (rows.length > 0 ? [rows[0].order] : []))
+        : [];
     if (!order) throw new Error("We could not find that order");
 
     if (order.paymentStatus === "paid") {
@@ -442,19 +499,30 @@ export const verifyPayment = createServerFn({ method: "POST" })
     if (!order.paymentReference) throw new Error("Order has no payment reference");
 
     const [ledgerRow] = await db
-      .select({ amountKobo: payments.amountKobo, kind: payments.kind, status: payments.status })
+      .select({ amountKobo: payments.amountKobo, kind: payments.kind, status: payments.status, gateway: payments.gateway })
       .from(payments)
       .where(eq(payments.reference, order.paymentReference))
       .limit(1);
     if (!ledgerRow) throw new Error("Order has no payment record");
 
-    const result = await provider.verify(order.paymentReference);
+    // Verify against the gateway the ledger row was created with (an order
+    // paid under a previously active provider still verifies correctly).
+    const provider: PaymentProvider | null =
+      (ledgerRow.gateway ? getPaymentProvider(ledgerRow.gateway) : null) ?? getActivePaymentProvider();
+    if (!provider) throw new Error("Payment service is not active");
+
+    const result =
+      (data.transactionId && provider.verifyById
+        ? await provider.verifyById(data.transactionId, order.paymentReference)
+        : null) ?? (await provider.verify(order.paymentReference));
+
     if (
       result.success &&
       result.currency === "NGN" &&
-      result.amountKobo === ledgerRow.amountKobo
+      result.amountKobo > 0 &&
+      result.amountKobo >= ledgerRow.amountKobo
     ) {
-      await confirmOrderPaid(order.id, order.paymentReference, result.channel ?? "paystack", "verify");
+      await confirmOrderPaid(order.id, order.paymentReference, result.channel ?? provider.id, "verify");
       const [after] = await db
         .select({ paymentStatus: orders.paymentStatus, balanceKobo: orders.balanceKobo })
         .from(orders)
@@ -468,7 +536,7 @@ export const verifyPayment = createServerFn({ method: "POST" })
       };
     }
 
-    if (!result.success && (result.rawStatus === "failed" || result.rawStatus === "abandoned")) {
+    if (!result.success && ["failed", "abandoned", "cancelled"].includes(result.rawStatus)) {
       await db
         .update(orders)
         .set({ paymentStatus: result.rawStatus === "failed" ? "failed" : "pending_payment", updatedAt: new Date() })
@@ -499,7 +567,7 @@ export const verifyPayment = createServerFn({ method: "POST" })
 export const initializeBalancePayment = createServerFn({ method: "POST" })
   .inputValidator(z.object({ orderNumber: z.string().min(4).max(40) }))
   .handler(async ({ data }) => {
-    const provider = getPaymentProvider("paystack");
+    const provider = getActivePaymentProvider();
     if (!provider) {
       throw new Error(
         "Online payment is not yet active. Please contact us on WhatsApp to complete your balance payment.",
@@ -528,7 +596,7 @@ export const initializeBalancePayment = createServerFn({ method: "POST" })
       throw new Error("Nothing outstanding on this order");
     }
 
-    const reference = `PSKB-${order.orderNumber}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
+    const reference = `${provider.refPrefix}B-${order.orderNumber}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     await db.insert(payments).values({
       orderId: order.id,
       reference,
@@ -536,11 +604,14 @@ export const initializeBalancePayment = createServerFn({ method: "POST" })
       currency: "NGN",
       kind: "balance",
       status: "initialized",
+      gateway: provider.id,
     });
 
     const siteUrl = process.env.SITE_URL || "http://localhost:3000";
     const init = await provider.initialize({
       email: order.email || `${order.orderNumber}@dreamzfk.order`,
+      name: order.customerName,
+      phone: order.phone,
       amountKobo: outstanding,
       reference,
       callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(order.orderNumber)}`,

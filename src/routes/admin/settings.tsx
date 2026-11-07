@@ -458,13 +458,13 @@ function AdminSettings() {
 
         <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Payment Status</h2>
         <p className="text-xs text-stone -mt-2">
-          Paystack:{" "}
+          Active gateway:{" "}
           <span className={form.paymentConfigured ? "text-forest font-medium" : "text-oxblood font-medium"}>
             {form.paymentConfigured ? "Connected" : "Not Connected"}
           </span>
           {form.paymentConfigured
-            ? " — live/test mode is whatever your Paystack dashboard keys control. Verify with a small real transaction before launch."
-            : " — PAYSTACK_SECRET_KEY is missing from this deployment. Checkout shows an honest Order Request (nothing is charged); online payment switches on automatically once the key is added. No code change needed."}
+            ? " — chosen by PAYMENT_PROVIDER (flutterwave or paystack). Live/test mode is whatever your gateway dashboard keys control. Verify with a small real transaction before launch."
+            : " — the active gateway's secret key is missing from this deployment. Checkout shows an honest Order Request (nothing is charged); online payment switches on automatically once the key is added. No code change needed."}
         </p>
 
         <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone pt-4">Delivery</h2>

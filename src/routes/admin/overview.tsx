@@ -176,13 +176,26 @@ function ReadinessPanel({ base }: { base: Array<{ label: string; value: string }
   const rows: Array<{ label: string; value: React.ReactNode; note?: string; href?: string }> = [
     ...base.map((r) => ({ label: r.label, value: <span className="text-forest font-medium">{r.value}</span> as React.ReactNode })),
     {
+      label: "FLUTTERWAVE",
+      value: readiness
+        ? flag(readiness.flutterwaveConfigured, "Connected", "Not Connected")
+        : <span className="text-stone">Checking…</span>,
+      note: !readiness?.flutterwaveConfigured
+        ? "Set FLW_SECRET_KEY and FLW_WEBHOOK_SECRET_HASH in the Netlify environment, then add the webhook URL in the Flutterwave dashboard."
+        : readiness.activePaymentProvider === "flutterwave"
+          ? "Active payment gateway (PAYMENT_PROVIDER=flutterwave)."
+          : "Configured but not the active gateway — set PAYMENT_PROVIDER=flutterwave to switch.",
+    },
+    {
       label: "PAYSTACK",
       value: readiness
         ? flag(readiness.paystackConfigured, "Connected", "Not Connected")
         : <span className="text-stone">Checking…</span>,
       note: readiness?.paystackConfigured
-        ? undefined
-        : "Set PAYSTACK_SECRET_KEY in the Netlify environment — online payment switches on automatically, no code change.",
+        ? readiness.activePaymentProvider === "paystack"
+          ? "Active payment gateway (PAYMENT_PROVIDER=paystack)."
+          : "Configured but dormant — switch back anytime with PAYMENT_PROVIDER=paystack."
+        : "Set PAYSTACK_SECRET_KEY in the Netlify environment to keep it selectable as a fallback gateway.",
     },
     {
       label: "AI ASSISTANT",
