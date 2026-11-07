@@ -10,6 +10,7 @@ const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> 
   { label: "Essentials", to: "/shop/essentials", shopCategory: true },
   { label: "Originals", to: "/shop/originals", shopCategory: true },
   { label: "Royale", to: "/shop/royale", shopCategory: true },
+  { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Leather Atelier", to: "/custom" },
 ];
@@ -19,6 +20,7 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Essentials", to: "/shop/essentials", shopCategory: true },
   { label: "Originals", to: "/shop/originals", shopCategory: true },
   { label: "Royale", to: "/shop/royale", shopCategory: true },
+  { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Leather Atelier", to: "/custom" },
   { label: "Creators", to: "/creators" },

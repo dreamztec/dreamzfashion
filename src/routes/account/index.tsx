@@ -151,6 +151,9 @@ function AccountOverview() {
             <Link to="/royale/request" className="nav-link text-[0.72rem] uppercase tracking-btn py-1">
               Start a Royale design
             </Link>
+            <Link to="/account/designs" className="nav-link text-[0.72rem] uppercase tracking-btn py-1">
+              Saved design briefs
+            </Link>
             <Link to="/track-order" search={{ order: undefined }} className="nav-link text-[0.72rem] uppercase tracking-btn py-1">
               Track an order
             </Link>

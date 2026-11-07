@@ -1149,6 +1149,34 @@ export const waitlist = pgTable(
   (t) => [uniqueIndex("waitlist_email_source_uidx").on(t.email, t.source)],
 );
 
+// ── Saved design briefs (Leather Atelier) ────────────────────────────
+
+/**
+ * A brief the customer chose to save from the atelier BEFORE submitting it
+ * to the house. Saved only for signed-in customers (verified JWT) — the
+ * storefront never shows a "saved" state unless a row actually exists here.
+ */
+export const savedBriefs = pgTable(
+  "saved_briefs",
+  {
+    id: serial("id").primaryKey(),
+    customerId: integer("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    category: text("category"),
+    piece: text("piece"),
+    // Full atelier snapshot: interview answers plus the composed outputs
+    // (design summary, render prompt, artisan brief).
+    payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+    // draft | submitted — set to submitted once the brief is sent to DREAMZ.
+    status: text("status").notNull().default("draft"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [index("saved_briefs_customer_idx").on(t.customerId)],
+);
+
 // ── Admin users (role-based access: owner | sales | operations) ──────
 
 export const adminUsers = pgTable(

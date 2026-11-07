@@ -7,7 +7,7 @@ import {
   COLLECTION_LABELS,
   COLLECTION_PRICE_BAND_KOBO,
 } from "../src/lib/collection";
-import { PRODUCT_TYPES, groupForType } from "../src/lib/taxonomy";
+import { PRODUCT_TYPES, GROUP_ORDER, groupForType, productGroup } from "../src/lib/taxonomy";
 import { CAMPAIGN_TIERS } from "../src/lib/campaign-tiers";
 
 /**
@@ -117,8 +117,21 @@ describe("Product type structure", () => {
     expect(PRODUCT_TYPES.bags).toContain("Laptop Bags");
     expect(PRODUCT_TYPES.bags).toContain("Other Bags");
     expect(PRODUCT_TYPES.accessories).toEqual([
-      "Belts", "Wallets", "Purses", "Card Holders", "Key Holders", "Gift Sets", "Other Accessories",
+      "Belts", "Wallets", "Purses", "Card Holders", "Key Holders", "Bracelets & Cuffs", "Wrist Pouches", "Gift Sets", "Other Accessories",
     ]);
+  });
+
+  it("offers the Leather Wear browsing structure with the house subcategories", () => {
+    expect(PRODUCT_TYPES["leather-wear"]).toEqual([
+      "Tops", "Vests", "Jackets", "Trousers", "Joggers", "Shorts", "Skirts", "Other Leather Wear",
+    ]);
+    expect(GROUP_ORDER["leather-wear"]).toEqual([
+      "Tops", "Vests", "Jackets", "Trousers", "Shorts", "Skirts", "Other Leather Wear",
+    ]);
+    expect(productGroup("leather-wear", "Tops")).toBe("Tops");
+    expect(productGroup("leather-wear", "Vests")).toBe("Vests");
+    expect(productGroup("leather-wear", "Joggers")).toBe("Trousers");
+    expect(productGroup("leather-wear", "Shorts")).toBe("Shorts");
   });
 
   it("maps product types onto browsing groups without confusing collections", () => {

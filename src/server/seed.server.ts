@@ -75,6 +75,14 @@ async function runSeed() {
         imageUrl: null,
         sortOrder: 3,
       },
+      {
+        name: "Leather Wear",
+        slug: "leather-wear",
+        description:
+          "Leather tops, vests, jackets, trousers and shorts — the wardrobe, made in leather.",
+        imageUrl: null,
+        sortOrder: 4,
+      },
     ])
     .onConflictDoNothing();
 

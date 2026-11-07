@@ -3,9 +3,10 @@
  * e.g. "Monk Straps", "Mules") stays exact on every listing; this only groups
  * types into the browsing structure:
  *
- *   Footwear    → Shoes / Loafers / Boots / Slides
- *   Bags        → Briefcases / Wrist Pouches / Handbags & Totes
- *   Accessories → Belts / Gift Sets / Wallets & Small Goods
+ *   Footwear     → Shoes / Loafers / Boots / Slides
+ *   Bags         → Briefcases / Wrist Pouches / Handbags & Totes
+ *   Accessories  → Belts / Gift Sets / Wallets & Small Goods
+ *   Leather Wear → Tops / Vests / Jackets / Trousers / Shorts / Skirts
  */
 
 const FOOTWEAR_GROUPS: Array<[string, RegExp]> = [
@@ -28,15 +29,27 @@ const BAG_GROUPS: Array<[string, RegExp]> = [
 
 const ACCESSORY_GROUPS: Array<[string, RegExp]> = [
   ["Belts", /belt/i],
+  ["Bracelets & Cuffs", /bracelet|cuff|bead/i],
   ["Gift Sets", /gift|combo|set/i],
   ["Purses", /purse/i],
   ["Wallets & Small Goods", /wallet|card|pouch|key/i],
 ];
 
+const LEATHER_WEAR_GROUPS: Array<[string, RegExp]> = [
+  ["Tops", /tee|top|shirt|blouse/i],
+  ["Vests", /vest/i],
+  ["Jackets", /jacket|coat|blazer|outerwear/i],
+  ["Trousers", /trouser|jogger|pant|chino/i],
+  ["Shorts", /short/i],
+  ["Skirts", /skirt/i],
+  ["Other Leather Wear", /other|ensemble|set|two.piece/i],
+];
+
 export const GROUP_ORDER: Record<string, string[]> = {
   footwear: ["Shoes", "Loafers", "Boots", "Sneakers", "Heels & Wedges", "Women's Flats", "Slides & Sandals"],
   bags: ["Handbags & Totes", "Briefcases & Laptop Bags", "Duffle & Travel", "Crossbody", "Wrist Pouches"],
-  accessories: ["Belts", "Wallets & Small Goods", "Purses", "Gift Sets"],
+  accessories: ["Belts", "Wallets & Small Goods", "Bracelets & Cuffs", "Purses", "Gift Sets"],
+  "leather-wear": ["Tops", "Vests", "Jackets", "Trousers", "Shorts", "Skirts", "Other Leather Wear"],
 };
 
 // ── Product types (exact admin vocabulary) ────────────────────────────
@@ -78,8 +91,20 @@ export const PRODUCT_TYPES: Record<string, string[]> = {
     "Purses",
     "Card Holders",
     "Key Holders",
+    "Bracelets & Cuffs",
+    "Wrist Pouches",
     "Gift Sets",
     "Other Accessories",
+  ],
+  "leather-wear": [
+    "Tops",
+    "Vests",
+    "Jackets",
+    "Trousers",
+    "Joggers",
+    "Shorts",
+    "Skirts",
+    "Other Leather Wear",
   ],
 };
 
@@ -114,6 +139,14 @@ const TYPE_GROUPS: Record<string, string> = {
   "Key Holders": "Wallets & Small Goods",
   "Gift Sets": "Gift Sets",
   "Other Accessories": "Wallets & Small Goods",
+  Tops: "Tops",
+  Vests: "Vests",
+  Jackets: "Jackets",
+  Trousers: "Trousers",
+  Joggers: "Trousers",
+  Shorts: "Shorts",
+  Skirts: "Skirts",
+  "Other Leather Wear": "Other Leather Wear",
 };
 
 /** Browsing group for an exact product type (null when unknown). */
@@ -126,7 +159,15 @@ export function groupForType(categorySlug: string, type: string): string | null 
 export function productGroup(categorySlug: string, subcategory: string | null | undefined): string | null {
   const sub = subcategory ?? "";
   const table =
-    categorySlug === "footwear" ? FOOTWEAR_GROUPS : categorySlug === "bags" ? BAG_GROUPS : categorySlug === "accessories" ? ACCESSORY_GROUPS : null;
+    categorySlug === "footwear"
+      ? FOOTWEAR_GROUPS
+      : categorySlug === "bags"
+        ? BAG_GROUPS
+        : categorySlug === "accessories"
+          ? ACCESSORY_GROUPS
+          : categorySlug === "leather-wear"
+            ? LEATHER_WEAR_GROUPS
+            : null;
   if (!table) return null;
   for (const [group, re] of table) if (re.test(sub)) return group;
   return null;

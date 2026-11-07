@@ -18,6 +18,8 @@ import { formatNaira } from "@/lib/format";
 import { ProductMedia } from "@/components/brand";
 import { WhatsAppCTAButton } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
+import { useAuth } from "@/lib/auth-client";
+import { saveBriefDraft } from "@/server/saved-briefs.functions";
 import { REFERENCE_LIMITS, precheckFile } from "@/lib/reference-upload";
 
 /**
@@ -100,7 +102,10 @@ export function LeatherAtelier() {
   const [copied, setCopied] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<{ requestNumber: string } | null>(null);
   const [submitBusy, setSubmitBusy] = useState(false);
-  const [saveState, setSaveState] = useState<"idle" | "saved" | "signin">("idle");
+  // "saved" appears ONLY after the server confirms a row exists in the
+  // customer's account — never as a result of a click alone.
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "failed">("idle");
+  const { user } = useAuth();
   const [images, setImages] = useState<Array<{ name: string; data: string }>>([]);
   const sessionId = useMemo(sessionKey, []);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -378,35 +383,86 @@ export function LeatherAtelier() {
               message={`Hello ${BRAND.shortName}, I have composed a leather design brief in your atelier (${a.piece}) and would like to continue.`}
               label="Continue on WhatsApp"
             />
-            <button
-              type="button"
-              className="btn-lux btn-lux-outline"
+            {user ? (
+              <button
+                type="button"
+                className="btn-lux btn-lux-outline"
+                disabled={saveState === "saving"}
               onClick={async () => {
+                setSaveState("saving");
+                setError(null);
                 try {
-                  const res = await fetch("/api/event", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ name: "atelier_prompt_saved", data: {} }),
-                    keepalive: true,
+                  const res = await saveBriefDraft({
+                    data: {
+                      title: `${a.piece ?? "Leather brief"} — ${new Date().toLocaleDateString("en-NG", { day: "numeric", month: "short" })}`,
+                      category: a.category ?? "",
+                      piece: a.piece ?? "",
+                      payload: {
+                        answers: {
+                          meaning: a.meaning,
+                          customMeaning: a.customMeaning,
+                          story: a.story,
+                          forWhom: a.forWhom,
+                          stylePreference: a.stylePreference,
+                          occasion: a.occasion,
+                          sizeOrMeasurements: a.sizeOrMeasurements,
+                          neededBy: a.neededBy,
+                          feel: a.feel,
+                          primaryColour: a.primaryColour,
+                          secondaryColour: a.secondaryColour,
+                          pattern: a.pattern,
+                          texture: a.texture,
+                          material: a.material,
+                          construction: a.construction,
+                          personalisation: { type: a.personalisationType, text: a.personalisationText },
+                          inspirationNotes: a.inspirationNotes,
+                          budgetNaira: a.budgetNaira,
+                        },
+                        designSummary: result.designSummary,
+                        renderPrompt: result.renderPrompt,
+                        artisanBrief: result.artisanBrief,
+                      },
+                    },
                   });
-                  void res;
+                  if (res.ok) setSaveState("saved");
+                  else {
+                    setSaveState("failed");
+                    setError("The brief could not be saved to your account just now. Continue on WhatsApp with it instead — our team will keep your design safe.");
+                  }
                 } catch {
-                  /* analytics must never break the page */
+                  setSaveState("failed");
+                  setError("The brief could not be saved to your account just now. Continue on WhatsApp with it instead — our team will keep your design safe.");
                 }
-                setSaveState("saved");
               }}
             >
-              {saveState === "saved" ? "Prompt saved ✓" : "Save to My Account"}
+              {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved to Your Account ✓" : "Save Design Brief"}
             </button>
+            ) : (
+              <Link to="/account/login" className="btn-lux btn-lux-outline">
+                Sign In to Save
+              </Link>
+            )}
             <button type="button" className="btn-lux btn-lux-outline" onClick={() => { setResult(null); setStep(0); }}>
               Refine This Brief
             </button>
           </div>
           {saveState === "saved" && (
             <p className="mt-3 text-xs text-stone">
-              A copy of your render prompt stays with this request in your
-              account area once you send the brief to DREAMZ.
+              This brief is now saved in{" "}
+              <Link to="/account/designs" className="underline hover:text-ink">
+                My Account → My Designs
+              </Link>
+              . Nothing has been sent to DREAMZ yet — choose Send to DREAMZ when
+              you are ready.
             </p>
+          )}
+          {saveState === "failed" && (
+            <div className="mt-3">
+              <WhatsAppCTAButton
+                message={`Hello ${BRAND.shortName}, I composed a leather design brief in your atelier (${a.piece ?? "custom piece"}) but saving it to my account did not go through. Here is my brief:`}
+                label="Continue on WhatsApp with this brief"
+              />
+            </div>
           )}
         </div>
 
