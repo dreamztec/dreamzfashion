@@ -32,6 +32,7 @@ const CATEGORIES = [
   { slug: "footwear", label: "Footwear" },
   { slug: "bags", label: "Bags" },
   { slug: "accessories", label: "Accessories" },
+  { slug: "leather-wear", label: "Leather Wear" },
 ];
 
 const AVAILABILITY_OPTIONS = [

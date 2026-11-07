@@ -99,6 +99,36 @@ const HELD_BACK: Record<string, string> = {
   "patterned-loafer.jpg": "lifestyle model shot — product not identified",
 };
 
+/**
+ * Leather Wear catalogue batch (2026-11-04) — 16 DRAFT products ingested
+ * unpublished at zero price (no approved prices yet), each with its own
+ * gallery file, plus two reference assets that are NOT product SKUs.
+ */
+const LEATHER_WEAR_DRAFTS: Record<string, string[]> = {
+  "DFK-ACC-201": ["resolve-double-buckle-cuff.jpg"],
+  "DFK-ACC-202": ["unity-beaded-bracelet.jpg"],
+  "DFK-ACC-203": ["mercy-wrap-cuff.jpg"],
+  "DFK-ACC-204": ["hope-slim-bracelet-set.jpg"],
+  "DFK-ACC-205": ["legacy-leather-belt.jpg"],
+  "DFK-ACC-206": ["purpose-wrist-pouch.jpg"],
+  "DFK-LWR-201": ["ambition-leather-tee.jpg"],
+  "DFK-LWR-202": ["courage-lace-up-vest.jpg"],
+  "DFK-LWR-203": ["discipline-wide-leg-trousers.jpg"],
+  "DFK-LWR-204": ["excellence-tailored-trousers.jpg"],
+  "DFK-LWR-205": ["resilience-cargo-trousers.jpg"],
+  "DFK-LWR-206": ["focus-cargo-joggers.jpg"],
+  "DFK-LWR-207": ["growth-tailored-shorts.jpg"],
+  "DFK-LWR-208": ["possibility-cargo-shorts.jpg"],
+  "DFK-LWR-209": ["leadership-utility-vest.jpg"],
+  "DFK-LWR-210": ["sacrifice-cargo-shorts.jpg"],
+};
+
+/** Reference/campaign assets — catalogued in the media library, never SKUs. */
+const REFERENCE_ASSETS = [
+  "vision-leather-ensemble-campaign.jpg",
+  "cargo-shorts-colourway-reference.jpg",
+];
+
 describe("isDisplayableImageUrl", () => {
   it("accepts uploaded media, bundled product photography and https", () => {
     expect(isDisplayableImageUrl("/api/media/products/abc.jpg")).toBe(true);
@@ -142,9 +172,19 @@ describe("Published product galleries", () => {
       ...SUPERSEDED_DUPLICATES,
       ...SUPERSEDED_FRONT_EDIT_PHOTO,
       ...Object.keys(HELD_BACK),
+      ...Object.values(LEATHER_WEAR_DRAFTS).flat(),
+      ...REFERENCE_ASSETS,
     ]);
     const orphans = fs.readdirSync(PRODUCTS_DIR).filter((f) => !accounted.has(f));
     expect(orphans, "unreconciled uploads in public/img/products").toEqual([]);
+  });
+
+  it("every Leather Wear draft has exactly one gallery file on disk", () => {
+    const onDisk = new Set(fs.readdirSync(PRODUCTS_DIR));
+    for (const [sku, files] of Object.entries(LEATHER_WEAR_DRAFTS)) {
+      expect(files, `${sku} has a gallery file`).toHaveLength(1);
+      expect(onDisk.has(files[0]), `${sku}: missing public/img/products/${files[0]}`).toBe(true);
+    }
   });
 
   it("the data layer filters through isDisplayableImageUrl rather than dropping /img/", () => {

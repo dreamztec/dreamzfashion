@@ -126,8 +126,8 @@ async function recommendFromCatalogue(brief: AtelierBrief) {
     footwear: ["footwear"],
     bags: ["bags"],
     accessories: ["accessories"],
-    wearable: ["footwear", "bags", "accessories"],
-    other: ["footwear", "bags", "accessories"],
+    wearable: ["leather-wear", "footwear", "bags", "accessories"],
+    other: ["leather-wear", "footwear", "bags", "accessories"],
   };
   const inCategory = all.filter((p) => categoryMap[brief.category].includes(p.categorySlug));
   const q = [

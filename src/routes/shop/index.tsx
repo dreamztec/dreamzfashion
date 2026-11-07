@@ -48,7 +48,7 @@ export const Route = createFileRoute("/shop/")({
       { title: `Shop — ${BRAND.name}` },
       {
         name: "description",
-        content: `Browse DREAMZ leather footwear, bags and accessories — Essentials, Originals and Royale.`,
+        content: `Browse DREAMZ leather footwear, bags, leather wear and accessories — Essentials, Originals and Royale.`,
       },
     ],
     // Filter/sort/search params create duplicate URLs; every variant points
@@ -173,12 +173,13 @@ function ShopIndex() {
       <div className="text-center mb-12">
         <p className="overline-label mb-3">The Collection</p>
         <h1 className="font-editorial text-4xl sm:text-6xl">
-          Handmade Leather Footwear &amp; Accessories
+          Handmade Leather Footwear, Wear &amp; Accessories
         </h1>
         <p className="text-stone mt-4 max-w-xl mx-auto text-sm leading-relaxed">
           Every piece here is a sample of what DREAMZ can make for you —
-          handcrafted leather shoes, boots, sandals, bags and accessories made
-          in Nigeria. Order any piece as shown in your size and colourway, or{" "}
+          handcrafted leather shoes, boots, sandals, bags, wearable leather and
+          accessories made in Nigeria. Order any piece as shown in your size
+          and colourway, or{" "}
           <Link to="/custom" className="underline hover:text-ink">design your own</Link>{" "}
           from scratch. Nationwide delivery in 2–5 working days.
         </p>

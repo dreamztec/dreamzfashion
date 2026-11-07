@@ -18,6 +18,7 @@ const COLUMNS: Array<{
       { label: "Originals", to: "/shop/originals", shop: true },
       { label: "Royale", to: "/shop/royale", shop: true },
       { label: "Footwear", to: "/shop/footwear", shop: true },
+      { label: "Leather Wear", to: "/shop/leather-wear", shop: true },
       { label: "Bags", to: "/shop/bags", shop: true },
       { label: "Accessories", to: "/shop/accessories", shop: true },
       { label: "Leather Atelier", to: "/custom", shop: true },
