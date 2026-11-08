@@ -28,9 +28,10 @@ const COLUMNS: Array<{
     title: "The House",
     links: [
       { label: "About DREAMZ", to: "/about" },
-      { label: "Creators — apply free", to: "/creators" },
-      { label: "Sell DREAMZ — retail partners", to: "/partnerships" },
-      { label: "Earn with DREAMZ", to: "/earn" },
+      { label: "Earn with DREAMZ — free", to: "/earn" },
+      { label: "Creator Programme", to: "/creators" },
+      { label: "Partner with DREAMZ — optional membership", to: "/partner-with-dreamz" },
+      { label: "Sell DREAMZ — retail stock", to: "/partnerships" },
       { label: "Corporate Orders", to: "/corporate" },
       { label: "Anniversary Collection", to: "/dreamz-5" },
       { label: "Track Order", to: "/track-order" },
