@@ -2,7 +2,6 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { getSiteSettings } from "@/server/catalog.functions";
 import { Reveal } from "@/components/Reveal";
 import { WhatsAppCTAButton } from "@/components/whatsapp";
-import { ImageComingSoon } from "@/components/brand";
 import { BRAND } from "@/lib/config";
 import { useAuth } from "@/lib/auth-client";
 
@@ -87,21 +86,20 @@ function RewardsPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24 grid gap-10 lg:grid-cols-2 items-center">
+      <section className="mx-auto max-w-3xl px-5 sm:px-8 py-16 lg:py-24 text-center">
         <Reveal>
           <p className="overline-label mb-4">Have a printed DREAMZ voucher?</p>
           <h2 className="font-editorial text-3xl sm:text-4xl leading-tight mb-4">
             Your voucher lives in your account
           </h2>
-          <p className="text-stone leading-relaxed mb-8 max-w-lg">
+          <p className="text-stone leading-relaxed mb-8 max-w-lg mx-auto">
             Enter the code from your printed DREAMZ voucher and it moves into
-            your wallet — ready to apply at checkout or keep for later.
+            your wallet — ready to apply to an eligible order or keep for later.
           </p>
           <Link to="/voucher" className="btn-lux btn-lux-primary">
             Enter Voucher Code
           </Link>
         </Reveal>
-        <ImageComingSoon aspect="aspect-[4/3]" label="DREAMZ Rewards — image coming soon" />
       </section>
 
       <section className="mx-auto max-w-3xl px-5 sm:px-8 pb-20 text-center">
