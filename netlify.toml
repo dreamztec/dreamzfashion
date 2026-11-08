@@ -2,6 +2,14 @@
   command = "vite build"
   publish = "dist/client"
 
+[build.environment]
+  # SITE_URL (the public site URL) and PAYMENT_PROVIDER ("flutterwave") are
+  # flagged as secrets in the Netlify env settings, but their values are
+  # non-sensitive and legitimately appear in the repo (canonical URLs in
+  # robots.txt/sitemap, gateway name in code and tests). Secret scanning
+  # fails the build when it finds them, so omit these keys from the scan.
+  SECRETS_SCAN_OMIT_KEYS = "SITE_URL,PAYMENT_PROVIDER"
+
 [dev]
   command = "npm run dev"
   targetPort = 3000
