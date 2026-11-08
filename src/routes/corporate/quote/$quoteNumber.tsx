@@ -24,7 +24,8 @@ export const Route = createFileRoute("/corporate/quote/$quoteNumber")({
   },
   head: () => ({
     meta: [
-      { title: `Quotation — ${BRAND.name}`, name: "robots", content: "noindex" },
+      { title: `Quotation — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: QuoteView,
