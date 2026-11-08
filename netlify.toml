@@ -1,5 +1,5 @@
 [build]
-  command = "npx vitest run tests/auth-client.test.tsx tests/auth-errors.test.ts tests/auth-server.test.ts tests/identity-session.test.ts tests/task-engine.test.ts"
+  command = "npx vitest run tests/catalog-pricing.test.ts tests/collections-partnerships.test.ts tests/new-drop-drafts.test.ts tests/originals-catalog.test.ts tests/originals-front-edit.test.ts tests/product-images.test.ts"
   publish = "dist/client"
 
 [dev]
