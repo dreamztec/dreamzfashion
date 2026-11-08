@@ -4,7 +4,14 @@ import { useAuth } from "@/lib/auth-client";
 import { BRAND } from "@/lib/config";
 
 export const Route = createFileRoute("/account/login")({
-  validateSearch: (search: Record<string, unknown>): { reset?: boolean } => ({ reset: search.reset === true || search.reset === "true" || search.reset === "1" }),
+  validateSearch: (search: Record<string, unknown>): { reset?: boolean; returnTo?: string } => {
+    const candidate = typeof search.returnTo === "string" ? search.returnTo : undefined;
+    const returnTo = candidate && candidate.startsWith("/") && !candidate.startsWith("//") ? candidate : undefined;
+    return {
+      reset: search.reset === true || search.reset === "true" || search.reset === "1",
+      returnTo,
+    };
+  },
   head: () => ({
     meta: [
       { title: `Sign In — ${BRAND.name}` },
@@ -17,6 +24,8 @@ export const Route = createFileRoute("/account/login")({
 function LoginPage() {
   const { user, loading, login, signup, recover, error, clearError, notice, passwordAction, resetPassword } = useAuth();
   const navigate = useNavigate();
+  const { returnTo } = Route.useSearch();
+  const safeReturnTo = returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/account";
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,10 +37,16 @@ function LoginPage() {
   const [recovering, setRecovering] = useState(false);
   const [recoverNotice, setRecoverNotice] = useState(false);
 
-  // Signed-in users land on the dashboard.
   useEffect(() => {
-    if (!loading && user && !passwordAction) void navigate({ to: "/account", replace: true });
-  }, [user, loading, navigate, passwordAction]);
+    if (returnTo && typeof window !== "undefined") {
+      sessionStorage.setItem("dfk-auth-return-to", safeReturnTo);
+    }
+  }, [returnTo, safeReturnTo]);
+
+  // Signed-in users return to the work they were doing, otherwise dashboard.
+  useEffect(() => {
+    if (!loading && user && !passwordAction) void navigate({ to: safeReturnTo, replace: true });
+  }, [user, loading, navigate, passwordAction, safeReturnTo]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -64,7 +79,7 @@ function LoginPage() {
         }
         setPassword("");
         setConfirmPassword("");
-        if (mode === "login") void navigate({ to: "/account" });
+        if (mode === "login") void navigate({ to: safeReturnTo });
       }
     } finally {
       setBusy(false);
