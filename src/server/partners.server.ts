@@ -126,38 +126,6 @@ export async function recordVerifiedCommission(
     .returning();
   if (inserted.length === 0) return { created: false, reason: "duplicate" };
 
-  if (
-    firstProductiveSale &&
-    referrer.introducerCode &&
-    settings.partnerIntroductionBonusKobo > 0
-  ) {
-    const [introducer] = await db
-      .select({ id: referrers.id, code: referrers.code })
-      .from(referrers)
-      .where(
-        and(
-          sql`upper(${referrers.code}) = ${referrer.introducerCode.toUpperCase()}`,
-          eq(referrers.status, "approved"),
-        ),
-      )
-      .limit(1);
-    if (introducer && introducer.id !== referrer.id) {
-      await db
-        .insert(commissions)
-        .values({
-          referrerId: introducer.id,
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          orderTotalKobo: basis,
-          rateBps: 0,
-          amountKobo: settings.partnerIntroductionBonusKobo,
-          status: "pending",
-          note: `One-time productive partner introduction bonus — ${referrer.code} first verified customer sale`,
-        })
-        .onConflictDoNothing({ target: [commissions.orderId, commissions.referrerId] });
-    }
-  }
-
   const { referralAttributions } = await import("../../db/schema");
   await db
     .update(referralAttributions)
