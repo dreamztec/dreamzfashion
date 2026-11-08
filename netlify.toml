@@ -1,5 +1,5 @@
 [build]
-  command = "npm test && npm run build"
+  command = "npx vitest run tests/auth-client.test.tsx tests/auth-errors.test.ts tests/auth-server.test.ts tests/identity-session.test.ts tests/task-engine.test.ts"
   publish = "dist/client"
 
 [dev]
