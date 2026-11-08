@@ -121,7 +121,6 @@ function AppShell() {
   const settings = (Route.useLoaderData() as { settings: Record<string, unknown> }).settings;
   const whatsappNumber =
     (settings.whatsappNumber as string) || process.env.DFK_WHATSAPP_NUMBER || "";
-  const announcement = (settings.announcementBar as string) || "";
 
   useEffect(() => {
     useSiteSettings.getState().set({ whatsappNumber });
@@ -135,7 +134,7 @@ function AppShell() {
       >
         Skip to content
       </a>
-      <Header announcement={announcement} />
+      <Header />
       <main id="main">
         <Outlet />
       </main>
