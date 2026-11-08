@@ -13,6 +13,11 @@ import { getPaymentProvider } from "./payments.server";
  * customer page cannot mutate anything except recording acceptance.
  */
 
+function onlinePaymentAvailable(): boolean {
+  const enabled = String(process.env.ONLINE_PAYMENTS_ENABLED ?? "").toLowerCase() === "true";
+  return enabled && getPaymentProvider("paystack") !== null;
+}
+
 const EnquirySchema = z.object({
   companyName: z.string().min(2).max(160),
   contactPerson: z.string().min(2).max(120),
@@ -98,6 +103,7 @@ export const getCorporateQuote = createServerFn({ method: "GET" })
     }
     return {
       found: true as const,
+      onlinePaymentAvailable: onlinePaymentAvailable(),
       quote: {
         quoteNumber: quote.quoteNumber,
         companyName: quote.companyName,
@@ -166,10 +172,15 @@ export const initializeQuotePayment = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }) => {
+    if (!onlinePaymentAvailable()) {
+      throw new Error(
+        "Online payment is not active yet. Please contact DREAMZ to arrange payment.",
+      );
+    }
     const provider = getPaymentProvider("paystack");
     if (!provider) {
       throw new Error(
-        "Online payment is not yet active. Please contact us to arrange payment.",
+        "Online payment is not active yet. Please contact DREAMZ to arrange payment.",
       );
     }
     const [quote] = await db
@@ -206,7 +217,7 @@ export const initializeQuotePayment = createServerFn({ method: "POST" })
     const amountKobo = Math.round((quote.totalKobo * milestone.percent) / 100);
     const reference = `PSKQ-${quote.quoteNumber}-${milestoneIndex + 1}`;
     await db.insert(payments).values({
-      orderId: 0, // quote payments are tracked against the quote, not a shop order
+      orderId: null, // quote payments are tracked against the quote, not a shop order
       reference,
       amountKobo,
       currency: "NGN",
