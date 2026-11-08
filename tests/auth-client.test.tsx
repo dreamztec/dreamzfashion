@@ -21,7 +21,10 @@ vi.mock("@/server/customer.functions", () => ({ ensureMyCustomerProfile: mocks.p
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mocks.navigate,
   useLocation: () => mocks.pathname,
-  createFileRoute: () => (options: unknown) => ({ options }),
+  createFileRoute: () => (options: unknown) => ({
+    options,
+    useSearch: () => ({ reset: false, returnTo: undefined }),
+  }),
   Outlet: () => {
     useEffect(() => { mocks.outletMounted(); }, []);
     return <div data-testid="public-outlet">Authentication route content</div>;
@@ -53,6 +56,7 @@ beforeEach(() => {
   mocks.listeners.clear();
   mocks.pathname = "/account/login";
   window.history.replaceState({}, "", "/account/login");
+  sessionStorage.clear();
   mocks.getUser.mockResolvedValue(null);
   mocks.hydrateSession.mockResolvedValue(null);
   mocks.handleAuthCallback.mockResolvedValue(null);
