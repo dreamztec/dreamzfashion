@@ -62,7 +62,7 @@ function CreatorsPage() {
           <dl className="grid gap-4 sm:grid-cols-2 text-sm">
             <div className="border border-ink/10 bg-ivory px-5 py-4">
               <dt className="input-lux-label">Commission rate</dt>
-              <dd className="font-editorial text-2xl">{t.rateLabel}</dd>
+              <dd className="font-editorial text-2xl">{t.creatorRateLabel}</dd>
               {!t.rateConfigured && (
                 <p className="text-xs text-stone mt-1">DREAMZ sets the rate before a creator is activated.</p>
               )}
