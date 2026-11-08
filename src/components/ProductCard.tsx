@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ProductWithMedia } from "@/server/catalog.server";
-import { formatNaira, normalizeTier } from "@/lib/format";
-import { displayFit, isPosterArtwork } from "@/lib/img";
+import { formatNaira } from "@/lib/format";
+import { isPosterArtwork } from "@/lib/img";
 import { ProductMedia } from "@/components/brand";
 import { availabilityOf } from "@/lib/availability";
 
@@ -16,7 +16,7 @@ export function ProductCard({
   const alt = product.images[0]?.altText ?? product.name;
   const variantStock = product.variants.reduce((sum, v) => sum + v.stockQuantity, 0);
   const info = availabilityOf(product, { hasStock: product.variants.length > 0 ? variantStock > 0 : undefined });
-  const quoteOnly = product.price <= 0 || !product.checkoutReady;
+  // Public product grids only render real, priced products. This prevents\n  // blank "Image coming soon" cards and ₦0/quote-only catalogue clutter.\n  if (!image || product.price <= 0) return null;
 
   return (
     <Link
@@ -35,9 +35,10 @@ export function ProductCard({
           // Two-column mobile grid at DPR 2 needs a ~640px source; larger
           // breakpoints step up through the Image CDN. No huge originals.
           sizes="(max-width: 479px) 92vw, (max-width: 1023px) 46vw, 30vw"
-          // Product photography shows the whole piece; lifestyle scenes may
-          // crop. The admin's per-product imageFit is respected.
-          fit={displayFit(product.images[0]?.kind, product.imageFit)}
+          // Clean product photography fills the commerce card. If the only
+          // approved asset is a house product poster, keep it fully visible
+          // rather than cropping its product/price information.
+          fit={isPosterArtwork(image) ? "contain" : "cover"}
         />
         {info.label !== "Available" && (
           <span className="absolute top-4 left-4 bg-ink text-ivory text-[0.6rem] uppercase tracking-btn px-3 py-1.5">
@@ -55,17 +56,11 @@ export function ProductCard({
         {product.subcategory && (
           <p className="text-xs text-stone mt-0.5">{product.subcategory}</p>
         )}
-        {quoteOnly ? (
-          <p className="mt-1.5 text-sm text-stone italic">
-            {normalizeTier(product.tier) === "royale" ? "Private commission" : "Request a quote"}
-          </p>
-        ) : (
-          /* One principal price per card — the Product Only price. The
-             Complete Package is presented on the product page only. */
-          <p className="mt-1.5 text-sm">
-            <span className="text-ink">{formatNaira(product.price)}</span>
-          </p>
-        )}
+        {/* One principal price per card — the Product Only price. The
+            Complete Package is presented on the product page only. */}
+        <p className="mt-1.5 text-sm">
+          <span className="text-ink">{formatNaira(product.price)}</span>
+        </p>
       </div>
     </Link>
   );
