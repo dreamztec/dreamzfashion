@@ -16,6 +16,11 @@ export const Route = createFileRoute("/")({
       { name: "description", content: HERO_BODY },
     ],
   }),
+  headers: () => ({
+    "Netlify-CDN-Cache-Control": "public, durable, max-age=300, stale-while-revalidate=1800",
+    "Netlify-Vary": "query=preview",
+  }),
+  staleTime: 60_000,
   component: Home,
 });
 
@@ -25,7 +30,7 @@ const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefi
 /** /shop/$category takes its own search params (no `q`). */
 const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
 
-type HomeProduct = Awaited<ReturnType<typeof getHomeSelectionFn>>["hero"];
+type HomeProduct = Awaited<ReturnType<typeof getHomePageDataFn>>["hero"];
 
 function Home() {
   const { hero, frontOriginals, collectionPreviews, total } = Route.useLoaderData() as {
