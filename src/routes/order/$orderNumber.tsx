@@ -18,7 +18,7 @@ export const Route = createFileRoute("/order/$orderNumber")({
     return result;
   },
   head: () => ({
-    meta: [{ title: `Your order — ${BRAND.name}` }, { name: "robots", content: "noindex" }],
+    meta: [{ title: `Your order — ${BRAND.name}` }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: OrderConfirmed,
 });
