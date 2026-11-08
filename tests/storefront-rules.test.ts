@@ -24,7 +24,7 @@ describe("delivery", () => {
     const q = quoteDelivery({ state: "", merchandiseKobo: 99_000_000, allCompletePackage: true, settings });
     expect(q).toMatchObject({ status: "needs_state", feeKobo: null });
   });
-  it("matches the banner: free at or above ₦150,000, flat fee below", () => {
+  it("applies the configured free-delivery threshold at ₦150,000", () => {
     expect(quoteDelivery({ state: "Lagos", merchandiseKobo: 14_999_900, allCompletePackage: false, settings }).feeKobo).toBe(350_000);
     expect(quoteDelivery({ state: "Lagos", merchandiseKobo: 15_000_000, allCompletePackage: false, settings }).feeKobo).toBe(0);
   });
@@ -52,18 +52,21 @@ describe("attribution rules", () => {
     expect(isSelfPurchase(partner, { customerId: 8, email: "d@x.com", phone: "08030000000" })).toBe(false);
   });
   it("classifies outcomes and never pays without a configured rate", () => {
-    expect(classifyAttribution({ track: "creator", selfPurchase: false, commissionBps: 1300, selfPurchaseBenefitBps: 0 })).toBe("commission");
+    expect(classifyAttribution({ track: "referral", selfPurchase: false, commissionBps: 1000, selfPurchaseBenefitBps: 0 })).toBe("commission");
+    expect(classifyAttribution({ track: "creator", selfPurchase: false, commissionBps: 1500, selfPurchaseBenefitBps: 0 })).toBe("commission");
+    expect(classifyAttribution({ track: "trade", selfPurchase: false, commissionBps: 1500, selfPurchaseBenefitBps: 0 })).toBe("commission");
     expect(classifyAttribution({ track: "creator", selfPurchase: false, commissionBps: 0, selfPurchaseBenefitBps: 0 })).toBe("not_eligible");
-    expect(classifyAttribution({ track: "public", selfPurchase: false, commissionBps: 1300, selfPurchaseBenefitBps: 0 })).toBe("not_eligible");
-    expect(classifyAttribution({ track: "creator", selfPurchase: true, commissionBps: 1300, selfPurchaseBenefitBps: 0 })).toBe("self_purchase");
-    expect(classifyAttribution({ track: "creator", selfPurchase: true, commissionBps: 1300, selfPurchaseBenefitBps: 500 })).toBe("self_purchase_benefit");
+    expect(classifyAttribution({ track: "public", selfPurchase: false, commissionBps: 1500, selfPurchaseBenefitBps: 0 })).toBe("not_eligible");
+    expect(classifyAttribution({ track: "creator", selfPurchase: true, commissionBps: 1500, selfPurchaseBenefitBps: 0 })).toBe("self_purchase");
+    expect(classifyAttribution({ track: "creator", selfPurchase: true, commissionBps: 1500, selfPurchaseBenefitBps: 500 })).toBe("self_purchase_benefit");
   });
   it("calculates on merchandise after discounts, excluding delivery, in integer kobo", () => {
     expect(commissionBasisKobo({ subtotal: 10_000_000, discountKobo: 1_000_000, selfPurchaseBenefitKobo: 0 })).toBe(9_000_000);
-    expect(bpsOf(9_000_000, 1300)).toBe(1_170_000);
-    expect(bpsOf(333, 1300)).toBe(43); // floor, never rounds up
+    expect(bpsOf(9_000_000, 1500)).toBe(1_350_000);
+    expect(bpsOf(333, 1500)).toBe(49); // floor, never rounds up
     expect(formatRate(0)).toBe("Rate confirmed on approval");
-    expect(formatRate(1300)).toBe("13%");
+    expect(formatRate(1000)).toBe("10%");
+    expect(formatRate(1500)).toBe("15%");
   });
   it("eligibility needs payment, delivery and the return window", () => {
     const now = new Date("2026-11-10T12:00:00Z");
