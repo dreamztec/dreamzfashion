@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   composeDreamToLeather,
@@ -82,7 +82,10 @@ type ComposeResult = Awaited<ReturnType<typeof composeDreamToLeather>>;
 
 const STEPS = ["The Piece", "The Dream", "Person & Occasion", "Design Character", "Leather", "Construction", "Personalisation", "Inspiration"] as const;
 
+const PENDING_ATELIER_KEY = "dfk-pending-atelier-brief";
+
 function sessionKey(): string {
+  if (typeof window === "undefined") return "server";
   let s = sessionStorage.getItem("dfk-design-session");
   if (!s) {
     s = `s-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`;
@@ -109,6 +112,37 @@ export function LeatherAtelier() {
   const [images, setImages] = useState<Array<{ name: string; data: string }>>([]);
   const sessionId = useMemo(sessionKey, []);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  // A completed brief survives the sign-in round trip. Once the customer
+  // returns authenticated, restore the exact answers and generated outputs.
+  useEffect(() => {
+    if (!user || typeof window === "undefined") return;
+    const raw = sessionStorage.getItem(PENDING_ATELIER_KEY);
+    if (!raw) return;
+    try {
+      const pending = JSON.parse(raw) as {
+        answers?: Partial<Answers>;
+        result?: Extract<ComposeResult, { ok: true }>;
+        promptFormat?: PromptFormat;
+      };
+      if (pending.answers) setA({ ...INITIAL, ...pending.answers });
+      if (pending.result) setResult(pending.result);
+      if (pending.promptFormat) setPromptFormat(pending.promptFormat);
+      setStep(STEPS.length - 1);
+      sessionStorage.removeItem(PENDING_ATELIER_KEY);
+    } catch {
+      sessionStorage.removeItem(PENDING_ATELIER_KEY);
+    }
+  }, [user]);
+
+  const stashForSignIn = () => {
+    if (typeof window === "undefined" || !result) return;
+    sessionStorage.setItem(
+      PENDING_ATELIER_KEY,
+      JSON.stringify({ answers: a, result, promptFormat }),
+    );
+    sessionStorage.setItem("dfk-auth-return-to", "/custom");
+  };
 
   const set = <K extends keyof Answers>(key: K, value: Answers[K]) => setA((v) => ({ ...v, [key]: value }));
   const toggle = (key: "meaning" | "feel", value: string, max: number) =>
@@ -438,7 +472,12 @@ export function LeatherAtelier() {
               {saveState === "saving" ? "Saving…" : saveState === "saved" ? "Saved to Your Account ✓" : "Save Design Brief"}
             </button>
             ) : (
-              <Link to="/account/login" className="btn-lux btn-lux-outline">
+              <Link
+                to="/account/login"
+                search={{ reset: undefined, returnTo: "/custom" }}
+                onClick={stashForSignIn}
+                className="btn-lux btn-lux-outline"
+              >
                 Sign In to Save
               </Link>
             )}
