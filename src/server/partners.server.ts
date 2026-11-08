@@ -18,7 +18,7 @@ import {
   isCommissionEligible,
   isSelfPurchase,
 } from "../lib/attribution";
-import { getPartnerSettingsFull } from "./order-pricing.server";
+import { commissionBpsForTrack, getPartnerSettingsFull } from "./order-pricing.server";
 
 /**
  * Earn-with-DREAMZ partner engine.
@@ -88,6 +88,7 @@ export async function recordVerifiedCommission(
   if (!referrer || referrer.status !== "approved") return { created: false, reason: "partner_not_approved" };
 
   const settings = await getPartnerSettingsFull();
+  const commissionBps = commissionBpsForTrack(settings, referrer.track);
   const self =
     order.attributionOutcome === "self_purchase" ||
     order.attributionOutcome === "self_purchase_benefit" ||
@@ -98,28 +99,14 @@ export async function recordVerifiedCommission(
   const outcome = classifyAttribution({
     track: referrer.track,
     selfPurchase: self,
-    commissionBps: settings.commissionBps,
+    commissionBps,
     selfPurchaseBenefitBps: settings.selfPurchaseBenefitBps,
   });
   if (outcome !== "commission") return { created: false, reason: outcome };
 
   const basis = commissionBasisKobo(order);
-  const amountKobo = bpsOf(basis, settings.commissionBps);
+  const amountKobo = bpsOf(basis, commissionBps);
   if (amountKobo <= 0) return { created: false, reason: "zero_amount" };
-
-  // A partner-introduction bonus can fire only on this seller's first
-  // non-reversed customer-sale commission. This is deliberately single-level:
-  // we inspect only this partner's introducerCode and never recurse upward.
-  const [priorProductiveSales] = await db
-    .select({
-      count: sql<number>`count(*) FILTER (
-        WHERE ${commissions.referrerId} = ${referrer.id}
-          AND ${commissions.rateBps} > 0
-          AND ${commissions.status} != 'reversed'
-      )::int`,
-    })
-    .from(commissions);
-  const firstProductiveSale = Number(priorProductiveSales?.count ?? 0) === 0;
 
   // Idempotency: the (order, partner) unique index makes duplicate payment
   // events (verify + webhook, retries) a no-op.
@@ -130,7 +117,7 @@ export async function recordVerifiedCommission(
       orderId: order.id,
       orderNumber: order.orderNumber,
       orderTotalKobo: basis,
-      rateBps: settings.commissionBps,
+      rateBps: commissionBps,
       amountKobo,
       status: "pending",
       note: "Basis: merchandise after discounts, excluding delivery",
@@ -409,11 +396,10 @@ export async function getPartnerDashboard(referrerId: number) {
     terms: {
       payoutThresholdKobo: settings.payoutThresholdKobo,
       termsNote: settings.termsNote,
-      commissionBps: settings.commissionBps,
-      rateLabel: formatRate(settings.commissionBps),
+      commissionBps: commissionBpsForTrack(settings, partner.track),
+      rateLabel: formatRate(commissionBpsForTrack(settings, partner.track)),
       returnWindowDays: settings.returnWindowDays,
       selfPurchaseBenefitBps: settings.selfPurchaseBenefitBps,
-      partnerIntroductionBonusKobo: settings.partnerIntroductionBonusKobo,
       payoutDay: "Wednesday",
     },
   };
