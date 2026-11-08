@@ -19,7 +19,8 @@ import { getCurrentCustomer } from "./auth.server";
 
 const ApplySchema = z.object({
   sellingMode: z.enum(["digital", "physical", "both"]).default("digital"),
-  partnerPlan: z.enum(["scout", "starter", "builder", "pro", "growth", "executive", "prestige", "flagship"]).default("scout"),
+  earningType: z.enum(["scout", "creator"]).default("scout"),
+  partnerPlan: z.enum(["scout", "starter", "growth", "pro"]).default("scout"),
   physicalModel: z.enum(["undecided", "bulk", "credit", "commission"]).default("undecided"),
   introducerCode: z.string().max(24).optional().or(z.literal("")),
   displayName: z.string().min(2).max(120),
@@ -65,7 +66,12 @@ export const applyAsPartner = createServerFn({ method: "POST" })
     const plan = getPartnerPlan(data.partnerPlan);
     // Digital sellers use the creator commission ledger; physical/both sellers
     // use the trade ledger. Neither path creates a downline.
-    const track = data.sellingMode === "digital" ? "creator" : "trade";
+    const track =
+      data.sellingMode === "digital"
+        ? data.earningType === "creator"
+          ? "creator"
+          : "referral"
+        : "trade";
     const requestedIntroducer = normalizePartnerCode(data.introducerCode);
     let introducerCode: string | null = null;
     if (requestedIntroducer) {
@@ -295,8 +301,10 @@ export const getPublicPartnerTerms = createServerFn({ method: "GET" }).handler(a
   const { formatRate } = await import("../lib/attribution");
   const t = await getPartnerSettingsFull();
   return {
-    rateConfigured: t.commissionBps > 0,
-    rateLabel: formatRate(t.commissionBps),
+    rateConfigured: t.scoutCommissionBps > 0 || t.creatorCommissionBps > 0,
+    scoutRateLabel: formatRate(t.scoutCommissionBps),
+    creatorRateLabel: formatRate(t.creatorCommissionBps),
+    tradeRateLabel: formatRate(t.tradeCommissionBps),
     returnWindowDays: t.returnWindowDays,
     payoutThresholdKobo: t.payoutThresholdKobo,
     attributionWindowDays: t.attributionWindowDays,

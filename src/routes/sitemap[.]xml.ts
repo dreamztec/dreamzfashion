@@ -11,9 +11,6 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/shop",
           "/shop/essentials",
           "/shop/originals",
-          "/royale",
-          "/rewards",
-          "/voucher",
           "/shop/footwear",
           "/shop/leather-wear",
           "/shop/bags",
@@ -28,8 +25,8 @@ export const Route = createFileRoute("/sitemap.xml")({
           "/creators",
           "/partner-with-dreamz",
           "/partnerships",
-          "/track-order",
-          "/feedback",
+          "/corporate",
+          "/dreamz-5",
         ];
         let productPaths: Array<{ slug: string; updatedAt: Date | null }> = [];
         try {

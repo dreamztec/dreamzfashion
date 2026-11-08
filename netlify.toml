@@ -13,6 +13,11 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # Baseline security headers for every response.
 # CSP notes: the app loads no third-party scripts, fonts or stylesheets
 # (fonts are self-hosted via Fontsource, imagery goes through the same-origin

@@ -42,6 +42,14 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function authReturnTarget(): string {
+  if (typeof window === "undefined") return "/account";
+  const candidate = sessionStorage.getItem("dfk-auth-return-to");
+  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) return "/account";
+  sessionStorage.removeItem("dfk-auth-return-to");
+  return candidate;
+}
+
 function toAuthUser(user: Awaited<ReturnType<typeof getUser>>): AuthUser | null {
   if (!user) return null;
   return { id: user.id, email: user.email ?? null,
@@ -101,7 +109,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else if (callback) {
           emailChangeToken.current = null;
           setNotice(callback.type === "confirmation" ? "Your DREAMZ email is verified. Welcome to your account." : callback.type === "email_change" ? "Your email address is updated." : "Welcome to your DREAMZ account.");
-          void navigate({ to: "/account", replace: true });
+          const target = authReturnTarget();
+          if (target === "/account") void navigate({ to: "/account", replace: true });
+          else window.location.replace(target);
         }
       } catch {
         if (!cancelled) {

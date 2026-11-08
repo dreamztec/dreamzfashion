@@ -16,7 +16,7 @@ const COLUMNS: Array<{
       { label: "All Pieces", to: "/shop", shop: true },
       { label: "Essentials", to: "/shop/essentials", shop: true },
       { label: "Originals", to: "/shop/originals", shop: true },
-      { label: "Royale", to: "/shop/royale", shop: true },
+      { label: "Royale Private Client", to: "/royale" },
       { label: "Footwear", to: "/shop/footwear", shop: true },
       { label: "Leather Wear", to: "/shop/leather-wear", shop: true },
       { label: "Bags", to: "/shop/bags", shop: true },

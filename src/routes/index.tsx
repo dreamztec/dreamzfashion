@@ -1,17 +1,15 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { getFrontOriginalsFn, getHomeSelectionFn, getSiteSettings } from "@/server/catalog.functions";
+import { getHomePageDataFn } from "@/server/catalog.functions";
 import { ProductMedia, RainbowRule } from "@/components/brand";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { AnniversaryBanner } from "@/components/AnniversaryBanner";
 import { BRAND } from "@/lib/config";
+import { CONTACT } from "@/lib/contact";
 import { formatNaira } from "@/lib/format";
 import { WaitlistSignup } from "@/components/WaitlistSignup";
 
 export const Route = createFileRoute("/")({
-  loader: async () => {
-    const [settings, selection, frontOriginals] = await Promise.all([getSiteSettings(), getHomeSelectionFn(), getFrontOriginalsFn()]);
-    return { settings, frontOriginals, ...selection };
-  },
+  loader: () => getHomePageDataFn(),
   head: () => ({
     meta: [
       { title: `Design Your Dream Outfit — ${BRAND.name}` },
@@ -30,16 +28,14 @@ const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size:
 type HomeProduct = Awaited<ReturnType<typeof getHomeSelectionFn>>["hero"];
 
 function Home() {
-  const { settings, hero, frontOriginals, collectionPreviews, accessoriesPreview, total } = Route.useLoaderData() as {
-    settings: Record<string, unknown>;
+  const { hero, frontOriginals, collectionPreviews, total } = Route.useLoaderData() as {
     hero: HomeProduct;
     frontOriginals: Array<NonNullable<HomeProduct>>;
     collectionPreviews: { essentials: HomeProduct; originals: HomeProduct; royale: HomeProduct };
     accessoriesPreview: HomeProduct;
     total: number;
   };
-  const whatsappNumber =
-    (settings.whatsappNumber as string) || process.env.DFK_WHATSAPP_NUMBER || "";
+  const whatsappNumber = CONTACT.whatsappNumber;
   // Clean product photography leads the hero; lifestyle imagery would crop.
   const heroPhoto = hero?.images.find((i) => i.kind !== "lifestyle") ?? hero?.images[0] ?? null;
 
@@ -172,6 +168,41 @@ function Home() {
         </section>
       )}
 
+      {/* ── Shop by product category ────────────────────────── */}
+      <section className="border-t border-ink/10 bg-ivory">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-20">
+          <div className="text-center mb-10">
+            <p className="overline-label mb-3">Shop by Category</p>
+            <h2 className="font-editorial text-3xl sm:text-4xl">Leather for how you live</h2>
+            <p className="mt-4 text-sm text-stone max-w-2xl mx-auto">
+              Explore DREAMZ by product type. Every public piece shown has approved imagery and a clear price.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { slug: "footwear", title: "Footwear", copy: "Boots, loafers, mules, slides and sandals." },
+              { slug: "leather-wear", title: "Leather Wear", copy: "Tops, vests, trousers, shorts and statement pieces." },
+              { slug: "bags", title: "Bags", copy: "Pouches, totes, briefcases and everyday carry." },
+              { slug: "accessories", title: "Accessories", copy: "Belts, cuffs, bracelets, wallets and finishing pieces." },
+            ].map((category) => (
+              <Link
+                key={category.slug}
+                to="/shop/$category"
+                params={{ category: category.slug }}
+                search={CATEGORY_SEARCH}
+                className="border border-ink/10 bg-ivory-deep/60 p-6 transition-colors hover:border-ink/40"
+              >
+                <h3 className="font-editorial text-2xl">{category.title}</h3>
+                <p className="text-sm text-stone mt-2 leading-relaxed">{category.copy}</p>
+                <span className="nav-link inline-block mt-5 text-[0.68rem] uppercase tracking-btn">
+                  Explore →
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── The three collections ───────────────────────────── */}
       <section className="bg-ivory-deep">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
@@ -208,9 +239,9 @@ function Home() {
             ).map(({ tier, title, copy, cta, product }) => (
               <Link
                 key={tier}
-                to="/shop/$category"
-                params={{ category: tier }}
-                search={CATEGORY_SEARCH}
+                to={tier === "royale" ? "/royale" : "/shop/$category"}
+                params={tier === "royale" ? undefined : { category: tier }}
+                search={tier === "royale" ? undefined : CATEGORY_SEARCH}
                 className="block border border-ink/10 bg-ivory p-6 text-center transition-colors hover:border-ink/40"
               >
                 {product?.images[0]?.url && (
@@ -231,33 +262,6 @@ function Home() {
             ))}
           </div>
 
-          {/* Accessories */}
-          <div className="max-w-5xl mx-auto mt-6">
-            <Link
-              to="/shop/$category"
-              params={{ category: "accessories" }}
-              search={CATEGORY_SEARCH}
-              className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] gap-6 items-center border border-ink/10 bg-ivory p-6 transition-colors hover:border-ink/40"
-            >
-              {accessoriesPreview?.images[0]?.url && (
-                <ProductMedia
-                  url={accessoriesPreview.images[0].url}
-                  alt={accessoriesPreview.images[0].altText ?? "DREAMZ accessories"}
-                  aspect="aspect-square w-24 sm:w-28"
-                  width={360}
-                  sizes="112px"
-                  fit="cover"
-                />
-              )}
-              <div>
-                <h3 className="font-editorial text-2xl">Accessories</h3>
-                <p className="text-sm text-stone mt-1 leading-relaxed">
-                  Belts · Wallets · Purses · Card Holders · Key Holders · Gift Sets
-                </p>
-              </div>
-              <span className="nav-link hidden sm:inline-block text-[0.68rem] uppercase tracking-btn">Explore →</span>
-            </Link>
-          </div>
         </div>
       </section>
 

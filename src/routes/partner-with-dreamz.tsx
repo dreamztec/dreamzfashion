@@ -141,6 +141,7 @@ function MembershipApplication() {
       const res = await applyAsPartner({
         data: {
           sellingMode,
+          earningType: "scout",
           partnerPlan: planId,
           physicalModel: "undecided",
           introducerCode: String(fd.get("introducerCode") || ""),
