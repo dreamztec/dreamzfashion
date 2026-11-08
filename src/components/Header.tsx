@@ -23,8 +23,9 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Leather Atelier", to: "/custom" },
-  { label: "Creators", to: "/creators" },
-  { label: "Partnerships", to: "/partnerships" },
+  { label: "Earn with DREAMZ", to: "/earn" },
+  { label: "Partner with DREAMZ", to: "/partner-with-dreamz" },
+  { label: "Sell DREAMZ", to: "/partnerships" },
 ];
 
 /** The /shop/$category search params that must be explicitly cleared. */
