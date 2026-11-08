@@ -16,7 +16,11 @@ export function img(
   params.set("q", String(opts.q ?? 80));
   if (opts.w) params.set("w", String(opts.w));
   if (opts.h) params.set("h", String(opts.h));
-  if (opts.fit) params.set("fit", opts.fit);
+  // Crop parameters (`fit=cover|fill`) require BOTH a width and a height —
+  // the CDN rejects or mis-serves a cover request that lacks the target
+  // height. When no height is supplied we send a plain responsive resize and
+  // let CSS object-fit perform the crop, so no Image CDN URL can ever 404.
+  if (opts.fit && opts.h) params.set("fit", opts.fit);
   return `/.netlify/images?${params.toString()}`;
 }
 
@@ -92,4 +96,20 @@ export function displayFit(
   if (kind === "lifestyle") return "cover";
   if (productFit === "cover") return "cover";
   return "contain";
+}
+
+/**
+ * STOREFRONT CARD fit — the catalogue/collection card image must visually
+ * FILL its 4:5 fashion frame (no white or blank margins around a small
+ * product). CSS `object-fit: cover` performs the crop on a clean responsive
+ * resize; only poster artwork (price/name text baked into the image) stays
+ * uncropped, because cropping could cut the lettering.
+ */
+export function cardFit(url: string | null | undefined): "cover" | "contain" {
+  return isPosterArtwork(url) ? "contain" : "cover";
+}
+
+/** Pixel height that preserves the given width/height ratio (e.g. 4/5). */
+export function coverHeight(width: number, ratio: number): number {
+  return Math.round(width / ratio);
 }

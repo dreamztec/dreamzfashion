@@ -5,6 +5,7 @@ import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { AnniversaryBanner } from "@/components/AnniversaryBanner";
 import { BRAND } from "@/lib/config";
 import { formatNaira } from "@/lib/format";
+import { cardFit } from "@/lib/img";
 import { WaitlistSignup } from "@/components/WaitlistSignup";
 
 export const Route = createFileRoute("/")({
@@ -117,6 +118,74 @@ function Home() {
       {/* ── DREAMZ 5-Year Experience announcement (dismissible) ── */}
       <AnniversaryBanner />
 
+      {/* ── Shop by Category — product types first, collections separate ── */}
+      <section className="border-t border-ink/10 bg-ivory">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-14">
+          <div className="text-center mb-10">
+            <p className="overline-label mb-3">Shop by Category</p>
+            <h2 className="font-editorial text-3xl sm:text-4xl">Four kinds of leather</h2>
+            <RainbowRule className="mx-auto mt-5" />
+          </div>
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            {(
+              [
+                { category: "footwear", name: "Footwear", copy: "Boots, loafers, mules, slides & sandals" },
+                { category: "leather-wear", name: "Leather Wear", copy: "Tops, vests, trousers, shorts & joggers" },
+                { category: "bags", name: "Bags", copy: "Totes, satchels, briefcases & wrist pouches" },
+                { category: "accessories", name: "Accessories", copy: "Belts, cuffs, bracelets & gift sets" },
+              ] as const
+            ).map((c) => (
+              <Link
+                key={c.category}
+                to="/shop/$category"
+                params={{ category: c.category }}
+                search={CATEGORY_SEARCH}
+                className="group border border-ink/10 bg-ivory-deep/40 px-6 py-8 text-center transition-colors hover:border-ink/40"
+              >
+                <h3 className="font-editorial text-xl sm:text-2xl">{c.name}</h3>
+                <p className="text-xs text-stone mt-2 leading-relaxed">{c.copy}</p>
+                <span className="nav-link inline-block mt-4 text-[0.66rem] uppercase tracking-btn">Browse →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Leather Wear — the newest core category, shown immediately ── */}
+      <section className="bg-ink text-ivory">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 py-16 lg:py-20">
+          <div className="grid gap-10 lg:grid-cols-12 lg:gap-14 items-center">
+            <div className="lg:col-span-7">
+              <img
+                src="/img/products/vision-leather-ensemble-campaign.jpg"
+                alt="Vision Leather Ensemble — a complete leather lifestyle composition of outerwear and coordinated accessories"
+                className="w-full aspect-[4/3] object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+            <div className="lg:col-span-5">
+              <p className="overline-label !text-gold-soft mb-3">New — Leather Wear</p>
+              <h2 className="font-editorial text-3xl sm:text-4xl leading-tight">The wardrobe, made in leather</h2>
+              <div className="rule-gold mt-5 mb-5" />
+              <p className="text-ivory/80 leading-relaxed text-sm sm:text-base">
+                Tops, vests, trousers, joggers and shorts — cut from real leather
+                and finished by hand. Each piece is made to order in your size
+                and colourway.
+              </p>
+              <div className="mt-7 flex flex-col sm:flex-row gap-3">
+                <Link to="/shop/$category" params={{ category: "leather-wear" }} search={CATEGORY_SEARCH} className="btn-lux btn-lux-primary">
+                  Discover Leather Wear
+                </Link>
+                <Link to="/lookbook" className="btn-lux text-ivory border border-ivory/40 hover:border-ivory">
+                  View the Lookbook
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Curated Originals — explicit house order, never inferred ── */}
       {frontOriginals.length > 0 && (
         <section className="border-t border-ink/10 bg-ivory">
@@ -154,7 +223,7 @@ function Home() {
                       aspect="aspect-[4/5]"
                       width={720}
                       sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
-                      fit="contain"
+                      fit={cardFit(photo?.url)}
                     />
                     <p className="mt-3 text-[0.62rem] uppercase tracking-btn text-gold-soft">Originals</p>
                     <h3 className="font-editorial text-base sm:text-lg leading-tight mt-1">{product.name}</h3>
@@ -205,9 +274,11 @@ function Home() {
             ).map(({ tier, title, copy, cta, product }) => (
               <Link
                 key={tier}
-                to="/shop/$category"
-                params={{ category: tier }}
-                search={CATEGORY_SEARCH}
+                // Royale is the premium private-client service first; its
+                // shopping gallery is reachable from the Royale page.
+                to={tier === "royale" ? "/royale" : "/shop/$category"}
+                params={tier === "royale" ? undefined : { category: tier }}
+                search={tier === "royale" ? undefined : CATEGORY_SEARCH}
                 className="block border border-ink/10 bg-ivory p-6 text-center transition-colors hover:border-ink/40"
               >
                 <ProductMedia
@@ -216,7 +287,7 @@ function Home() {
                   aspect="aspect-[4/5]"
                   width={720}
                   sizes="(max-width: 640px) 88vw, 30vw"
-                  fit="contain"
+                  fit={cardFit(product?.images[0]?.url)}
                   className="mb-5"
                 />
                 <h3 className="font-editorial text-2xl">{title}</h3>
@@ -240,7 +311,7 @@ function Home() {
                 aspect="aspect-square w-24 sm:w-28"
                 width={360}
                 sizes="112px"
-                fit="contain"
+                fit={cardFit(accessoriesPreview?.images[0]?.url)}
               />
               <div>
                 <h3 className="font-editorial text-2xl">Accessories</h3>
@@ -249,6 +320,25 @@ function Home() {
                 </p>
               </div>
               <span className="nav-link hidden sm:inline-block text-[0.68rem] uppercase tracking-btn">Explore →</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Leather Atelier — design your own ──────────────── */}
+      <section className="border-t border-ink/10">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-16 lg:py-20 text-center">
+          <p className="overline-label mb-3">Leather Atelier</p>
+          <h2 className="font-editorial text-3xl sm:text-4xl">Dream it. We craft it.</h2>
+          <div className="rule-gold mx-auto mt-5 mb-5" />
+          <p className="text-stone max-w-xl mx-auto leading-relaxed text-sm sm:text-base">
+            Choose the leather, the colour, the construction and the meaning —
+            then walk through the Atelier brief with us. We build your piece
+            from scratch and keep you updated at every stage of the make.
+          </p>
+          <div className="mt-8">
+            <Link to="/custom" search={{ design: undefined, t: undefined }} className="btn-lux btn-lux-gold">
+              Enter the Leather Atelier
             </Link>
           </div>
         </div>

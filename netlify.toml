@@ -15,9 +15,17 @@
   targetPort = 3000
   port = 8888
 
-# Long-cache the immutable generated route tree assets
+# Long-cache version-stable assets: bundled product/editorial imagery under
+# /img/* and hashed application bundles under /assets/* are immutable, so
+# browsers and the CDN can hold them for a year. SSR HTML is never cached
+# here (TanStack Start controls its own response headers).
 [[headers]]
   for = "/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 

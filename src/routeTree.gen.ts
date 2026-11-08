@@ -71,8 +71,8 @@ import { Route as ShopIndexRouteImport } from './routes/shop/index'
 import { Route as ShopCategoryRouteImport } from './routes/shop/$category'
 import { Route as ApiDesignReferencesSplatRouteImport } from './routes/api/design-references/$'
 import { Route as ApiMediaSplatRouteImport } from './routes/api/media/$'
-import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/paystack'
 import { Route as ApiWebhooksFlutterwaveRouteImport } from './routes/api/webhooks/flutterwave'
+import { Route as ApiWebhooksPaystackRouteImport } from './routes/api/webhooks/paystack'
 import { Route as CorporateQuoteQuoteNumberRouteImport } from './routes/corporate/quote/$quoteNumber'
 
 const IndexRoute = IndexRouteImport.update({
@@ -386,14 +386,14 @@ const ApiMediaSplatRoute = ApiMediaSplatRouteImport.update({
   path: '/api/media/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiWebhooksPaystackRoute = ApiWebhooksPaystackRouteImport.update({
-  id: '/api/webhooks/paystack',
-  path: '/api/webhooks/paystack',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiWebhooksFlutterwaveRoute = ApiWebhooksFlutterwaveRouteImport.update({
   id: '/api/webhooks/flutterwave',
   path: '/api/webhooks/flutterwave',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWebhooksPaystackRoute = ApiWebhooksPaystackRouteImport.update({
+  id: '/api/webhooks/paystack',
+  path: '/api/webhooks/paystack',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CorporateQuoteQuoteNumberRoute =
@@ -466,8 +466,8 @@ export interface FileRoutesByFullPath {
   '/shop/': typeof ShopIndexRoute
   '/api/design-references/$': typeof ApiDesignReferencesSplatRoute
   '/api/media/$': typeof ApiMediaSplatRoute
-  '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/flutterwave': typeof ApiWebhooksFlutterwaveRoute
+  '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/corporate/quote/$quoteNumber': typeof CorporateQuoteQuoteNumberRoute
 }
 export interface FileRoutesByTo {
@@ -532,8 +532,8 @@ export interface FileRoutesByTo {
   '/shop': typeof ShopIndexRoute
   '/api/design-references/$': typeof ApiDesignReferencesSplatRoute
   '/api/media/$': typeof ApiMediaSplatRoute
-  '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/flutterwave': typeof ApiWebhooksFlutterwaveRoute
+  '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/corporate/quote/$quoteNumber': typeof CorporateQuoteQuoteNumberRoute
 }
 export interface FileRoutesById {
@@ -600,8 +600,8 @@ export interface FileRoutesById {
   '/shop/': typeof ShopIndexRoute
   '/api/design-references/$': typeof ApiDesignReferencesSplatRoute
   '/api/media/$': typeof ApiMediaSplatRoute
-  '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/api/webhooks/flutterwave': typeof ApiWebhooksFlutterwaveRoute
+  '/api/webhooks/paystack': typeof ApiWebhooksPaystackRoute
   '/corporate/quote/$quoteNumber': typeof CorporateQuoteQuoteNumberRoute
 }
 export interface FileRouteTypes {
@@ -669,8 +669,8 @@ export interface FileRouteTypes {
     | '/shop/'
     | '/api/design-references/$'
     | '/api/media/$'
-    | '/api/webhooks/paystack'
     | '/api/webhooks/flutterwave'
+    | '/api/webhooks/paystack'
     | '/corporate/quote/$quoteNumber'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -735,8 +735,8 @@ export interface FileRouteTypes {
     | '/shop'
     | '/api/design-references/$'
     | '/api/media/$'
-    | '/api/webhooks/paystack'
     | '/api/webhooks/flutterwave'
+    | '/api/webhooks/paystack'
     | '/corporate/quote/$quoteNumber'
   id:
     | '__root__'
@@ -802,8 +802,8 @@ export interface FileRouteTypes {
     | '/shop/'
     | '/api/design-references/$'
     | '/api/media/$'
-    | '/api/webhooks/paystack'
     | '/api/webhooks/flutterwave'
+    | '/api/webhooks/paystack'
     | '/corporate/quote/$quoteNumber'
   fileRoutesById: FileRoutesById
 }
@@ -858,8 +858,8 @@ export interface RootRouteChildren {
   ShopIndexRoute: typeof ShopIndexRoute
   ApiDesignReferencesSplatRoute: typeof ApiDesignReferencesSplatRoute
   ApiMediaSplatRoute: typeof ApiMediaSplatRoute
-  ApiWebhooksPaystackRoute: typeof ApiWebhooksPaystackRoute
   ApiWebhooksFlutterwaveRoute: typeof ApiWebhooksFlutterwaveRoute
+  ApiWebhooksPaystackRoute: typeof ApiWebhooksPaystackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1298,18 +1298,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMediaSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/webhooks/paystack': {
-      id: '/api/webhooks/paystack'
-      path: '/api/webhooks/paystack'
-      fullPath: '/api/webhooks/paystack'
-      preLoaderRoute: typeof ApiWebhooksPaystackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/webhooks/flutterwave': {
       id: '/api/webhooks/flutterwave'
       path: '/api/webhooks/flutterwave'
       fullPath: '/api/webhooks/flutterwave'
       preLoaderRoute: typeof ApiWebhooksFlutterwaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/webhooks/paystack': {
+      id: '/api/webhooks/paystack'
+      path: '/api/webhooks/paystack'
+      fullPath: '/api/webhooks/paystack'
+      preLoaderRoute: typeof ApiWebhooksPaystackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/corporate/quote/$quoteNumber': {
@@ -1427,8 +1427,8 @@ const rootRouteChildren: RootRouteChildren = {
   ShopIndexRoute: ShopIndexRoute,
   ApiDesignReferencesSplatRoute: ApiDesignReferencesSplatRoute,
   ApiMediaSplatRoute: ApiMediaSplatRoute,
-  ApiWebhooksPaystackRoute: ApiWebhooksPaystackRoute,
   ApiWebhooksFlutterwaveRoute: ApiWebhooksFlutterwaveRoute,
+  ApiWebhooksPaystackRoute: ApiWebhooksPaystackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -9,9 +9,10 @@ const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> 
   { label: "Shop", to: "/shop" },
   { label: "Essentials", to: "/shop/essentials", shopCategory: true },
   { label: "Originals", to: "/shop/originals", shopCategory: true },
-  { label: "Royale", to: "/shop/royale", shopCategory: true },
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
-  { label: "Accessories", to: "/shop/accessories", shopCategory: true },
+  // Royale is the premium private-client service first; its shopping gallery
+  // is linked from within the Royale page.
+  { label: "Royale", to: "/royale" },
   { label: "Leather Atelier", to: "/custom" },
 ];
 
@@ -19,12 +20,12 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Shop", to: "/shop" },
   { label: "Essentials", to: "/shop/essentials", shopCategory: true },
   { label: "Originals", to: "/shop/originals", shopCategory: true },
-  { label: "Royale", to: "/shop/royale", shopCategory: true },
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
-  { label: "Accessories", to: "/shop/accessories", shopCategory: true },
+  { label: "Royale", to: "/royale" },
   { label: "Leather Atelier", to: "/custom" },
   { label: "Creators", to: "/creators" },
   { label: "Partnerships", to: "/partnerships" },
+  { label: "Track Order", to: "/track-order" },
 ];
 
 /** The /shop/$category search params that must be explicitly cleared. */
@@ -38,6 +39,14 @@ const SHOP_CATEGORY_SEARCH = {
   sort: undefined,
   sub: undefined,
 } as const;
+
+/** Search props for non-category primary links that validate search params. */
+function navSearch(item: { to: string; shopCategory?: boolean }) {
+  if (item.shopCategory) return SHOP_CATEGORY_SEARCH;
+  if (item.to === "/shop") return { q: undefined };
+  if (item.to === "/track-order") return { order: undefined };
+  return undefined;
+}
 
 export function Header({
   announcement,
@@ -110,7 +119,7 @@ export function Header({
                   <Link
                     key={item.to}
                     to={item.to}
-                    search={item.shopCategory ? SHOP_CATEGORY_SEARCH : item.to === "/shop" ? { q: undefined } : undefined}
+                    search={navSearch(item)}
                     className="nav-link text-[0.62rem] uppercase tracking-btn whitespace-nowrap"
                   >
                     {item.label}
@@ -189,7 +198,7 @@ export function Header({
                 <Link
                   key={item.to}
                   to={item.to}
-                  search={item.shopCategory ? SHOP_CATEGORY_SEARCH : item.to === "/shop" ? { q: undefined } : undefined}
+                  search={navSearch(item)}
                   onClick={() => setMobileOpen(false)}
                   className="py-3.5 font-editorial text-2xl border-b border-ink/5"
                 >
