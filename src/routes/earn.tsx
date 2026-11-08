@@ -50,7 +50,7 @@ function EarnPage() {
               <li>• Free to apply.</li>
               <li>• Unique code/link after approval.</li>
               <li>• Dashboard for attributed qualifying sales.</li>
-              <li>• Current configured commission: <strong>{terms.rateLabel}</strong>.</li>
+              <li>• Scout commission: <strong>{terms.scoutRateLabel}</strong> on qualifying verified sales.</li>
             </ul>
           </article>
 
@@ -64,7 +64,7 @@ function EarnPage() {
             </p>
             <ul className="mt-5 space-y-2 text-sm">
               <li>• No creator joining fee.</li>
-              <li>• Sales commission comes from verified qualifying orders.</li>
+              <li>• Creator commission: <strong>{terms.creatorRateLabel}</strong> on qualifying verified sales.</li>
               <li>• Campaign collaborations are negotiated separately.</li>
               <li>• No payment for recruiting other members.</li>
             </ul>
@@ -139,6 +139,7 @@ function EarnApplication() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [agreed, setAgreed] = useState(false);
+  const [earningType, setEarningType] = useState<"scout" | "creator">("scout");
   const [result, setResult] = useState<Awaited<ReturnType<typeof applyAsPartner>> | null>(null);
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
@@ -154,6 +155,7 @@ function EarnApplication() {
       const res = await applyAsPartner({
         data: {
           sellingMode: "digital",
+          earningType,
           partnerPlan: "scout",
           physicalModel: "undecided",
           introducerCode: String(fd.get("introducerCode") || ""),
@@ -203,6 +205,19 @@ function EarnApplication() {
       <p className="mt-3 text-sm text-stone text-center">
         No subscription. No inventory purchase required. No recruitment commission.
       </p>
+
+      <div className="mt-8">
+        <label htmlFor="earn-type" className="input-lux-label">How would you like to earn?</label>
+        <select
+          id="earn-type"
+          className="input-lux"
+          value={earningType}
+          onChange={(e) => setEarningType(e.target.value as "scout" | "creator")}
+        >
+          <option value="scout">Scout — refer customers ({terms.scoutRateLabel})</option>
+          <option value="creator">Creator — create content and sell ({terms.creatorRateLabel})</option>
+        </select>
+      </div>
 
       <div className="grid gap-5 sm:grid-cols-2 mt-8">
         <div>
