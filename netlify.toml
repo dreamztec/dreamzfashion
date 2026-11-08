@@ -1,5 +1,5 @@
 [build]
-  command = "npx vitest run tests/identity-session.test.ts"
+  command = "npx vitest run tests/task-engine.test.ts"
   publish = "dist/client"
 
 [dev]
