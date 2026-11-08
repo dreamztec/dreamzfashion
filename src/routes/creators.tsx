@@ -3,17 +3,16 @@ import { getPublicPartnerTerms } from "@/server/partner.functions";
 import { RainbowRule } from "@/components/brand";
 import { BRAND } from "@/lib/config";
 import { formatNaira } from "@/lib/format";
-import { CAMPAIGN_TIERS } from "@/lib/campaign-tiers";
 
 export const Route = createFileRoute("/creators")({
   loader: () => getPublicPartnerTerms(),
   head: () => ({
     meta: [
-      { title: `Creators & Partners — ${BRAND.name}` },
+      { title: `DREAMZ Creator Programme — ${BRAND.name}` },
       {
         name: "description",
         content:
-          "Sell DREAMZ through your audience. Start free as a Scout or choose an optional annual Partner Business Plan; creator campaign collaborations remain separate.",
+          "Join the DREAMZ creator programme free, earn on qualifying verified product sales, and become eligible for separately negotiated campaign collaborations.",
       },
     ],
   }),
@@ -21,31 +20,31 @@ export const Route = createFileRoute("/creators")({
 });
 
 const STEPS: Array<[string, string]> = [
-  ["Choose how you want to sell", "Start free as a Scout, or choose an optional annual Partner Business Plan for additional tools and support."],
-  ["Receive approval and your code", "Once approved you get a unique creator code (not case-sensitive) and a shareable link, with copy buttons in your dashboard."],
-  ["Share samples and your link", "Share DREAMZ samples, products and custom designs with your audience, together with your code or link."],
-  ["Customers order with your code", "Customers type your code at checkout, or arrive through your link. A code typed at checkout takes precedence over a link."],
-  ["Eligible completed sales earn commission", "When an order is verified as fully paid, a pending commission is recorded once — duplicates are impossible."],
-  ["Approved earnings become available", "After delivery and the return window, pending commission becomes available. Request a payout; the house reviews it and records the actual transfer reference."],
+  ["Apply free", "Creators do not pay a joining fee or buy a subscription to qualify for sales commission."],
+  ["Receive approval and your code", "Approved creators receive a unique code/link and access to approved DREAMZ product content."],
+  ["Create and share", "Use your audience, content and community to introduce customers to real DREAMZ products."],
+  ["Customers order", "Qualifying orders are attributed through the approved code/link system."],
+  ["Commission is recorded", "Commission is created only after the relevant order is verified as fully paid."],
+  ["Earnings clear", "After fulfilment and the return window, eligible earnings can be requested according to the published payout rules."],
 ];
 
 function CreatorsPage() {
   const t = Route.useLoaderData();
   return (
     <div>
-      <div className="mx-auto max-w-3xl px-5 sm:px-8 pt-32 pb-10 text-center">
-        <p className="overline-label mb-4">Creators &amp; Partners</p>
-        <h1 className="font-editorial text-4xl sm:text-6xl leading-tight">Share DREAMZ. Earn on real sales.</h1>
+      <section className="mx-auto max-w-3xl px-5 sm:px-8 pt-32 pb-10 text-center">
+        <p className="overline-label mb-4">DREAMZ CREATOR PROGRAMME</p>
+        <h1 className="font-editorial text-4xl sm:text-6xl leading-tight">Create. Share. Earn on real sales.</h1>
         <RainbowRule className="mx-auto mt-7" />
         <p className="text-stone mt-7 leading-relaxed">
-          You are paid from <strong>qualifying sales</strong> — verified,
-          fully paid and fulfilled orders placed with your code or link. Simply
-          receiving a code, sharing it, or a customer entering it does not earn
-          anything on its own.
+          The creator programme is part of <strong>Earn with DREAMZ</strong> and
+          is free to join. Sales commission comes from qualifying verified
+          customer orders — not from paying a fee, recruiting people or merely
+          receiving a code.
         </p>
-      </div>
+      </section>
 
-      <div className="mx-auto max-w-5xl px-5 sm:px-8 pb-14">
+      <section className="mx-auto max-w-5xl px-5 sm:px-8 pb-14">
         <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map(([title, body], i) => (
             <li key={title} className="border border-ink/10 px-6 py-7">
@@ -55,34 +54,34 @@ function CreatorsPage() {
             </li>
           ))}
         </ol>
-      </div>
+      </section>
 
       <section className="bg-ivory-deep">
         <div className="mx-auto max-w-3xl px-5 sm:px-8 py-14">
-          <h2 className="font-editorial text-3xl mb-6 text-center">Current terms</h2>
+          <h2 className="font-editorial text-3xl mb-6 text-center">Current sales terms</h2>
           <dl className="grid gap-4 sm:grid-cols-2 text-sm">
             <div className="border border-ink/10 bg-ivory px-5 py-4">
               <dt className="input-lux-label">Commission rate</dt>
               <dd className="font-editorial text-2xl">{t.rateLabel}</dd>
               {!t.rateConfigured && (
-                <p className="text-xs text-stone mt-1">The house sets the rate before any creator is activated.</p>
+                <p className="text-xs text-stone mt-1">DREAMZ sets the rate before a creator is activated.</p>
               )}
             </div>
             <div className="border border-ink/10 bg-ivory px-5 py-4">
               <dt className="input-lux-label">Calculated on</dt>
-              <dd>Merchandise value after discounts — delivery fees excluded.</dd>
+              <dd>Eligible merchandise value after discounts; delivery fees are excluded.</dd>
             </div>
             <div className="border border-ink/10 bg-ivory px-5 py-4">
               <dt className="input-lux-label">Becomes available</dt>
               <dd>
-                {t.returnWindowDays} day{t.returnWindowDays === 1 ? "" : "s"} after delivery (return window), if the order isn't refunded or cancelled.
+                {t.returnWindowDays} day{t.returnWindowDays === 1 ? "" : "s"} after delivery, if the order is not refunded or cancelled.
               </dd>
             </div>
             <div className="border border-ink/10 bg-ivory px-5 py-4">
               <dt className="input-lux-label">Payouts</dt>
               <dd>
-                Requested from your dashboard, reviewed by the house, paid by
-                manual transfer.{t.payoutThresholdKobo > 0 ? ` Minimum ${formatNaira(t.payoutThresholdKobo)}.` : ""}
+                Requested from your dashboard and reviewed by DREAMZ.
+                {t.payoutThresholdKobo > 0 ? ` Minimum ${formatNaira(t.payoutThresholdKobo)}.` : ""}
               </dd>
             </div>
             <div className="border border-ink/10 bg-ivory px-5 py-4 sm:col-span-2">
@@ -90,70 +89,37 @@ function CreatorsPage() {
               <dd>
                 Self-purchases never earn commission.{" "}
                 {t.selfPurchaseBenefitBps > 0
-                  ? `Approved creators get a ${(t.selfPurchaseBenefitBps / 100).toFixed(0)}% creator purchase benefit on their own orders instead.`
-                  : "No creator purchase benefit is offered at the moment."}
+                  ? `Approved creators receive a ${(t.selfPurchaseBenefitBps / 100).toFixed(0)}% creator purchase benefit on their own orders instead.`
+                  : "No creator purchase benefit is currently offered."}
               </dd>
             </div>
           </dl>
           <ul className="mt-8 text-sm text-stone leading-relaxed list-disc pl-5 space-y-1.5">
-            <li>Unpaid order requests earn nothing until they are paid; the order keeps your code while it waits.</li>
+            <li>Unpaid order requests earn nothing until payment is confirmed.</li>
             <li>Referral links count for {t.attributionWindowDays} days after the click.</li>
-            <li>Refunds and cancellations reverse the related commission.</li>
-            <li>Your dashboard shows order numbers and values only — never customers' names, phone numbers or addresses.</li>
+            <li>Refunds and cancellations reverse the related unpaid commission.</li>
+            <li>Your dashboard does not expose customer contact or delivery details.</li>
             {t.termsNote && <li>{t.termsNote}</li>}
           </ul>
-          <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/earn" hash="apply" className="btn-lux btn-lux-primary">
-              Join the Partner Network
-            </Link>
-            <Link to="/account/partner" className="btn-lux btn-lux-outline">
-              Creator dashboard
-            </Link>
-          </div>
         </div>
       </section>
-      {/* ── Campaign tiers (collaboration values, not joining fees) ── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-16">
-          <div className="text-center mb-10">
-            <p className="overline-label mb-3">Campaign Tiers</p>
-            <h2 className="font-editorial text-3xl sm:text-4xl">Seven ways to create with DREAMZ</h2>
-            <div className="rule-gold mx-auto mt-6" />
-            <p className="text-stone mt-6 max-w-2xl mx-auto leading-relaxed">
-              These are paid <strong>creator collaboration campaigns</strong> —
-              what DREAMZ may budget when engaging a creator for campaign work.
-              They are separate from the Partner Network: anyone can start selling
-              at the free Scout level, while optional annual Partner Business
-              Plans add tools and support. Creator selection depends on audience
-              quality, content quality, reach, conversion history and negotiated scope.
-            </p>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2">
-            {CAMPAIGN_TIERS.map((tier) => (
-              <article key={tier.level} className="border border-ink/15 bg-ivory px-6 py-6">
-                <div className="flex items-baseline justify-between gap-3 flex-wrap">
-                  <p className="overline-label !text-gold-soft">
-                    {tier.level} — {tier.name}
-                  </p>
-                  <p className="font-editorial text-xl">{tier.price}</p>
-                </div>
-                <p className="text-xs text-stone mt-2">{tier.audience}</p>
-                <ul className="mt-3 space-y-1.5 text-sm">
-                  {tier.deliverables.map((d) => (
-                    <li key={d} className="flex gap-2">
-                      <span aria-hidden="true" className="text-gold">·</span>
-                      <span>{d}</span>
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            ))}
-          </div>
-          <p className="mt-8 text-xs text-stone text-center max-w-2xl mx-auto leading-relaxed">
-            Deliverables are indicative. Every campaign is agreed in writing —
-            nothing on this page guarantees views, revenue or conversions.
-            The sales-code commission system above is separate and unaffected.
-          </p>
+
+      <section className="mx-auto max-w-4xl px-5 sm:px-8 py-16 text-center">
+        <p className="overline-label mb-3">Creator Collaborations</p>
+        <h2 className="font-editorial text-3xl">Campaign work is separate.</h2>
+        <p className="mt-4 text-stone leading-relaxed max-w-2xl mx-auto">
+          DREAMZ may separately commission creators for campaign content, shoots,
+          launches or appearances. Those collaborations are individually scoped
+          and negotiated. There is no public fixed creator-fee ladder and no
+          campaign payment is promised simply because you join the sales programme.
+        </p>
+        <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+          <Link to="/earn" hash="apply" className="btn-lux btn-lux-primary">
+            Apply Free
+          </Link>
+          <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline">
+            Optional Business Support
+          </Link>
         </div>
       </section>
     </div>
