@@ -59,7 +59,7 @@ export function isSelfPurchase(partner: PartnerIdentity, buyer: PartnerIdentity)
 export type AttributionOutcome = "commission" | "self_purchase" | "self_purchase_benefit" | "not_eligible";
 
 /** Tracks that earn cash commission through the partner ledger. */
-export const COMMISSION_TRACKS = ["creator", "trade"] as const;
+export const COMMISSION_TRACKS = ["referral", "creator", "trade"] as const;
 
 export function classifyAttribution(input: {
   track: string;
