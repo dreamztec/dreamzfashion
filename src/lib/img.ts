@@ -16,7 +16,7 @@ export function img(
   params.set("q", String(opts.q ?? 80));
   if (opts.w) params.set("w", String(opts.w));
   if (opts.h) params.set("h", String(opts.h));
-  if (opts.fit) params.set("fit", opts.fit);
+  // Netlify Image CDN requires BOTH width and height for fit=cover.\n  // When only width is supplied (our responsive product cards), CSS handles\n  // the visual crop and the CDN only resizes/optimizes the source.\n  if (opts.fit && (opts.fit !== "cover" || (opts.w && opts.h))) params.set("fit", opts.fit);
   return `/.netlify/images?${params.toString()}`;
 }
 
