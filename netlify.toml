@@ -7,6 +7,12 @@
   targetPort = 3000
   port = 8888
 
+# Fingerprinted Vite bundles are immutable across deployments.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # Long-cache the immutable generated route tree assets
 [[headers]]
   for = "/img/*"
