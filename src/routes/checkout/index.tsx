@@ -170,6 +170,23 @@ function Checkout() {
   const paymentOnline = Boolean(preview?.paymentAvailable) && !pricing?.hasQuoteLines;
   const canDeposit = paymentOnline && depositEligible.eligible;
 
+  const cartSubtotal = items.reduce(
+    (sum, item) => sum + (item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity,
+    0,
+  );
+  const whatsappOrderMessage = [
+    `Hello ${BRAND.shortName}, I want to order these pieces:`,
+    ...items.map(
+      (item) =>
+        `• ${item.name}${item.variantLabel ? ` — ${item.variantLabel}` : ""} × ${item.quantity}`,
+    ),
+    `Cart subtotal: ${formatNaira(cartSubtotal)}`,
+    partnerCode ? `Partner code: ${partnerCode}` : "",
+    "Please confirm availability, delivery and the next step for my order.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
   const submit = async (form: HTMLFormElement, mode: "pay" | "request") => {
     if (submitting) return; // duplicate-submit guard (the server is idempotent too)
     setError(null);
@@ -195,8 +212,8 @@ function Checkout() {
         referralSessionId: readReferralSession(),
       };
       const result = await initializeCheckout({ data: payload });
-      clear();
       if ("authorizationUrl" in result && result.authorizationUrl) {
+        // Do not clear the cart before a hosted payment is verified.
         window.location.href = result.authorizationUrl;
         return;
       }
@@ -216,11 +233,13 @@ function Checkout() {
         ].filter(Boolean).join("\n");
         const href = whatsappLink(message, whatsappNumber);
         if (href) {
+          clear();
           window.location.href = href;
           return;
         }
       }
 
+      clear();
       window.location.href = result.orderUrl ?? `/order/${result.orderNumber}`;
     } catch (err) {
       setError(
@@ -244,6 +263,49 @@ function Checkout() {
       : pricing.delivery.feeKobo === 0
         ? deliveryReasonLabel(pricing.delivery.reason)
         : formatNaira(pricing.delivery.feeKobo);
+
+  if (preview === null || previewBusy) {
+    return (
+      <div className="mx-auto max-w-xl px-5 pt-40 pb-32 text-center text-stone">
+        Preparing your order…
+      </div>
+    );
+  }
+
+  if (!paymentOnline) {
+    return (
+      <div className="mx-auto max-w-xl px-5 pt-36 pb-28 text-center">
+        <p className="overline-label mb-3">Order with DREAMZ</p>
+        <h1 className="font-editorial text-4xl sm:text-5xl">Complete Your Order on WhatsApp</h1>
+        <p className="mt-5 text-stone leading-relaxed">
+          Your cart is saved. Send it to the DREAMZ client team and we will confirm
+          availability, delivery and your order details directly with you.
+        </p>
+        <div className="mt-7 border border-ink/10 bg-ivory-deep p-5 text-left">
+          {items.map((item) => (
+            <div key={item.id} className="flex justify-between gap-4 py-2 text-sm border-b border-ink/5 last:border-0">
+              <span>{item.name} × {item.quantity}</span>
+              <span>{formatNaira((item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between gap-4 pt-4 font-medium">
+            <span>Cart subtotal</span>
+            <span>{formatNaira(cartSubtotal)}</span>
+          </div>
+        </div>
+        <div className="mt-7">
+          <WhatsAppCTAButton
+            message={whatsappOrderMessage}
+            whatsappNumber={whatsappNumber}
+            label="Contact DREAMZ on WhatsApp"
+          />
+        </div>
+        <p className="mt-4 text-xs text-stone">
+          Never send your card PIN, OTP, banking password or full card details in chat.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-32 pb-24">
