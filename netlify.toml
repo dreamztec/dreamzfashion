@@ -1,5 +1,5 @@
 [build]
-  command = "npx vitest run tests/catalog-pricing.test.ts tests/collections-partnerships.test.ts tests/new-drop-drafts.test.ts tests/originals-catalog.test.ts tests/originals-front-edit.test.ts tests/product-images.test.ts"
+  command = "npx vitest run tests/checkout-attribution-ledger.test.ts tests/commerce-tiers-deposits.test.ts tests/paystack-webhook.test.ts tests/storefront-rules.test.ts"
   publish = "dist/client"
 
 [dev]
