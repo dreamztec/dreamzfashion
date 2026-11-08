@@ -27,8 +27,16 @@ export function CartDrawer() {
 
   if (!isOpen) return null;
 
+  const cartLines = items
+    .map((item) => `• ${item.name}${item.variantLabel ? ` — ${item.variantLabel}` : ""} × ${item.quantity}`)
+    .join("\n");
   const whatsappText = encodeURIComponent(
-    `Hello ${BRAND.shortName}, I need help with my order.`,
+    [
+      `Hello ${BRAND.shortName}, I want to order these pieces:`,
+      cartLines,
+      `Cart subtotal: ${formatNaira(total)}`,
+      "Please confirm availability, delivery and the next step for my order.",
+    ].join("\n"),
   );
   const whatsappHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${whatsappText}`
@@ -154,26 +162,18 @@ export function CartDrawer() {
                 <span className="font-editorial text-xl">{formatNaira(total)}</span>
               </div>
               <p className="text-xs text-stone">
-                Delivery is calculated at checkout once you select your state
-                (included with Complete Package orders).
+                Continue with DREAMZ on WhatsApp to confirm availability, delivery
+                and your order details.
               </p>
-              <Link
-                to="/checkout"
+              <a
+                href={whatsappHref}
+                target="_blank"
+                rel="noopener noreferrer"
                 onClick={close}
-                className="btn-lux btn-lux-primary w-full"
+                className="btn-lux btn-lux-primary w-full text-center"
               >
-                Checkout
-              </Link>
-              {whatsappHref && (
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-center text-xs uppercase tracking-btn text-stone hover:text-ink transition-colors"
-                >
-                  Message {BRAND.shortName} on WhatsApp
-                </a>
-              )}
+                Contact DREAMZ on WhatsApp
+              </a>
             </div>
           </>
         )}
