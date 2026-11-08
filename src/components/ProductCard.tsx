@@ -16,7 +16,8 @@ export function ProductCard({
   const alt = product.images[0]?.altText ?? product.name;
   const variantStock = product.variants.reduce((sum, v) => sum + v.stockQuantity, 0);
   const info = availabilityOf(product, { hasStock: product.variants.length > 0 ? variantStock > 0 : undefined });
-  // Public product grids only render real, priced products. This prevents\n  // blank "Image coming soon" cards and ₦0/quote-only catalogue clutter.\n  if (!image || product.price <= 0) return null;
+  // Public product grids only render real, priced products. This prevents
+  // blank "Image coming soon" cards and ₦0/quote-only catalogue clutter.\n  if (!image || product.price <= 0) return null;
 
   return (
     <Link
