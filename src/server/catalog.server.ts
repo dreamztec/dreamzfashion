@@ -34,13 +34,13 @@ export type { Product } from "../../db/schema";
 function displayableImages(
   rows: Array<{ url: string; altText: string | null; kind?: string | null }>,
 ): Array<{ url: string; altText: string | null; kind: string }> {
-  return rows
-    .filter(
-      (i) =>
-        isDisplayableImageUrl(i.url) &&
-        (i.kind ?? "product") !== "catalogue" &&
-        !isPosterArtwork(i.url),
-    )
+  const valid = rows.filter((i) => isDisplayableImageUrl(i.url));
+  const clean = valid.filter(
+    (i) => (i.kind ?? "product") !== "catalogue" && !isPosterArtwork(i.url),
+  );
+  const chosen = clean.length > 0 ? clean : valid;
+  return chosen
+    .sort((a, b) => Number(isPosterArtwork(a.url)) - Number(isPosterArtwork(b.url)))
     .map((i) => ({ url: i.url, altText: i.altText, kind: i.kind || "product" }));
 }
 
@@ -328,18 +328,19 @@ export async function getHomeSelection(): Promise<{
           like(productImages.url, "/img/products/%"),
           like(productImages.url, "https://%"),
         ),
-        // Poster artwork never leads the storefront (see displayableImages).
-        ne(productImages.kind, "catalogue"),
       ),
     )
     .orderBy(asc(productImages.position));
 
-  const imagesByProduct = new Map<number, Array<{ url: string; altText: string | null; kind: string }>>();
+  const rawImagesByProduct = new Map<number, Array<{ url: string; altText: string | null; kind?: string | null }>>();
   for (const row of imgRows) {
-    if (isPosterArtwork(row.url)) continue;
-    const list = imagesByProduct.get(row.productId) ?? [];
-    list.push({ url: row.url, altText: row.altText, kind: row.kind || "product" });
-    imagesByProduct.set(row.productId, list);
+    const list = rawImagesByProduct.get(row.productId) ?? [];
+    list.push({ url: row.url, altText: row.altText, kind: row.kind });
+    rawImagesByProduct.set(row.productId, list);
+  }
+  const imagesByProduct = new Map<number, Array<{ url: string; altText: string | null; kind: string }>>();
+  for (const [productId, rowsForProduct] of rawImagesByProduct) {
+    imagesByProduct.set(productId, displayableImages(rowsForProduct));
   }
 
   const withImages: Array<HomeProductSummary & { homepageHero: boolean; bestseller: boolean }> =
