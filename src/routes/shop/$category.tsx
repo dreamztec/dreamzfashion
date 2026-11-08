@@ -50,6 +50,10 @@ export const Route = createFileRoute("/shop/$category")({
     if (!category) throw notFound();
     return { kind: "category" as const, tier: null, products: [], productsByCategory: products, category };
   },
+  headers: () => ({
+    "Netlify-CDN-Cache-Control": "public, durable, max-age=120, stale-while-revalidate=600",
+  }),
+  staleTime: 30_000,
   head: ({ loaderData }) => ({
     meta: [
       { title: `${loaderData?.category?.name ?? "Shop"} — ${BRAND.name}` },

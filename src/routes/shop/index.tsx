@@ -43,6 +43,10 @@ export const Route = createFileRoute("/shop/")({
     ]);
     return { products, categories, query: q ?? "" };
   },
+  headers: () => ({
+    "Netlify-CDN-Cache-Control": "public, durable, max-age=120, stale-while-revalidate=600",
+  }),
+  staleTime: 30_000,
   head: () => ({
     meta: [
       { title: `Shop — ${BRAND.name}` },

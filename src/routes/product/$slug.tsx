@@ -1,6 +1,6 @@
 import { Link, createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { getProduct, getRelated, getSiteSettings } from "@/server/catalog.functions";
+import { getProduct, getRelated } from "@/server/catalog.functions";
 import type { ProductWithMedia } from "@/server/catalog.server";
 import { ProductGrid } from "@/components/ProductCard";
 import { ImageComingSoon } from "@/components/brand";
@@ -49,11 +49,8 @@ export const Route = createFileRoute("/product/$slug")({
     if (product.slug !== params.slug) {
       throw redirect({ to: "/product/$slug", params: { slug: product.slug }, replace: true });
     }
-    const [related, settings] = await Promise.all([
-      getRelated({ data: { slug: params.slug, limit: 4 } }),
-      getSiteSettings(),
-    ]);
-    return { product, related, settings };
+    const related = await getRelated({ data: { slug: params.slug, limit: 4 } });
+    return { product, related };
   },
   head: ({ loaderData }) => {
     if (!loaderData) return { meta: [] };
@@ -115,14 +112,17 @@ export const Route = createFileRoute("/product/$slug")({
       ],
     };
   },
+  headers: () => ({
+    "Netlify-CDN-Cache-Control": "public, durable, max-age=120, stale-while-revalidate=600",
+  }),
+  staleTime: 60_000,
   component: ProductPage,
 });
 
 function ProductPage() {
-  const { product, related, settings } = Route.useLoaderData() as {
+  const { product, related } = Route.useLoaderData() as {
     product: ProductWithMedia;
     related: ProductWithMedia[];
-    settings: Record<string, unknown>;
   };
   const add = useCart((s) => s.add);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -409,7 +409,7 @@ function ProductPage() {
                 <WhatsAppCTAButton
                   message={`Hello ${BRAND.shortName}, I'd like a quote for ${product.name} (${product.sku}).`}
                   whatsappNumber={
-                    (settings.whatsappNumber as string) || CONTACT.whatsappNumber
+                    CONTACT.whatsappNumber
                   }
                   label="Ask on WhatsApp"
                   className="flex-1"
@@ -628,7 +628,7 @@ function ProductPage() {
                 <WhatsAppCTAButton
                   message={`Hello ${BRAND.shortName}, please notify me when ${product.name} (${product.sku}) is available again.`}
                   whatsappNumber={
-                    (settings.whatsappNumber as string) || CONTACT.whatsappNumber
+                    CONTACT.whatsappNumber
                   }
                   label={info.altCta?.label ?? "Notify Me"}
                   className="flex-1"
@@ -636,7 +636,7 @@ function ProductPage() {
                 <WhatsAppCTAButton
                   message={`Hello ${BRAND.shortName}, I'd like to ask about ${product.name} (${product.sku}).`}
                   whatsappNumber={
-                    (settings.whatsappNumber as string) || CONTACT.whatsappNumber
+                    CONTACT.whatsappNumber
                   }
                   label="Ask on WhatsApp"
                   className="flex-1"
@@ -665,7 +665,7 @@ function ProductPage() {
             <div className="mt-3">
               <ProductWhatsAppCTA
                 product={product}
-                whatsappNumber={(settings.whatsappNumber as string) || CONTACT.whatsappNumber}
+                whatsappNumber={CONTACT.whatsappNumber}
                 customizable={product.customizable}
               />
             </div>
