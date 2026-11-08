@@ -8,6 +8,7 @@ export const Route = createFileRoute("/voucher")({
   head: () => ({
     meta: [
       { title: `Redeem a DREAMZ Voucher — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "Enter your printed DREAMZ voucher code to add it to your account or apply it to your order." },
     ],
   }),

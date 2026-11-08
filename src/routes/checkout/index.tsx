@@ -37,7 +37,7 @@ export const Route = createFileRoute("/checkout/")({
   head: () => ({
     meta: [
       { title: `Checkout — ${BRAND.name}` },
-      { name: "robots", content: "noindex" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: Checkout,

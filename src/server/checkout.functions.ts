@@ -388,8 +388,11 @@ export const initializeCheckout = createServerFn({ method: "POST" })
 export const initializeRequestPayment = createServerFn({ method: "POST" })
   .inputValidator(z.object({ orderNumber: z.string().min(4).max(40), contact: z.string().min(5).max(120) }))
   .handler(async ({ data }) => {
+    if (!paymentAvailable()) {
+      throw new Error("Online payment is not active yet — please contact DREAMZ on WhatsApp.");
+    }
     const provider = getPaymentProvider("paystack");
-    if (!provider) throw new Error("Online payment is not active yet — the DREAMZ team will send you a payment link.");
+    if (!provider) throw new Error("Online payment is not active yet — please contact DREAMZ on WhatsApp.");
     const [order] = await db.select().from(orders).where(eq(orders.orderNumber, data.orderNumber.trim().toUpperCase())).limit(1);
     if (!order) throw new Error("We could not find that order");
     const contact = data.contact.trim().toLowerCase();
@@ -504,10 +507,15 @@ export const verifyPayment = createServerFn({ method: "POST" })
 export const initializeBalancePayment = createServerFn({ method: "POST" })
   .inputValidator(z.object({ orderNumber: z.string().min(4).max(40) }))
   .handler(async ({ data }) => {
+    if (!paymentAvailable()) {
+      throw new Error(
+        "Online payment is not active yet. Please contact DREAMZ on WhatsApp to complete your balance payment.",
+      );
+    }
     const provider = getPaymentProvider("paystack");
     if (!provider) {
       throw new Error(
-        "Online payment is not yet active. Please contact us on WhatsApp to complete your balance payment.",
+        "Online payment is not active yet. Please contact DREAMZ on WhatsApp to complete your balance payment.",
       );
     }
 
@@ -607,6 +615,7 @@ export const trackOrder = createServerFn({ method: "POST" })
 
     return {
       found: true as const,
+      onlinePaymentAvailable: paymentAvailable(),
       order: {
         orderNumber: order.orderNumber,
         customerName: order.customerName,

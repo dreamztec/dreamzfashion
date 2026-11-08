@@ -10,7 +10,10 @@ export const Route = createFileRoute("/track-order")({
     order: typeof search.order === "string" ? search.order : undefined,
   }),
   head: () => ({
-    meta: [{ title: `Track Order — ${BRAND.name}` }],
+    meta: [
+      { title: `Track Order — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
   }),
   component: TrackOrder,
 });
@@ -26,6 +29,7 @@ function TrackOrder() {
   const [contactInput, setContactInput] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [prefilled, setPrefilled] = useState(false);
+  const [onlinePaymentAvailable, setOnlinePaymentAvailable] = useState(false);
 
   // A signed-in customer coming from My Orders knows their own order — the
   // server still verifies ownership through their stored contact details.
@@ -48,6 +52,7 @@ function TrackOrder() {
       });
       if (result.found) {
         setOrder(result.order);
+        setOnlinePaymentAvailable(result.onlinePaymentAvailable);
       } else {
         setNotFound(true);
       }
@@ -151,7 +156,11 @@ function TrackOrder() {
             </div>
 
             {order.paymentStatus === "requested" && (
-              <RequestedNotice orderNumber={order.orderNumber} contact={contactInput} />
+              <RequestedNotice
+                orderNumber={order.orderNumber}
+                contact={contactInput}
+                onlinePaymentAvailable={onlinePaymentAvailable}
+              />
             )}
 
             {/* Timeline */}
@@ -258,7 +267,10 @@ function TrackOrder() {
                     : ""}
                   . Your piece dispatches once the balance is fully paid.
                 </p>
-                <PayBalanceButton orderNumber={order.orderNumber} />
+                <PayBalanceButton
+                  orderNumber={order.orderNumber}
+                  onlinePaymentAvailable={onlinePaymentAvailable}
+                />
               </div>
             )}
 
@@ -286,7 +298,13 @@ function TrackOrder() {
 }
 
 /** Pay the outstanding balance on a deposit-plan order (server-priced). */
-function PayBalanceButton({ orderNumber }: { orderNumber: string }) {
+function PayBalanceButton({
+  orderNumber,
+  onlinePaymentAvailable,
+}: {
+  orderNumber: string;
+  onlinePaymentAvailable: boolean;
+}) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const pay = async () => {
@@ -302,6 +320,21 @@ function PayBalanceButton({ orderNumber }: { orderNumber: string }) {
       setBusy(false);
     }
   };
+  if (!onlinePaymentAvailable) {
+    return (
+      <a
+        href={`https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(
+          `Hello ${BRAND.shortName}, I want to complete the outstanding balance for order ${orderNumber}.`,
+        )}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="btn-lux btn-lux-primary inline-flex"
+      >
+        Contact DREAMZ on WhatsApp
+      </a>
+    );
+  }
+
   return (
     <div>
       <button onClick={pay} disabled={busy} className="btn-lux btn-lux-primary">
@@ -322,7 +355,15 @@ function PayBalanceButton({ orderNumber }: { orderNumber: string }) {
  * live the customer can pay the recorded total; otherwise the house sends a
  * payment link. The server re-checks everything.
  */
-function RequestedNotice({ orderNumber, contact }: { orderNumber: string; contact: string }) {
+function RequestedNotice({
+  orderNumber,
+  contact,
+  onlinePaymentAvailable,
+}: {
+  orderNumber: string;
+  contact: string;
+  onlinePaymentAvailable: boolean;
+}) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const pay = async () => {
@@ -344,10 +385,25 @@ function RequestedNotice({ orderNumber, contact }: { orderNumber: string; contac
         sizing and any custom-design quote, then sends you a secure payment
         link. Production starts after payment is verified.
       </p>
-      <button type="button" onClick={pay} disabled={busy} className="btn-lux btn-lux-outline !py-2 !px-5 mt-3">
-        {busy ? "Checking…" : "Pay online now"}
-      </button>
-      {message && <p role="status" className="text-xs text-stone mt-2">{message}</p>}
+      {onlinePaymentAvailable ? (
+        <>
+          <button type="button" onClick={pay} disabled={busy} className="btn-lux btn-lux-outline !py-2 !px-5 mt-3">
+            {busy ? "Checking…" : "Pay online now"}
+          </button>
+          {message && <p role="status" className="text-xs text-stone mt-2">{message}</p>}
+        </>
+      ) : (
+        <a
+          href={`https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(
+            `Hello ${BRAND.shortName}, I want to complete order ${orderNumber}. Please confirm payment instructions.`,
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-lux btn-lux-outline !py-2 !px-5 mt-3 inline-flex"
+        >
+          Contact DREAMZ on WhatsApp
+        </a>
+      )}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
 import { formatNaira } from "@/lib/format";
 import { RainbowRule } from "@/components/brand";
 import { BRAND } from "@/lib/config";
+import { CONTACT } from "@/lib/contact";
 
 /**
  * Customer-facing corporate quotation. Access requires BOTH the quote number
@@ -23,7 +24,8 @@ export const Route = createFileRoute("/corporate/quote/$quoteNumber")({
   },
   head: () => ({
     meta: [
-      { title: `Quotation — ${BRAND.name}`, name: "robots", content: "noindex" },
+      { title: `Quotation — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: QuoteView,
@@ -52,6 +54,7 @@ function QuoteView() {
   }
 
   const q = data.quote;
+  const onlinePaymentAvailable = data.onlinePaymentAvailable;
   const isAccepted = accepted || q.status === "accepted" || q.status === "production" || q.status === "delivered";
   const expired = q.validUntil ? new Date(q.validUntil).getTime() < Date.now() : false;
 
@@ -174,12 +177,14 @@ function QuoteView() {
           </button>
           <p className="mt-3 text-xs text-stone">
             Accepting confirms the quantities, prices, milestones and terms
-            above. Payment follows per the milestones.
+            above. {onlinePaymentAvailable
+              ? "Online payment follows per the milestones."
+              : "DREAMZ will confirm payment instructions with you directly."}
           </p>
         </div>
       )}
 
-      {isAccepted && q.milestones.length > 0 && (
+      {isAccepted && q.milestones.length > 0 && onlinePaymentAvailable && (
         <div className="mt-8">
           <h2 className="text-[0.7rem] uppercase tracking-luxe text-stone mb-3">Pay a milestone</h2>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -194,6 +199,24 @@ function QuoteView() {
               </button>
             ))}
           </div>
+        </div>
+      )}
+
+      {isAccepted && q.milestones.length > 0 && !onlinePaymentAvailable && (
+        <div className="mt-8 text-center border border-ink/10 p-5">
+          <p className="text-sm text-stone mb-4">
+            Online payment is not active on the website. Contact DREAMZ to confirm the next payment step for this quotation.
+          </p>
+          <a
+            href={`https://wa.me/${CONTACT.whatsappNumber}?text=${encodeURIComponent(
+              `Hello ${BRAND.shortName}, I accepted corporate quote ${q.quoteNumber} and want to arrange payment.`,
+            )}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn-lux btn-lux-primary inline-flex"
+          >
+            Contact DREAMZ on WhatsApp
+          </a>
         </div>
       )}
 

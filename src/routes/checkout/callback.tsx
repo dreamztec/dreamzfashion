@@ -12,7 +12,12 @@ export const Route = createFileRoute("/checkout/callback")({
     reference: typeof search.reference === "string" ? search.reference : undefined,
     trxref: typeof search.trxref === "string" ? search.trxref : undefined,
   }),
-  head: () => ({ meta: [{ title: `Confirming payment — ${BRAND.name}`, name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [
+      { title: `Confirming payment — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  }),
   component: PaymentCallback,
 });
 

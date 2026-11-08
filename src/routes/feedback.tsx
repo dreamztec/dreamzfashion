@@ -39,6 +39,7 @@ export const Route = createFileRoute("/feedback")({
   head: () => ({
     meta: [
       { title: `Send Us Feedback — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: `Share your experience with ${BRAND.name}. We read every message.` },
     ],
   }),
