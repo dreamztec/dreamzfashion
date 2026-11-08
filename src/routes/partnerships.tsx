@@ -171,10 +171,9 @@ function PartnershipsPage() {
           <p className="overline-label !text-gold-soft mb-3">Retail Partnership Programme</p>
           <h1 className="font-editorial text-5xl sm:text-7xl leading-tight">SELL DREAMZ</h1>
           <p className="mt-4 max-w-xl text-ivory/85 leading-relaxed">
-            Sell DREAMZ digitally, physically, or both. Choose bulk, approved
-            credit or commission/consignment according to your business. You can
-            start free through the Partner Network; paid Business Plans are
-            optional support packages, not a requirement to earn from real sales.
+            For boutiques, stores and other approved retailers that want to stock
+            or physically sell DREAMZ. Choose bulk purchase, approved credit or
+            commission/consignment. No paid Partner Membership is required.
           </p>
         </div>
       </section>
@@ -212,20 +211,20 @@ function PartnershipsPage() {
 
       <section className="border-y border-ink/10 bg-ivory-deep">
         <div className="mx-auto max-w-5xl px-5 sm:px-8 py-12 text-center">
-          <p className="overline-label mb-3">One Partner Account</p>
-          <h2 className="font-editorial text-3xl">Choose Digital, Physical or Both</h2>
+          <p className="overline-label mb-3">Retail Relationship</p>
+          <h2 className="font-editorial text-3xl">No subscription required to Sell DREAMZ.</h2>
           <p className="text-sm text-stone mt-4 max-w-2xl mx-auto leading-relaxed">
-            Start free as a Scout, or choose an optional 365-day Partner Business Plan
-            from ₦25,000 to ₦1,000,000 for additional sales tools, content, display
-            support and service. Paid plans do not restrict which available DREAMZ
-            products you can sell and do not guarantee income.
+            Retail approval is based on your business, location, stock model and
+            ability to represent the brand properly. Paid Partner Memberships are
+            optional business-support packages and are not a condition for bulk,
+            credit or commission/consignment consideration.
           </p>
           <div className="mt-7 flex flex-col sm:flex-row justify-center gap-3">
-            <Link to="/earn" hash="apply" className="btn-lux btn-lux-primary">
-              Choose Your Partner Plan
-            </Link>
-            <Link to="/earn" className="btn-lux btn-lux-outline">
-              See How Partner Earnings Work
+            <a href="#apply" className="btn-lux btn-lux-primary">
+              Apply to Sell DREAMZ
+            </a>
+            <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline">
+              Optional Partner Memberships
             </Link>
           </div>
         </div>
@@ -265,10 +264,9 @@ function PartnershipsPage() {
             </h2>
             <div className="rule-gold mt-6 mb-6" />
             <p className="text-stone leading-relaxed">
-              Use this form for a preliminary retail-space enquiry. Final seller
-              onboarding, annual-plan selection and your Digital / Physical / Both
-              choice happen through the unified Partner Network. Credit and
-              consignment remain subject to DREAMZ approval, KYC and location review.
+              Use this form to apply directly for a DREAMZ retail relationship.
+              No paid membership is required. Credit and consignment remain subject
+              to DREAMZ approval, KYC, location review, stock controls and agreed terms.
             </p>
             <div className="mt-8 flex flex-col gap-3">
               <WhatsAppCTAButton
@@ -279,9 +277,10 @@ function PartnershipsPage() {
               <CallCTAButton label={`Call ${CONTACT.phoneDisplay}`} />
             </div>
             <p className="mt-6 text-xs text-stone leading-relaxed">
-              Students, individuals, creators and store owners all use the same{" "}
-              <Link to="/earn" className="underline hover:text-ink">DREAMZ Partner Network</Link>.
-              The free Scout level requires no paid plan.
+              If you do not operate a retail business and simply want to refer
+              customers or create content, use{" "}
+              <Link to="/earn" className="underline hover:text-ink">Earn with DREAMZ</Link>{" "}
+              instead.
             </p>
           </div>
 
@@ -396,10 +395,11 @@ function PartnershipsPage() {
       </section>
 
       <section className="mx-auto max-w-3xl px-5 sm:px-8 pb-24 text-center">
-        <p className="overline-label mb-4">Also exploring</p>
+        <p className="overline-label mb-4">Other ways to work with DREAMZ</p>
         <div className="flex flex-wrap justify-center gap-4">
-          <Link to="/creators" className="btn-lux btn-lux-outline">Creator Programme</Link>
-          <Link to="/royale" className="btn-lux btn-lux-outline">Royale Commissions</Link>
+          <Link to="/earn" className="btn-lux btn-lux-outline">Earn with DREAMZ</Link>
+          <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline">Partner with DREAMZ</Link>
+          <Link to="/royale" className="btn-lux btn-lux-outline">Royale Private Client</Link>
         </div>
       </section>
     </div>

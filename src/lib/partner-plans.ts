@@ -1,9 +1,10 @@
 export type PartnerPlanId =
   | "scout"
   | "starter"
-  | "builder"
-  | "pro"
   | "growth"
+  | "pro"
+  // Legacy ids are retained only so existing records keep their original terms.
+  | "builder"
   | "executive"
   | "prestige"
   | "flagship";
@@ -20,117 +21,117 @@ export type PartnerPlan = {
   benefits: string[];
 };
 
+/**
+ * Current public Partner with DREAMZ offers.
+ *
+ * IMPORTANT: these are optional BUSINESS-SUPPORT memberships. They do not buy
+ * commission rights, guarantee income, grant credit/consignment automatically,
+ * or create a recruitment/downline programme.
+ */
 export const PARTNER_PLANS: PartnerPlan[] = [
   {
     id: "scout",
-    name: "Scout",
+    name: "Free Scout",
     feeKobo: 0,
     durationDays: null,
-    summary: "Start selling DREAMZ without buying stock or paying a membership fee.",
+    summary: "The free earning level. No paid membership is required to earn from qualifying DREAMZ sales.",
     benefits: [
       "Unique DREAMZ code and referral link after approval",
       "Partner dashboard with tracked qualifying sales",
       "Approved product and campaign assets",
-      "Access to the full available DREAMZ catalogue",
+      "No membership fee",
     ],
   },
   {
     id: "starter",
-    name: "Starter",
+    name: "Partner Starter",
     feeKobo: 2_500_000,
     durationDays: 365,
-    summary: "A simple annual business toolkit for new DREAMZ sellers.",
+    summary: "A practical annual support package for new sellers who want better tools and guidance.",
     benefits: [
-      "Everything in Scout",
-      "Personalised partner storefront",
-      "Sales starter kit and product content library",
-      "Partner onboarding and sales training",
-    ],
-  },
-  {
-    id: "builder",
-    name: "Builder",
-    feeKobo: 5_000_000,
-    durationDays: 365,
-    summary: "For sellers building a repeatable digital or physical sales channel.",
-    benefits: [
-      "Everything in Starter",
-      "Expanded campaign assets",
-      "Partner performance analytics",
-      "Monthly sales clinic access",
-    ],
-  },
-  {
-    id: "pro",
-    name: "Pro",
-    feeKobo: 10_000_000,
-    durationDays: 365,
-    summary: "For active sellers who need stronger marketing and product support.",
-    benefits: [
-      "Everything in Builder",
-      "Co-branded campaign assets",
-      "Priority access to approved product drops",
-      "Sample/demo privileges subject to availability",
+      "Everything available to a Free Scout",
+      "Partner onboarding and sales toolkit",
+      "Digital catalogue and approved campaign assets",
+      "Access to partner sales-training sessions",
     ],
   },
   {
     id: "growth",
-    name: "Growth",
-    feeKobo: 25_000_000,
+    name: "Partner Growth",
+    feeKobo: 7_500_000,
     durationDays: 365,
-    summary: "For partners growing a serious DREAMZ sales business.",
+    summary: "For active sellers who want stronger marketing support and a more professional sales presence.",
     benefits: [
-      "Everything in Pro",
+      "Everything in Partner Starter",
+      "Co-branded marketing templates",
       "Priority partner support",
-      "Enhanced sample/display support subject to approval",
-      "Launch and pop-up participation opportunities",
+      "Early access to selected launches",
+      "Two business/sales review sessions during the membership year",
     ],
+  },
+  {
+    id: "pro",
+    name: "Partner Pro",
+    feeKobo: 15_000_000,
+    durationDays: 365,
+    summary: "For serious partners building a consistent DREAMZ sales channel or customer community.",
+    benefits: [
+      "Everything in Partner Growth",
+      "Quarterly strategy sessions",
+      "Customised campaign-material support",
+      "Priority consideration for approved activations and pop-ups",
+      "Eligibility for a featured partner profile/directory placement",
+    ],
+  },
+];
+
+/**
+ * Old plans are no longer offered publicly. Keeping their original definitions
+ * prevents historical approved accounts from being silently repriced.
+ */
+const LEGACY_PARTNER_PLANS: PartnerPlan[] = [
+  {
+    id: "builder",
+    name: "Builder (Legacy)",
+    feeKobo: 5_000_000,
+    durationDays: 365,
+    summary: "Legacy annual partner plan. No longer offered to new applicants.",
+    benefits: ["Legacy benefits remain subject to the terms originally approved."],
   },
   {
     id: "executive",
-    name: "Executive",
+    name: "Executive (Legacy)",
     feeKobo: 50_000_000,
     durationDays: 365,
-    summary: "For established sellers and approved retail spaces.",
-    benefits: [
-      "Everything in Growth",
-      "Premium display support subject to location approval",
-      "Professional campaign content pack",
-      "Priority replenishment and account support",
-    ],
+    summary: "Legacy annual partner plan. No longer offered to new applicants.",
+    benefits: ["Legacy benefits remain subject to the terms originally approved."],
   },
   {
     id: "prestige",
-    name: "Prestige",
+    name: "Prestige (Legacy)",
     feeKobo: 75_000_000,
     durationDays: 365,
-    summary: "For high-performing partners requiring deeper brand support.",
-    benefits: [
-      "Everything in Executive",
-      "Premium early-release access",
-      "Quarterly partner strategy session",
-      "Expanded branded display/content support",
-    ],
+    summary: "Legacy annual partner plan. No longer offered to new applicants.",
+    benefits: ["Legacy benefits remain subject to the terms originally approved."],
   },
   {
     id: "flagship",
-    name: "Flagship",
+    name: "Flagship (Legacy)",
     feeKobo: 100_000_000,
     durationDays: 365,
-    summary: "DREAMZ's highest annual partner business plan.",
-    benefits: [
-      "Everything in Prestige",
-      "Dedicated partner account support",
-      "Flagship/shop-in-shop support subject to site approval",
-      "Major campaign collaboration opportunities",
-    ],
+    summary: "Legacy annual partner plan. No longer offered to new applicants.",
+    benefits: ["Legacy benefits remain subject to the terms originally approved."],
   },
 ];
 
 export const PAID_PARTNER_PLANS = PARTNER_PLANS.filter((plan) => plan.feeKobo > 0);
 
 export function getPartnerPlan(id: string | null | undefined): PartnerPlan {
-  return PARTNER_PLANS.find((plan) => plan.id === id) ?? PARTNER_PLANS[0];
+  return (
+    PARTNER_PLANS.find((plan) => plan.id === id) ??
+    LEGACY_PARTNER_PLANS.find((plan) => plan.id === id) ??
+    PARTNER_PLANS[0]
+  );
 }
 
 export function partnerPlanPriceLabel(plan: PartnerPlan): string {

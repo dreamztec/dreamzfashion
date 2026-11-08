@@ -261,29 +261,48 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Creators & Retail Partnerships ──────────────────── */}
-      <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16 lg:py-24">
-        <div className="grid gap-6 sm:grid-cols-2">
+      {/* ── Three distinct ways to work with DREAMZ ────────────── */}
+      <section className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
+        <div className="text-center mb-10">
+          <p className="overline-label mb-3">Work with DREAMZ</p>
+          <h2 className="font-editorial text-3xl sm:text-4xl">Choose the relationship that fits you</h2>
+          <p className="mt-4 text-sm text-stone max-w-2xl mx-auto">
+            Earning, business-support membership and retail stock are three
+            different programmes. You never need to buy a membership just to earn.
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-3">
           <div className="border border-ink/10 bg-ivory-deep/60 p-8 text-center sm:text-left">
-            <p className="overline-label mb-3">Creators</p>
-            <h2 className="font-editorial text-2xl sm:text-3xl">Create with DREAMZ</h2>
+            <p className="overline-label mb-3">Earn with DREAMZ</p>
+            <h3 className="font-editorial text-2xl">Refer. Create. Earn.</h3>
             <p className="text-stone leading-relaxed mt-4 text-sm">
-              Apply free, receive your creator code and link, and earn commission
-              on verified qualifying sales — never just for clicks or codes.
+              Free sales and creator programme. Get an approved code/link and
+              earn on qualifying verified product sales.
             </p>
-            <Link to="/creators" className="btn-lux btn-lux-primary mt-6">
-              Sell with DREAMZ
+            <Link to="/earn" className="btn-lux btn-lux-primary mt-6">
+              Join Free
             </Link>
           </div>
           <div className="border border-ink/10 bg-ivory-deep/60 p-8 text-center sm:text-left">
-            <p className="overline-label mb-3">Retail Partnerships</p>
-            <h2 className="font-editorial text-2xl sm:text-3xl">Sell DREAMZ in your store</h2>
+            <p className="overline-label mb-3">Partner with DREAMZ</p>
+            <h3 className="font-editorial text-2xl">Build with more support.</h3>
             <p className="text-stone leading-relaxed mt-4 text-sm">
-              Bulk sales, credit sales or commission sales partnerships for
-              boutiques, footwear retailers and lifestyle stores.
+              Optional annual business-support memberships with sales tools,
+              training, marketing support and strategy access.
+            </p>
+            <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline mt-6">
+              See Memberships
+            </Link>
+          </div>
+          <div className="border border-ink/10 bg-ivory-deep/60 p-8 text-center sm:text-left">
+            <p className="overline-label mb-3">Sell DREAMZ</p>
+            <h3 className="font-editorial text-2xl">Stock DREAMZ in your business.</h3>
+            <p className="text-stone leading-relaxed mt-4 text-sm">
+              Bulk purchase, approved credit or commission/consignment for
+              eligible retailers. No paid membership is required.
             </p>
             <Link to="/partnerships" className="btn-lux btn-lux-outline mt-6">
-              See the Partnership Models
+              See Retail Models
             </Link>
           </div>
         </div>
