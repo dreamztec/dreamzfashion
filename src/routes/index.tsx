@@ -46,7 +46,7 @@ function Home() {
   return (
     <div>
       {/* ── Opening: the offer first, then the hero product ─── */}
-      <section className="bg-ivory pt-36 sm:pt-32">
+      <section className="bg-ivory pt-28 sm:pt-28">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 pb-10 sm:pb-16 text-center">
           {/* No fade-up on the H1 or hero image: the LCP element must paint
               at full opacity immediately (transparent elements are skipped
@@ -59,13 +59,16 @@ function Home() {
           </p>
           <div className="mt-9 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 fade-up fade-up-2">
             <Link to="/custom" search={{ design: undefined, t: undefined }} className="btn-lux btn-lux-primary">
-              Design Your Dream Leather Piece
+              Design Your Dream Pair in 5 Minutes
             </Link>
             <Link to="/shop" search={SHOP_SEARCH} className="btn-lux btn-lux-outline">
               Shop the Collection
             </Link>
           </div>
-          <p className="mt-7 text-xs text-stone tracking-wide fade-up fade-up-3">
+          <p className="mt-5 text-xs text-stone leading-relaxed fade-up fade-up-3">
+            Answer a few guided questions and receive a ready-to-copy DREAMZ design prompt in about five minutes.
+          </p>
+          <p className="mt-3 text-xs text-stone tracking-wide">
             Handmade in Nigeria · Made to order or ready to wear · Delivery nationwide
           </p>
         </div>
@@ -154,7 +157,7 @@ function Home() {
                       aspect="aspect-[4/5]"
                       width={720}
                       sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
-                      fit="contain"
+                      fit="cover"
                     />
                     <p className="mt-3 text-[0.62rem] uppercase tracking-btn text-gold-soft">Originals</p>
                     <h3 className="font-editorial text-base sm:text-lg leading-tight mt-1">{product.name}</h3>
@@ -210,15 +213,17 @@ function Home() {
                 search={CATEGORY_SEARCH}
                 className="block border border-ink/10 bg-ivory p-6 text-center transition-colors hover:border-ink/40"
               >
-                <ProductMedia
-                  url={product?.images[0]?.url ?? null}
-                  alt={product?.images[0]?.altText ?? `${title} collection`}
-                  aspect="aspect-[4/5]"
-                  width={720}
-                  sizes="(max-width: 640px) 88vw, 30vw"
-                  fit="contain"
-                  className="mb-5"
-                />
+                {product?.images[0]?.url && (
+                  <ProductMedia
+                    url={product.images[0].url}
+                    alt={product.images[0].altText ?? `${title} collection`}
+                    aspect="aspect-[4/5]"
+                    width={720}
+                    sizes="(max-width: 640px) 88vw, 30vw"
+                    fit="cover"
+                    className="mb-5"
+                  />
+                )}
                 <h3 className="font-editorial text-2xl">{title}</h3>
                 <p className="text-sm text-stone mt-2 leading-relaxed">{copy}</p>
                 <span className="nav-link inline-block mt-4 text-[0.68rem] uppercase tracking-btn">{cta} →</span>
@@ -234,14 +239,16 @@ function Home() {
               search={CATEGORY_SEARCH}
               className="grid grid-cols-[auto_1fr] sm:grid-cols-[auto_1fr_auto] gap-6 items-center border border-ink/10 bg-ivory p-6 transition-colors hover:border-ink/40"
             >
-              <ProductMedia
-                url={accessoriesPreview?.images[0]?.url ?? null}
-                alt={accessoriesPreview?.images[0]?.altText ?? "DREAMZ accessories"}
-                aspect="aspect-square w-24 sm:w-28"
-                width={360}
-                sizes="112px"
-                fit="contain"
-              />
+              {accessoriesPreview?.images[0]?.url && (
+                <ProductMedia
+                  url={accessoriesPreview.images[0].url}
+                  alt={accessoriesPreview.images[0].altText ?? "DREAMZ accessories"}
+                  aspect="aspect-square w-24 sm:w-28"
+                  width={360}
+                  sizes="112px"
+                  fit="cover"
+                />
+              )}
               <div>
                 <h3 className="font-editorial text-2xl">Accessories</h3>
                 <p className="text-sm text-stone mt-1 leading-relaxed">

@@ -288,11 +288,11 @@ export function LeatherAtelier() {
     const prompt = formatPromptFor(result.renderPrompt, promptFormat);
     return (
       <div className="text-left">
-        <h3 className="font-editorial text-2xl mb-2">Your DREAMZ leather brief is ready</h3>
+        <h3 className="font-editorial text-2xl mb-2">Your 5-minute DREAMZ design prompt is ready</h3>
         <p className="text-sm text-stone mb-6">
-          The atelier has translated your dream into professional leathercraft
-          language. Nothing is rendered here — copy the prompt into the visual
-          model of your choice, or send it to DREAMZ for a quote.
+          The atelier has translated your choices into professional leathercraft
+          language. Copy the ready-to-use render prompt into the visual model of
+          your choice, or send the brief directly to DREAMZ.
         </p>
 
         <OutputBlock title="1 · DREAMZ Design Summary" body={result.designSummary} />
@@ -495,6 +495,10 @@ export function LeatherAtelier() {
 
   return (
     <div>
+      <div className="mb-4 flex items-center justify-between gap-3 text-xs text-stone">
+        <span>Designed to take about 5 minutes</span>
+        <span>Step {step + 1} of {STEPS.length}</span>
+      </div>
       {/* Progress */}
       <ol className="flex flex-wrap gap-x-4 gap-y-1 mb-6 text-[0.62rem] uppercase tracking-btn" aria-label="Interview progress">
         {STEPS.map((label, i) => (
@@ -790,7 +794,7 @@ export function LeatherAtelier() {
           </button>
         ) : (
           <button type="button" onClick={compose} disabled={busy} className="btn-lux btn-lux-gold flex-1">
-            {busy ? "Composing your brief…" : "Generate Your DREAMZ Render Prompt"}
+            {busy ? "Composing your brief…" : "Get My 5-Minute Design Prompt"}
           </button>
         )}
       </div>

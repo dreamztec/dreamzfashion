@@ -171,9 +171,10 @@ function PartnershipsPage() {
           <p className="overline-label !text-gold-soft mb-3">Retail Partnership Programme</p>
           <h1 className="font-editorial text-5xl sm:text-7xl leading-tight">SELL DREAMZ</h1>
           <p className="mt-4 max-w-xl text-ivory/85 leading-relaxed">
-            Sell DREAMZ digitally, physically, or both. Physical partners can
-            choose bulk, approved credit or commission/consignment stock after
-            selecting a DREAMZ Partner Business Plan.
+            Sell DREAMZ digitally, physically, or both. Choose bulk, approved
+            credit or commission/consignment according to your business. You can
+            start free through the Partner Network; paid Business Plans are
+            optional support packages, not a requirement to earn from real sales.
           </p>
         </div>
       </section>
@@ -233,8 +234,8 @@ function PartnershipsPage() {
       {/* General retail terms */}
       <section className="bg-ivory-deep">
         <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16">
-          <p className="overline-label mb-3 text-center">General Retail Terms</p>
-          <h2 className="font-editorial text-3xl text-center mb-10">Applying to every retail partnership</h2>
+          <p className="overline-label mb-3 text-center">Clear Partner Terms</p>
+          <h2 className="font-editorial text-3xl text-center mb-10">What every retail partner agrees to</h2>
           <ul className="max-w-2xl mx-auto space-y-3 text-sm">
             {GENERAL_TERMS.map((t) => (
               <li key={t} className="flex gap-3 border-b border-ink/10 pb-3">

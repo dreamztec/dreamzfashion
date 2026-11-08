@@ -39,11 +39,7 @@ const SHOP_CATEGORY_SEARCH = {
   sub: undefined,
 } as const;
 
-export function Header({
-  announcement,
-}: {
-  announcement?: string;
-}) {
+export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const hydrated = useCartHydrated((s) => s.hydrated);
@@ -75,11 +71,6 @@ export function Header({
 
   return (
     <header className="fixed top-0 inset-x-0 z-[70]">
-      {announcement && (
-        <div className="bg-ink text-ivory text-[0.62rem] uppercase tracking-luxe text-center py-2 px-4">
-          {announcement}
-        </div>
-      )}
       <div
         className={`transition-colors duration-300 ${
           transparent

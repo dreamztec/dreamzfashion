@@ -83,10 +83,11 @@ function Custom() {
     <div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-28 pb-10 text-center">
         <p className="overline-label mb-3">DREAMZ Leather Atelier</p>
-        <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Tell us the dream</h1>
-        <p className="mt-4 max-w-xl mx-auto text-stone leading-relaxed">
-          We'll turn it into a leather design brief. Choose your design. Carry
-          your meaning.
+        <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Design Your Dream Pair in 5 Minutes</h1>
+        <p className="mt-4 max-w-2xl mx-auto text-stone leading-relaxed">
+          Start with footwear or choose another leather piece. Answer a short guided
+          consultation and receive a professional DREAMZ design summary, render prompt
+          and artisan brief — designed to take about five minutes.
         </p>
       </div>
 
@@ -100,7 +101,7 @@ function Custom() {
         )}
         {!atelierOpen ? (
           <div className="border border-gold/40 bg-gold/5 px-6 sm:px-10 py-8 text-center">
-            <p className="overline-label !text-gold mb-3">The DREAMZ DREAM-TO-LEATHER Method</p>
+            <p className="overline-label !text-gold mb-3">Your 5-Minute Dream-to-Leather Brief</p>
             <p className="text-sm leading-relaxed text-stone">
               A guided consultation in eight short steps: the piece, the dream,
               the person, the character, the leather, the construction, the
@@ -115,7 +116,7 @@ function Custom() {
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button type="button" onClick={() => setAtelierOpen(true)} className="btn-lux btn-lux-primary">
-                Begin the Consultation
+                Start My 5-Minute Design
               </button>
               <WhatsAppCTAButton
                 message={`Hello ${BRAND.shortName}, I'd like to design my own leather piece.`}
