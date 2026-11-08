@@ -1,5 +1,5 @@
 [build]
-  command = "vite build"
+  command = "npm run typecheck && npm test && npm run build"
   publish = "dist/client"
 
 [dev]
