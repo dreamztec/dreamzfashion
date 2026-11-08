@@ -96,6 +96,11 @@ async function attachMedia(rows: Product[]): Promise<ProductWithMedia[]> {
   }));
 }
 
+/** Public shop surfaces show only finished merchandise: real image + real price. */
+function isPublicMerchandise(p: ProductWithMedia): boolean {
+  return p.price > 0 && p.checkoutReady && p.images.length > 0;
+}
+
 /** A published product is purchasable only when fully approved for checkout. */
 export function isPurchasable(p: Pick<Product, "price" | "checkoutReady">): boolean {
   // Bespoke-tier pieces priced after review carry no price yet and fall out
@@ -117,7 +122,7 @@ export async function getFrontOriginals(): Promise<ProductWithMedia[]> {
     )
     .orderBy(asc(products.frontOriginalRank), asc(products.id))
     .limit(10);
-  return attachMedia(rows);
+  return (await attachMedia(rows)).filter(isPublicMerchandise);
 }
 
 export async function getPublishedProducts(opts?: {
@@ -139,7 +144,7 @@ export async function getPublishedProducts(opts?: {
     .where(and(...conds))
     .orderBy(asc(products.id))
     .limit(opts?.limit ?? 100);
-  const media = await attachMedia(rows);
+  const media = (await attachMedia(rows)).filter(isPublicMerchandise);
   if (opts?.collection) {
     const coll = opts.collection.toLowerCase();
     return media.filter((p) => (p.collection ?? "").toLowerCase() === coll);
@@ -210,9 +215,9 @@ export async function getRelatedProducts(
         ),
       )
       .limit(limit - rows.length);
-    return attachMedia([...rows, ...fill]);
+    return (await attachMedia([...rows, ...fill])).filter(isPublicMerchandise).slice(0, limit);
   }
-  return attachMedia(rows);
+  return (await attachMedia(rows)).filter(isPublicMerchandise).slice(0, limit);
 }
 
 export async function searchProducts(query: string): Promise<ProductWithMedia[]> {
@@ -235,12 +240,12 @@ export async function searchProducts(query: string): Promise<ProductWithMedia[]>
       ),
     )
     .limit(24);
-  const media = await attachMedia(rows);
+  const media = (await attachMedia(rows)).filter(isPublicMerchandise);
   // Also include products whose resolved collection matches the query
   const queryLower = query.toLowerCase();
   if (queryLower.includes("essential") || queryLower.includes("original") || queryLower.includes("royale")) {
     const allPublished = await db.select().from(products).where(eq(products.status, "published")).limit(100);
-    const allMedia = await attachMedia(allPublished);
+    const allMedia = (await attachMedia(allPublished)).filter(isPublicMerchandise);
     const matched = allMedia.filter(
       (p) =>
         (p.collection ?? "").toLowerCase().includes(queryLower) &&
@@ -299,13 +304,12 @@ export async function getHomeSelection(): Promise<{
     .orderBy(asc(products.id))
     .limit(200);
 
-  const total = rows.length;
-  if (total === 0) {
+  if (rows.length === 0) {
     return {
       hero: null,
       collectionPreviews: { essentials: null, originals: null, royale: null },
       accessoriesPreview: null,
-      total,
+      total: 0,
     };
   }
 
@@ -357,7 +361,17 @@ export async function getHomeSelection(): Promise<{
     bestseller: r.bestseller,
     theme: r.theme,
     images: imagesByProduct.get(r.id) ?? [],
-  }));
+  })).filter((p) => p.price > 0 && p.checkoutReady && p.images.length > 0);
+
+  const total = withImages.length;
+  if (total === 0) {
+    return {
+      hero: null,
+      collectionPreviews: { essentials: null, originals: null, royale: null },
+      accessoriesPreview: null,
+      total: 0,
+    };
+  }
 
   // Homepage hero: explicit admin flag, then bestseller, then the Boot of
   // Many Colours SKU. Automatic rules never move the hero.
@@ -367,8 +381,7 @@ export async function getHomeSelection(): Promise<{
     withImages.find((p) => p.sku === "DFK-FTW-001") ??
     null;
   const rest = withImages.filter((p) => p.id !== hero?.id);
-  const pick = (tier: string) =>
-    rest.find((p) => p.tier === tier && p.images[0]) ?? rest.find((p) => p.tier === tier) ?? null;
+  const pick = (tier: string) => rest.find((p) => p.tier === tier) ?? null;
 
   return {
     hero,
