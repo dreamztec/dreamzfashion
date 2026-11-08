@@ -11,6 +11,7 @@ export const Route = createFileRoute("/rewards")({
   head: () => ({
     meta: [
       { title: `DREAMZ Rewards — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
       {
         name: "description",
         content:
