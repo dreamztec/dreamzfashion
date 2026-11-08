@@ -86,9 +86,14 @@ const CheckoutSchema = z.object({
 
 export type CheckoutInput = z.infer<typeof CheckoutSchema>;
 
-/** Whether online payment can actually be taken right now. */
+/** Whether online payment can actually be taken right now.
+ * DREAMZ stays WhatsApp-first until the owner explicitly enables a verified
+ * online gateway. Merely having old/test credentials in the environment must
+ * never make a payment button appear.
+ */
 function paymentAvailable(): boolean {
-  return getPaymentProvider("paystack") !== null;
+  const enabled = String(process.env.ONLINE_PAYMENTS_ENABLED ?? "").toLowerCase() === "true";
+  return enabled && getPaymentProvider("paystack") !== null;
 }
 
 function publicPricing(priced: PricedOrder) {
