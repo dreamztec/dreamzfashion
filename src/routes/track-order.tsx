@@ -10,7 +10,10 @@ export const Route = createFileRoute("/track-order")({
     order: typeof search.order === "string" ? search.order : undefined,
   }),
   head: () => ({
-    meta: [{ title: `Track Order — ${BRAND.name}` }],
+    meta: [
+      { title: `Track Order — ${BRAND.name}` },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
   }),
   component: TrackOrder,
 });
