@@ -58,7 +58,7 @@ function Policies() {
           {[
             ["Delivery & Shipping", "delivery"],
             ["Returns & Exchanges", "returns"],
-            ["Payment Information", "payment"],
+            ["Ordering & Confirmation", "payment"],
             ["Product Care", "care"],
             ["Made-to-Order & Bespoke", "bespoke"],
             ["Privacy Policy", "privacy"],
@@ -81,11 +81,10 @@ function Policies() {
           production or dispatch begins immediately afterwards.
         </p>
         <p>
-          Complete Package orders include fast-track production and delivery
-          within 7 days. Delivery is complimentary above the threshold shown at
-          checkout; the current threshold and any delivery fee are always
-          displayed in your order summary before you pay — the figures you see
-          at checkout are the figures you pay.
+          Delivery timing and any delivery charge are confirmed with you before
+          your order enters production or dispatch. Where a product package
+          includes delivery, that will be stated clearly in the product or order
+          details.
         </p>
         <p>
           You will be contacted on the phone number supplied at checkout if our
@@ -115,26 +114,22 @@ function Policies() {
         </p>
       </Section>
 
-      <Section id="payment" title="Payment Information">
+      <Section id="payment" title="Ordering & Confirmation">
         <p>
-          All prices are in Nigerian Naira (₦). When online payment is
-          available, checkout is processed by Paystack (card, bank transfer and
-          USSD) and your card details go directly to Paystack — they never
-          touch our servers. While online payment is not connected, checkout
-          sends an unpaid order request instead: you receive an order
-          reference, nothing is charged, and the DREAMZ team sends you a
-          secure payment link after confirming your order. We never ask for
-          card details by message or form.
+          All displayed product prices are in Nigerian Naira (₦). To place an
+          order, add the pieces you want and contact the DREAMZ client team on
+          WhatsApp from your cart. We confirm the item, size or measurements,
+          availability, delivery details and final order total with you.
         </p>
         <p>
-          An order is confirmed only after payment verification. If your
-          payment is declined or abandoned, the order is saved as unpaid and
-          can be retried from your confirmation page — you are never charged
-          for an incomplete payment.
+          Production or dispatch begins only after your order details and
+          payment have been confirmed by DREAMZ. For your security, never send
+          your card PIN, OTP, banking password or full card details in
+          WhatsApp, email or any site form.
         </p>
         <p>
-          Questions about a charge? Have your order number ready and message
-          the client team on WhatsApp.
+          If anything about your order is unclear, message the client team
+          before making payment and keep your order details for reference.
         </p>
       </Section>
 
@@ -169,8 +164,8 @@ function Policies() {
         <p>
           We collect only the information needed to fulfil your order or answer
           your enquiry: your name, contact details, delivery address and order
-          history. Payment credentials are handled entirely by Paystack and are
-          never stored by us.
+          history. DREAMZ does not ask you to submit card PINs, OTPs or banking
+          passwords through this website or WhatsApp.
         </p>
         <p>
           We do not sell your personal information. Order details are visible
