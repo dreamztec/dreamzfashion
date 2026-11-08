@@ -70,8 +70,8 @@ beforeAll(async () => {
   pricedId = await ins("T-PRICED", "Test Slide", 2_625_000, 3_500_000, true);
   quoteOnlyId = await ins("T-QUOTE", "Unpriced Boot", 0, null, false);
   const boot = await q<{ id: number }>(`SELECT id FROM products WHERE sku = 'DFK-FTW-001'`);
-  bootId = boot[0]?.id ?? (await ins("DFK-FTW-001", "Boot of Many Colours", 9_000_000, 12_000_000, true));
-  await q(`UPDATE products SET status='published', price=9000000, checkout_ready=true WHERE id=$1`, [bootId]);
+  bootId = boot[0]?.id ?? (await ins("DFK-FTW-001", "Boot of Many Colours", 12_000_000, 16_000_000, true));
+  await q(`UPDATE products SET status='published', price=12000000, checkout_ready=true WHERE id=$1`, [bootId]);
   creatorId = (
     await q<{ id: number }>(
       `INSERT INTO referrers (code,track,status,display_name,email,phone) VALUES ('DAMI13','creator','approved','Dami','dami@example.com','08035550000') RETURNING id`,
@@ -111,7 +111,7 @@ describe("server pricing", () => {
     expect(small.delivery.feeKobo).toBe(350_000);
     expect(small.total).toBe(2_625_000 + 350_000);
     const big = await priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", quantity: 2 }], state: "Kano", buyer });
-    expect(big.subtotal).toBe(18_000_000);
+    expect(big.subtotal).toBe(24_000_000);
     expect(big.delivery.feeKobo).toBe(0);
   });
 
@@ -255,6 +255,6 @@ describe("saved designs (retired workspace)", () => {
   it("purchase still works normally without any saved design", async () => {
     const { priceOrder } = await import("../src/server/order-pricing.server");
     const res = await priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", quantity: 1 }], state: "Lagos", buyer });
-    expect(res.lines[0]).toMatchObject({ unitPrice: 9_000_000, quoteRequired: false });
+    expect(res.lines[0]).toMatchObject({ unitPrice: 12_000_000, quoteRequired: false });
   });
 });

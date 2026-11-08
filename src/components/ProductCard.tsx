@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ProductWithMedia } from "@/server/catalog.server";
 import { formatNaira, normalizeTier } from "@/lib/format";
-import { displayFit, isPosterArtwork } from "@/lib/img";
+import { cardFit, isPosterArtwork } from "@/lib/img";
 import { ProductMedia } from "@/components/brand";
 import { availabilityOf } from "@/lib/availability";
 
@@ -35,9 +35,9 @@ export function ProductCard({
           // Two-column mobile grid at DPR 2 needs a ~640px source; larger
           // breakpoints step up through the Image CDN. No huge originals.
           sizes="(max-width: 479px) 92vw, (max-width: 1023px) 46vw, 30vw"
-          // Product photography shows the whole piece; lifestyle scenes may
-          // crop. The admin's per-product imageFit is respected.
-          fit={displayFit(product.images[0]?.kind, product.imageFit)}
+          // Storefront cards fill their 4:5 fashion frame (object-fit: cover
+          // crops clean product photography); poster artwork stays uncropped.
+          fit={cardFit(product.images[0]?.url)}
         />
         {info.label !== "Available" && (
           <span className="absolute top-4 left-4 bg-ink text-ivory text-[0.6rem] uppercase tracking-btn px-3 py-1.5">

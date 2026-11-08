@@ -1,4 +1,4 @@
-import { img, isDisplayableImageUrl } from "@/lib/img";
+import { coverHeight, img, isDisplayableImageUrl } from "@/lib/img";
 
 /**
  * Brand presentation built from type, not image files. The house uploads
@@ -96,6 +96,14 @@ export function ImageComingSoon({
  */
 const MEDIA_WIDTHS = [640, 960, 1280, 1600];
 
+/** Width/height ratio for an `aspect-*` utility (4:5 frame → 0.8). */
+export function aspectRatioOf(aspect: string): number {
+  if (/aspect-square/.test(aspect)) return 1;
+  const m = aspect.match(/aspect-\[(\d+)\/(\d+)\]/);
+  if (m) return Number(m[1]) / Number(m[2]);
+  return 1;
+}
+
 export function ProductMedia({
   url,
   alt,
@@ -121,13 +129,21 @@ export function ProductMedia({
   if (!isDisplayableImageUrl(url)) {
     return <ImageComingSoon aspect={aspect} className={className} />;
   }
+  // A cover crop is requested from the Image CDN only when BOTH the target
+  // width and a ratio-correct height travel with it; otherwise the plain
+  // responsive resize goes out and CSS object-fit performs the crop.
+  const ratio = aspectRatioOf(aspect);
+  const dimensions = fit === "cover" ? { w: width ?? 960, h: coverHeight(width ?? 960, ratio) } : { w: width ?? 960 };
   return (
     <div className={`img-frame ${aspect} ${className}`} data-fit={fit}>
       <img
-        src={img(url, { w: width ?? 960, fit })}
+        src={img(url, { ...dimensions, fit })}
         srcSet={
           sizes
-            ? MEDIA_WIDTHS.map((w) => `${img(url, { w, fit })} ${w}w`).join(", ")
+            ? MEDIA_WIDTHS.map((w) => {
+                const h = fit === "cover" ? coverHeight(w, ratio) : undefined;
+                return `${img(url, { w, h, fit })} ${w}w`;
+              }).join(", ")
             : undefined
         }
         sizes={sizes}

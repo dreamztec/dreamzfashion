@@ -100,11 +100,12 @@ const HELD_BACK: Record<string, string> = {
 };
 
 /**
- * Leather Wear catalogue batch (2026-11-04) — 16 DRAFT products ingested
- * unpublished at zero price (no approved prices yet), each with its own
- * gallery file, plus two reference assets that are NOT product SKUs.
+ * Leather Wear catalogue batch (2026-11-04 ingested; published with approved
+ * prices by 20261108150000_publish_leather_wear_catalogue) — 16 products,
+ * each with its own gallery file, plus two reference assets that are NOT
+ * product SKUs.
  */
-const LEATHER_WEAR_DRAFTS: Record<string, string[]> = {
+const LEATHER_WEAR_PUBLISHED: Record<string, string[]> = {
   "DFK-ACC-201": ["resolve-double-buckle-cuff.jpg"],
   "DFK-ACC-202": ["unity-beaded-bracelet.jpg"],
   "DFK-ACC-203": ["mercy-wrap-cuff.jpg"],
@@ -172,16 +173,16 @@ describe("Published product galleries", () => {
       ...SUPERSEDED_DUPLICATES,
       ...SUPERSEDED_FRONT_EDIT_PHOTO,
       ...Object.keys(HELD_BACK),
-      ...Object.values(LEATHER_WEAR_DRAFTS).flat(),
+      ...Object.values(LEATHER_WEAR_PUBLISHED).flat(),
       ...REFERENCE_ASSETS,
     ]);
     const orphans = fs.readdirSync(PRODUCTS_DIR).filter((f) => !accounted.has(f));
     expect(orphans, "unreconciled uploads in public/img/products").toEqual([]);
   });
 
-  it("every Leather Wear draft has exactly one gallery file on disk", () => {
+  it("every Leather Wear product has exactly one gallery file on disk", () => {
     const onDisk = new Set(fs.readdirSync(PRODUCTS_DIR));
-    for (const [sku, files] of Object.entries(LEATHER_WEAR_DRAFTS)) {
+    for (const [sku, files] of Object.entries(LEATHER_WEAR_PUBLISHED)) {
       expect(files, `${sku} has a gallery file`).toHaveLength(1);
       expect(onDisk.has(files[0]), `${sku}: missing public/img/products/${files[0]}`).toBe(true);
     }

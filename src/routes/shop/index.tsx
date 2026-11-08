@@ -61,7 +61,7 @@ export const Route = createFileRoute("/shop/")({
 type ShopProduct = Awaited<ReturnType<typeof getCatalog>>[number];
 
 const SORTS = [
-  { value: "featured", label: "Featured" },
+  { value: "featured", label: "Recommended" },
   { value: "newest", label: "Newest" },
   { value: "price_asc", label: "Price: Low to High" },
   { value: "price_desc", label: "Price: High to Low" },
@@ -144,9 +144,17 @@ function ShopIndex() {
         );
         break;
       default:
-        // Clean photography first, then featured, then by id (stable).
+        // Deliberate merchandising — hero/featured pieces first, then
+        // bestsellers, then new arrivals, then the rest. Database insertion
+        // order never dictates the storefront.
         out = photographyFirst(
-          [...out].sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.id - b.id),
+          [...out].sort(
+            (a, b) =>
+              (b.featured ? 1 : 0) - (a.featured ? 1 : 0) ||
+              (b.bestseller ? 1 : 0) - (a.bestseller ? 1 : 0) ||
+              (b.newArrival ? 1 : 0) - (a.newArrival ? 1 : 0) ||
+              a.id - b.id,
+          ),
         );
     }
     return out;
@@ -201,7 +209,9 @@ function ShopIndex() {
         </button>
       </form>
 
-      <nav aria-label="Categories" className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-8">
+      {/* Shop by CATEGORY — product types, never collections */}
+      <p className="overline-label text-center mb-4">Shop by Category</p>
+      <nav aria-label="Categories" className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-10">
         <Link
           to="/shop"
           search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }}
@@ -222,15 +232,17 @@ function ShopIndex() {
         ))}
       </nav>
 
-      {/* Commercial tiers */}
-      <nav aria-label="DREAMZ tiers" className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-10">
+      {/* Shop by COLLECTION — Essentials / Originals / Royale, separate from
+          the product categories above (collections ≠ categories). */}
+      <p className="overline-label text-center mb-4">Shop by Collection</p>
+      <nav aria-label="DREAMZ collections" className="flex flex-wrap justify-center gap-x-8 gap-y-3 mb-10">
         <button
           type="button"
           onClick={() => update({ tier: undefined })}
           aria-pressed={!search.tier}
           className={`nav-link text-[0.7rem] uppercase tracking-btn ${!search.tier ? "text-brand-red" : ""}`}
         >
-          All Tiers
+          All Collections
         </button>
         {PRODUCT_TIERS.map((tier) => (
           <button

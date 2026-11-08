@@ -54,34 +54,34 @@ async function runSeed() {
     .insert(categories)
     .values([
       {
-        name: "Footwear",
-        slug: "footwear",
+        name: "Leather Wear",
+        slug: "leather-wear",
         description:
-          "Boots, mules, slides, sandals and loafers — distinct pieces, made to be remembered.",
+          "Leather tops, vests, jackets, trousers and shorts — the wardrobe, made in leather.",
         imageUrl: null,
-        sortOrder: 1,
+        sortOrder: 2,
       },
       {
         name: "Bags",
         slug: "bags",
         description: "Statement bags with a refined finish, made to carry well.",
         imageUrl: null,
-        sortOrder: 2,
+        sortOrder: 3,
       },
       {
         name: "Accessories",
         slug: "accessories",
         description: "Complete sets and the finishing details of a considered wardrobe.",
         imageUrl: null,
-        sortOrder: 3,
+        sortOrder: 4,
       },
       {
-        name: "Leather Wear",
-        slug: "leather-wear",
+        name: "Footwear",
+        slug: "footwear",
         description:
-          "Leather tops, vests, jackets, trousers and shorts — the wardrobe, made in leather.",
+          "Boots, mules, slides, sandals and loafers — distinct pieces, made to be remembered.",
         imageUrl: null,
-        sortOrder: 4,
+        sortOrder: 1,
       },
     ])
     .onConflictDoNothing();
@@ -98,8 +98,10 @@ async function runSeed() {
         slug: "boot-of-many-colours",
         categorySlug: "footwear",
         subcategory: "Boots",
-        price: 9000000,
-        completePackagePrice: 12000000,
+        // ₦120,000 Product Only / ₦160,000 Complete Package — the house's
+        // approved principal prices (Product Only 25% below Complete Package).
+        price: 12000000,
+        completePackagePrice: 16000000,
         packageContents: STANDARD_PACKAGE_CONTENTS,
         shortDescription: "Bold. Distinctive. Unapologetically You.",
         fullDescription:

@@ -7,12 +7,20 @@ import { ImageComingSoon } from "@/components/brand";
 import { ProductWhatsAppCTA, WhatsAppCTAButton } from "@/components/whatsapp";
 import { useCart } from "@/store/cart";
 import { formatNaira, normalizeTier, TIER_LABELS } from "@/lib/format";
-import { displayFit, img } from "@/lib/img";
+import { displayFit, coverHeight, img } from "@/lib/img";
 import { availabilityOf } from "@/lib/availability";
 import { MakeItMeaningful } from "@/components/MakeItMeaningful";
 import type { MessageSnapshot } from "@/lib/meaning";
 import { BRAND, SITE_URL } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
+
+/** Customer-facing category names for the breadcrumb and detail block. */
+const CATEGORY_LABELS: Record<string, string> = {
+  footwear: "Footwear",
+  "leather-wear": "Leather Wear",
+  bags: "Bags",
+  accessories: "Accessories",
+};
 
 function logEvent(name: string, data: Record<string, unknown>) {
   try {
@@ -247,7 +255,7 @@ function ProductPage() {
         <Link to="/shop" search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }} className="hover:text-ink">Shop</Link>
         <span className="mx-2">/</span>
         <Link to="/shop/$category" params={{ category: product.categorySlug }} search={{ tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined }} className="hover:text-ink">
-          {product.categorySlug}
+          {CATEGORY_LABELS[product.categorySlug] ?? product.categorySlug}
         </Link>
       </nav>
 
@@ -261,6 +269,11 @@ function ProductPage() {
             {quoteOnly
               ? "Request a quote"
               : `${formatNaira(productOnlyPrice)}${packagePrice ? " · Complete Package available" : ""}`}
+          </p>
+          <p className="mt-1.5 text-[0.68rem] uppercase tracking-btn">
+            {CATEGORY_LABELS[product.categorySlug] ?? product.categorySlug}
+            {product.subcategory ? ` · ${product.subcategory}` : ""}
+            {!quoteOnly ? ` · ${info.label}` : ""}
           </p>
         </div>
         {/* Gallery — the whole product is visible at first glance; swipe on
@@ -300,9 +313,9 @@ function ProductPage() {
                       aria-label="View image fullscreen"
                     >
                       <img
-                        src={img(current.url, { w: 1280, fit })}
+                        src={img(current.url, { w: 1280, h: fit === "cover" ? coverHeight(1280, 4 / 5) : undefined, fit })}
                         srcSet={[640, 960, 1280, 1600]
-                          .map((w) => `${img(current.url, { w, fit })} ${w}w`)
+                          .map((w) => `${img(current.url, { w, h: fit === "cover" ? coverHeight(w, 4 / 5) : undefined, fit })} ${w}w`)
                           .join(", ")}
                         sizes="(max-width: 1023px) 92vw, 46vw"
                         style={fit === "contain" ? { objectFit: "contain" } : undefined}
@@ -363,7 +376,7 @@ function ProductPage() {
                           data-fit={thumbFit}
                         >
                           <img
-                            src={img(im.url, { w: 240, fit: thumbFit })}
+                            src={img(im.url, { w: 240, h: thumbFit === "cover" ? 300 : undefined, fit: thumbFit })}
                             style={thumbFit === "contain" ? { objectFit: "contain" } : undefined}
                             alt=""
                             loading="lazy"
@@ -380,9 +393,14 @@ function ProductPage() {
 
         {/* Details */}
         <div className="lg:sticky lg:top-28 lg:self-start">
-          {/* Collection, product type and service level are separate facts. */}
+          {/* Collection, category and product type are separate facts. */}
           <p className="tier-badge mb-3">
             {product.collection ?? TIER_LABELS[tier]}
+            {(CATEGORY_LABELS[product.categorySlug] ?? product.categorySlug) && (
+              <span className="text-stone/75 font-normal tracking-normal ml-2">
+                · {CATEGORY_LABELS[product.categorySlug] ?? product.categorySlug}
+              </span>
+            )}
             {product.subcategory && (
               <span className="text-stone/75 font-normal tracking-normal ml-2">· {product.subcategory}</span>
             )}
@@ -463,6 +481,15 @@ function ProductPage() {
             </p>
           )}
 
+          {/* Availability — a core fact, shown beside the price. */}
+          <p className="mt-3 text-xs uppercase tracking-btn" aria-live="polite">
+            {info.state === "available" ? (
+              <span className="text-forest">{info.label}</span>
+            ) : (
+              <span className={info.purchasable ? "text-forest" : "text-oxblood"}>{info.label}</span>
+            )}
+          </p>
+
           {/* Personalization, when the house offers it at a stated charge */}
           {product.personalizationLabel && product.personalizationChargeKobo ? (
             <p className="mt-3 text-sm text-stone">
@@ -511,6 +538,15 @@ function ProductPage() {
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Colour — explicit for pieces whose colourway is fixed (the
+              product carries a colour but has no colour variants). */}
+          {colors.length === 0 && (product.colors ?? []).length > 0 && (
+            <p className="mt-6 text-sm">
+              <span className="input-lux-label !mb-1">Colour</span>
+              {(product.colors ?? []).join(" · ")}
+            </p>
           )}
 
           {/* Size selection */}
@@ -589,15 +625,6 @@ function ProductPage() {
               . The exact wording is recorded with your order.
             </p>
           )}
-
-          {/* Availability */}
-          <p className="mt-5 text-xs uppercase tracking-btn" aria-live="polite">
-            {info.state === "available" ? (
-              <span className="text-forest">{info.label}</span>
-            ) : (
-              <span className={info.purchasable ? "text-forest" : "text-oxblood"}>{info.label}</span>
-            )}
-          </p>
 
           {/* CTAs — availability state and purchase actions never contradict */}
           <div className="mt-6 flex flex-col sm:flex-row gap-3">

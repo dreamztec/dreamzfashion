@@ -121,13 +121,28 @@ function PartnershipsPage() {
   const { whatsappNumber } = Route.useLoaderData() as { whatsappNumber: string };
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fallbackNote, setFallbackNote] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSaving(true);
     setError(null);
+    setFallbackNote(null);
     const fd = new FormData(e.currentTarget);
+    const summary = [
+      `Business: ${String(fd.get("businessName") ?? "")}`,
+      `Contact: ${String(fd.get("contactPerson") ?? "")}`,
+      `Phone: ${String(fd.get("phone") ?? "")}`,
+      `Email: ${String(fd.get("email") ?? "")}`,
+      `Location: ${String(fd.get("city") ?? "")}, ${String(fd.get("stateCountry") ?? "")}`,
+      `Type: ${String(fd.get("businessType") ?? "")}`,
+      `Presence: ${String(fd.get("presence") ?? "")}`,
+      `Interest: ${String(fd.get("productInterest") ?? "")}`,
+      `Volume: ${String(fd.get("orderVolume") ?? "")}`,
+      `Model: ${String(fd.get("partnershipCategory") ?? "")}`,
+      String(fd.get("message") ?? "") && `Message: ${String(fd.get("message") ?? "")}`,
+    ].filter(Boolean).join("\n");
     try {
       await submitPartnershipEnquiry({
         data: {
@@ -153,6 +168,9 @@ function PartnershipsPage() {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send your enquiry. Please try again.");
+      // The enquiry must never dead-end on an error: offer the same
+      // application content over WhatsApp so the conversation continues.
+      setFallbackNote(summary);
     } finally {
       setSaving(false);
     }
@@ -171,9 +189,11 @@ function PartnershipsPage() {
           <p className="overline-label !text-gold-soft mb-3">Retail Partnership Programme</p>
           <h1 className="font-editorial text-5xl sm:text-7xl leading-tight">SELL DREAMZ</h1>
           <p className="mt-4 max-w-xl text-ivory/85 leading-relaxed">
-            Sell DREAMZ digitally, physically, or both. Physical partners can
-            choose bulk, approved credit or commission/consignment stock after
-            selecting a DREAMZ Partner Business Plan.
+            Sell DREAMZ digitally, physically, or both. Start free as a Scout —
+            referring and earning through your own code and link — and grow
+            into bulk, approved credit or commission/consignment supply.
+            Annual Partner Business Plans are optional 365-day enhancements,
+            never a requirement to sell.
           </p>
         </div>
       </section>
@@ -209,19 +229,37 @@ function PartnershipsPage() {
         </div>
       </section>
 
+      {/* Free Scout vs optional paid plans — the distinction, spelled out */}
       <section className="border-y border-ink/10 bg-ivory-deep">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-12 text-center">
-          <p className="overline-label mb-3">One Partner Account</p>
-          <h2 className="font-editorial text-3xl">Choose Digital, Physical or Both</h2>
-          <p className="text-sm text-stone mt-4 max-w-2xl mx-auto leading-relaxed">
-            Start free as a Scout, or choose an optional 365-day Partner Business Plan
-            from ₦25,000 to ₦1,000,000 for additional sales tools, content, display
-            support and service. Paid plans do not restrict which available DREAMZ
-            products you can sell and do not guarantee income.
-          </p>
-          <div className="mt-7 flex flex-col sm:flex-row justify-center gap-3">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-12">
+          <div className="text-center mb-8">
+            <p className="overline-label mb-3">One Partner Account</p>
+            <h2 className="font-editorial text-3xl">Free to start. Optional to upgrade.</h2>
+            <div className="rule-gold mx-auto mt-5" />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2 max-w-4xl mx-auto">
+            <article className="border border-ink/15 bg-ivory p-6">
+              <p className="overline-label mb-2 !text-forest">FREE — Scout</p>
+              <h3 className="font-editorial text-xl mb-3">Sell and earn from day one</h3>
+              <ul className="text-sm space-y-2 text-stone">
+                <li className="flex gap-2"><span aria-hidden="true" className="text-gold">·</span><span>A unique partner code and shareable link, free.</span></li>
+                <li className="flex gap-2"><span aria-hidden="true" className="text-gold">·</span><span>Earn according to the applicable verified-sales rules when customers buy with your code or link.</span></li>
+                <li className="flex gap-2"><span aria-hidden="true" className="text-gold">·</span><span>No paid plan is required to sell, refer or earn.</span></li>
+              </ul>
+            </article>
+            <article className="border border-ink/15 bg-ivory p-6">
+              <p className="overline-label mb-2">OPTIONAL — Partner Business Plans</p>
+              <h3 className="font-editorial text-xl mb-3">365-day commercial support</h3>
+              <ul className="text-sm space-y-2 text-stone">
+                <li className="flex gap-2"><span aria-hidden="true" className="text-gold">·</span><span>Optional annual packages (₦25,000 – ₦1,000,000) adding sales tools, content and display/support benefits.</span></li>
+                <li className="flex gap-2"><span aria-hidden="true" className="text-gold">·</span><span>Plans do NOT buy the right to earn commission and do not change commission rules.</span></li>
+                <li className="flex gap-2"><span aria-hidden="true" className="text-gold">·</span><span>No commission is paid for recruiting another partner. DREAMZ partnership is based on real product sales — never guaranteed income.</span></li>
+              </ul>
+            </article>
+          </div>
+          <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
             <Link to="/earn" hash="apply" className="btn-lux btn-lux-primary">
-              Choose Your Partner Plan
+              Apply to the Partner Network
             </Link>
             <Link to="/earn" className="btn-lux btn-lux-outline">
               See How Partner Earnings Work
@@ -368,7 +406,19 @@ function PartnershipsPage() {
                   <textarea id="pb-msg" name="message" rows={4} className="input-lux" maxLength={1200} />
                 </div>
                 {error && (
-                  <p role="alert" className="sm:col-span-2 text-sm text-oxblood">{error}</p>
+                  <div role="alert" className="sm:col-span-2 border border-oxblood/30 bg-oxblood/5 px-4 py-4">
+                    <p className="text-sm text-oxblood mb-3">{error}</p>
+                    <p className="text-xs text-stone mb-3 leading-relaxed">
+                      Your details are ready to send — continue the same
+                      partnership enquiry on WhatsApp and our team will pick it
+                      up from there.
+                    </p>
+                    <WhatsAppCTAButton
+                      message={`Hello ${BRAND.shortName}, my SELL DREAMZ partnership application could not be submitted online. Please review it here:\n\n${fallbackNote ?? "Partnership enquiry"}`}
+                      whatsappNumber={whatsappNumber}
+                      label="Send this application on WhatsApp"
+                    />
+                  </div>
                 )}
                 <div className="sm:col-span-2">
                   <button type="submit" disabled={saving} className="btn-lux btn-lux-primary w-full sm:w-auto">
