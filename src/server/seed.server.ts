@@ -650,14 +650,18 @@ async function runSeed() {
         },
       },
       {
-        // Partner programme terms (all three tracks) — zero until the owner
-        // sets real commission rates. Payouts always require admin review.
+        // Partner programme terms. Scout referrals earn 10%; approved
+        // creators and commission/consignment trade partners earn 15%.
+        // Payouts always require admin review.
         key: "partners",
         value: {
-          commissionBps: 0,
+          commissionBps: 1500,
+          scoutCommissionBps: 1000,
+          creatorCommissionBps: 1500,
+          tradeCommissionBps: 1500,
           payoutThresholdKobo: 0,
           attributionWindowDays: 30,
-          termsNote: "",
+          termsNote: "Commission applies only to qualifying verified sales. No recruitment or downline commission.",
         },
       },
       {
