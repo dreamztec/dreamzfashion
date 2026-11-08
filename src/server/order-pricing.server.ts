@@ -217,28 +217,39 @@ async function resolveMessage(
 }
 
 export type PartnerSettingsFull = {
+  /** Legacy fallback retained for old settings rows. */
   commissionBps: number;
+  scoutCommissionBps: number;
+  creatorCommissionBps: number;
+  tradeCommissionBps: number;
   payoutThresholdKobo: number;
   attributionWindowDays: number;
   termsNote: string;
   selfPurchaseBenefitBps: number;
   returnWindowDays: number;
-  partnerIntroductionBonusKobo: number;
 };
+
+export function commissionBpsForTrack(settings: PartnerSettingsFull, track: string): number {
+  if (track === "referral") return settings.scoutCommissionBps;
+  if (track === "creator") return settings.creatorCommissionBps;
+  if (track === "trade") return settings.tradeCommissionBps;
+  return 0;
+}
 
 export async function getPartnerSettingsFull(): Promise<PartnerSettingsFull> {
   const s = await getSetting<Partial<PartnerSettingsFull>>("partners", {});
+  const legacy = Number(s.commissionBps ?? 0) || 0;
   return {
-    commissionBps: Number(s.commissionBps ?? 0) || 0,
+    commissionBps: legacy,
+    scoutCommissionBps: Number(s.scoutCommissionBps ?? legacy) || 0,
+    creatorCommissionBps: Number(s.creatorCommissionBps ?? legacy) || 0,
+    tradeCommissionBps: Number(s.tradeCommissionBps ?? legacy) || 0,
     payoutThresholdKobo: Number(s.payoutThresholdKobo ?? 0) || 0,
     attributionWindowDays: Number(s.attributionWindowDays ?? 30) || 30,
     termsNote: String(s.termsNote ?? ""),
     selfPurchaseBenefitBps: Number(s.selfPurchaseBenefitBps ?? 0) || 0,
     // Returns policy: faults reported within 48 hours of delivery.
     returnWindowDays: s.returnWindowDays == null ? 2 : Number(s.returnWindowDays) || 0,
-    // Optional one-time reward for introducing a partner who then makes their
-    // first verified customer sale. Zero means disabled; there is no downline.
-    partnerIntroductionBonusKobo: Number(s.partnerIntroductionBonusKobo ?? 0) || 0,
   };
 }
 
@@ -344,10 +355,11 @@ export async function priceOrder(input: {
       { customerId: r.customerId, email: r.email, phone: r.phone },
       input.buyer,
     );
+    const commissionBps = commissionBpsForTrack(settings, r.track);
     const outcome = classifyAttribution({
       track: r.track,
       selfPurchase: self,
-      commissionBps: settings.commissionBps,
+      commissionBps,
       selfPurchaseBenefitBps: settings.selfPurchaseBenefitBps,
     });
     if (outcome === "self_purchase_benefit") {
