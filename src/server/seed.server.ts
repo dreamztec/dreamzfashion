@@ -62,24 +62,24 @@ async function runSeed() {
         sortOrder: 1,
       },
       {
+        name: "Leather Wear",
+        slug: "leather-wear",
+        description:
+          "Leather tops, vests, jackets, trousers and shorts — the wardrobe, made in leather.",
+        imageUrl: null,
+        sortOrder: 2,
+      },
+      {
         name: "Bags",
         slug: "bags",
         description: "Statement bags with a refined finish, made to carry well.",
         imageUrl: null,
-        sortOrder: 2,
+        sortOrder: 3,
       },
       {
         name: "Accessories",
         slug: "accessories",
         description: "Complete sets and the finishing details of a considered wardrobe.",
-        imageUrl: null,
-        sortOrder: 3,
-      },
-      {
-        name: "Leather Wear",
-        slug: "leather-wear",
-        description:
-          "Leather tops, vests, jackets, trousers and shorts — the wardrobe, made in leather.",
         imageUrl: null,
         sortOrder: 4,
       },
@@ -98,8 +98,8 @@ async function runSeed() {
         slug: "boot-of-many-colours",
         categorySlug: "footwear",
         subcategory: "Boots",
-        price: 9000000,
-        completePackagePrice: 12000000,
+        price: 12000000,
+        completePackagePrice: 16000000,
         packageContents: STANDARD_PACKAGE_CONTENTS,
         shortDescription: "Bold. Distinctive. Unapologetically You.",
         fullDescription:
