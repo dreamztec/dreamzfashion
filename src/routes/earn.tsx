@@ -50,7 +50,7 @@ function EarnPage() {
               <li>• Free to apply.</li>
               <li>• Unique code/link after approval.</li>
               <li>• Dashboard for attributed qualifying sales.</li>
-              <li>• Scout commission: <strong>{scoutRateLabel}</strong> on qualifying verified sales.</li>
+              <li>• Scout commission: <strong>{terms.scoutRateLabel}</strong> on qualifying verified sales.</li>
             </ul>
           </article>
 
@@ -64,7 +64,7 @@ function EarnPage() {
             </p>
             <ul className="mt-5 space-y-2 text-sm">
               <li>• No creator joining fee.</li>
-              <li>• Creator commission: <strong>{creatorRateLabel}</strong> on qualifying verified sales.</li>
+              <li>• Creator commission: <strong>{terms.creatorRateLabel}</strong> on qualifying verified sales.</li>
               <li>• Campaign collaborations are negotiated separately.</li>
               <li>• No payment for recruiting other members.</li>
             </ul>
@@ -100,7 +100,7 @@ function EarnPage() {
       </section>
 
       <section id="apply" className="mx-auto max-w-3xl px-5 sm:px-8 py-16">
-        <EarnApplication scoutRateLabel={scoutRateLabel} creatorRateLabel={creatorRateLabel} />
+        <EarnApplication scoutRateLabel={terms.scoutRateLabel} creatorRateLabel={terms.creatorRateLabel} />
       </section>
 
       <section className="border-t border-ink/10">
