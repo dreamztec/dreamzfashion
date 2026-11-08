@@ -21,7 +21,7 @@ let pricedId = 0;
 let quoteOnlyId = 0;
 let bootId = 0;
 let creatorId = 0;
-let publicId = 0;
+let scoutId = 0;
 
 async function insertOrder(values: Record<string, unknown>) {
   const base = {
@@ -70,23 +70,33 @@ beforeAll(async () => {
   pricedId = await ins("T-PRICED", "Test Slide", 2_625_000, 3_500_000, true);
   quoteOnlyId = await ins("T-QUOTE", "Unpriced Boot", 0, null, false);
   const boot = await q<{ id: number }>(`SELECT id FROM products WHERE sku = 'DFK-FTW-001'`);
-  bootId = boot[0]?.id ?? (await ins("DFK-FTW-001", "Boot of Many Colours", 9_000_000, 12_000_000, true));
-  await q(`UPDATE products SET status='published', price=9000000, checkout_ready=true WHERE id=$1`, [bootId]);
+  bootId = boot[0]?.id ?? (await ins("DFK-FTW-001", "Boot of Many Colours", 12_000_000, 16_000_000, true));
+  await q(`UPDATE products SET status='published', price=12000000, complete_package_price=16000000, checkout_ready=true WHERE id=$1`, [bootId]);
   creatorId = (
     await q<{ id: number }>(
       `INSERT INTO referrers (code,track,status,display_name,email,phone) VALUES ('DAMI13','creator','approved','Dami','dami@example.com','08035550000') RETURNING id`,
     )
   )[0].id;
-  publicId = (
+  scoutId = (
     await q<{ id: number }>(
-      `INSERT INTO referrers (code,track,status,display_name) VALUES ('FRIEND1','public','approved','Friend') RETURNING id`,
+      `INSERT INTO referrers (code,track,status,display_name) VALUES ('FRIEND1','referral','approved','Friend') RETURNING id`,
     )
   )[0].id;
-  // Owner-approved test terms: 13% creator rate, 2-day return window.
+  // Current DREAMZ terms: Scout 10%, Creator/Trade 15%, 2-day return window.
   await q(
     `INSERT INTO settings (key, value) VALUES ('partners', $1::jsonb)
      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
-    [JSON.stringify({ commissionBps: 1300, payoutThresholdKobo: 0, attributionWindowDays: 30, termsNote: "", returnWindowDays: 2, selfPurchaseBenefitBps: 0 })],
+    [JSON.stringify({
+      commissionBps: 1500,
+      scoutCommissionBps: 1000,
+      creatorCommissionBps: 1500,
+      tradeCommissionBps: 1500,
+      payoutThresholdKobo: 0,
+      attributionWindowDays: 30,
+      termsNote: "",
+      returnWindowDays: 2,
+      selfPurchaseBenefitBps: 0,
+    })],
   );
   await q(
     `INSERT INTO settings (key, value) VALUES ('shipping', '{"defaultFee":3500,"freeThreshold":150000}'::jsonb)
@@ -111,7 +121,7 @@ describe("server pricing", () => {
     expect(small.delivery.feeKobo).toBe(350_000);
     expect(small.total).toBe(2_625_000 + 350_000);
     const big = await priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", quantity: 2 }], state: "Kano", buyer });
-    expect(big.subtotal).toBe(18_000_000);
+    expect(big.subtotal).toBe(24_000_000);
     expect(big.delivery.feeKobo).toBe(0);
   });
 
@@ -147,10 +157,10 @@ describe("creator code attribution", () => {
   });
 
   it("an explicit checkout code beats an earlier referral link", async () => {
-    await q(`INSERT INTO referral_attributions (referrer_id, session_id, status) VALUES ($1, 'sess-link-123456', 'clicked')`, [publicId]);
+    await q(`INSERT INTO referral_attributions (referrer_id, session_id, status) VALUES ($1, 'sess-link-123456', 'clicked')`, [scoutId]);
     const { priceOrder } = await import("../src/server/order-pricing.server");
     const viaLink = await priceOrder({ items: [{ productId: pricedId, purchaseOption: "product_only", quantity: 1 }], referralSessionId: "sess-link-123456", buyer });
-    expect(viaLink.partner).toMatchObject({ code: "FRIEND1", source: "referral_link", outcome: "not_eligible" });
+    expect(viaLink.partner).toMatchObject({ code: "FRIEND1", source: "referral_link", outcome: "commission", referrerId: scoutId });
     const both = await priceOrder({ items: [{ productId: pricedId, purchaseOption: "product_only", quantity: 1 }], referralSessionId: "sess-link-123456", partnerCode: "DAMI13", buyer });
     expect(both.partner).toMatchObject({ code: "DAMI13", source: "checkout_code" });
   });
@@ -177,7 +187,7 @@ describe("commission ledger", () => {
     expect(await q(`SELECT * FROM commissions WHERE order_id = $1`, [o.id])).toHaveLength(0);
   });
 
-  it("a verified paid order creates exactly one 13% pending commission on merchandise (excl. delivery), even on duplicate events", async () => {
+  it("a verified paid creator order creates exactly one 15% pending commission on merchandise (excl. delivery), even on duplicate events", async () => {
     const { recordVerifiedCommission } = await import("../src/server/partners.server");
     const o = await insertOrder({ subtotal: 10_000_000, discount_kobo: 1_000_000, delivery_fee: 350_000, total: 9_350_000, referrer_id: creatorId, referral_code: "DAMI13", attribution_source: "checkout_code", attribution_outcome: "commission" });
     const order = await loadOrder(o.id);
@@ -186,7 +196,7 @@ describe("commission ledger", () => {
     expect((await recordVerifiedCommission(order)).reason).toBe("duplicate");
     const rows = await q<{ amount_kobo: number; status: string; order_total_kobo: number; rate_bps: number }>(`SELECT * FROM commissions WHERE order_id = $1`, [o.id]);
     expect(rows).toHaveLength(1);
-    expect(rows[0]).toMatchObject({ amount_kobo: 1_170_000, status: "pending", order_total_kobo: 9_000_000, rate_bps: 1300 });
+    expect(rows[0]).toMatchObject({ amount_kobo: 1_350_000, status: "pending", order_total_kobo: 9_000_000, rate_bps: 1500 });
   });
 
   it("self-purchases never earn commission even when paid", async () => {
@@ -255,6 +265,6 @@ describe("saved designs (retired workspace)", () => {
   it("purchase still works normally without any saved design", async () => {
     const { priceOrder } = await import("../src/server/order-pricing.server");
     const res = await priceOrder({ items: [{ productId: bootId, purchaseOption: "product_only", quantity: 1 }], state: "Lagos", buyer });
-    expect(res.lines[0]).toMatchObject({ unitPrice: 9_000_000, quoteRequired: false });
+    expect(res.lines[0]).toMatchObject({ unitPrice: 12_000_000, quoteRequired: false });
   });
 });
