@@ -21,7 +21,7 @@ const CATALOGUE: TierProduct[] = [
   { id: 2, name: "Crimson Pin", productLine: "essentials", price: 2625000, completePackagePrice: 3500000 },
   { id: 3, name: "Asiwaju Mule", productLine: "originals", price: 6000000, completePackagePrice: 8000000 },
   { id: 4, name: "Lagos Tassel", productLine: "originals", price: 11850000, completePackagePrice: 15800000 },
-  { id: 5, name: "Boot of Many Colours", productLine: "royale", price: 9000000, completePackagePrice: 12000000 },
+  { id: 5, name: "Boot of Many Colours", productLine: "originals", price: 12000000, completePackagePrice: 16000000 },
   { id: 6, name: "Gentleman Complete Combo", productLine: "royale", price: 18750000, completePackagePrice: 25000000 },
   { id: 7, name: "Hyper-Prestige Showpiece", productLine: "royale", price: 500000000, completePackagePrice: null },
 ];
@@ -67,14 +67,14 @@ describe("Price filtering with no ceiling", () => {
 describe("Product line filtering", () => {
   it("filters by product line", () => {
     expect(filterByLine(CATALOGUE, "essentials").map((p) => p.id)).toEqual([1, 2]);
-    expect(filterByLine(CATALOGUE, "originals").map((p) => p.id)).toEqual([3, 4]);
-    expect(filterByLine(CATALOGUE, "royale").map((p) => p.id)).toEqual([5, 6, 7]);
+    expect(filterByLine(CATALOGUE, "originals").map((p) => p.id)).toEqual([3, 4, 5]);
+    expect(filterByLine(CATALOGUE, "royale").map((p) => p.id)).toEqual([6, 7]);
   });
 
   it("lines are additive with price filters", () => {
     const royale = filterByLine(CATALOGUE, "royale");
     const band = filterByPrice(royale, 10000000, null);
-    expect(band.map((p) => p.id)).toEqual([5, 6, 7]);
+    expect(band.map((p) => p.id)).toEqual([6, 7]);
   });
 });
 
@@ -89,7 +89,7 @@ describe("Sorting", () => {
 });
 
 describe("Delivery fee threshold", () => {
-  it("waives the fee at or above the complimentary threshold", () => {
+  it("waives the fee at or above the configured free-delivery threshold", () => {
     const freeThreshold = 15000000; // ₦150,000 in kobo
     const defaultFee = 350000; // ₦3,500 in kobo
     const feeFor = (subtotal: number) => (subtotal >= freeThreshold ? 0 : defaultFee);
