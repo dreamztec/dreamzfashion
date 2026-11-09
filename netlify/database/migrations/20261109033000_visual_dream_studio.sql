@@ -23,7 +23,9 @@ ALTER TABLE saved_briefs
   ADD COLUMN IF NOT EXISTS client_label TEXT,
   ADD COLUMN IF NOT EXISTS design_version INTEGER NOT NULL DEFAULT 1,
   ADD COLUMN IF NOT EXISTS approval_token TEXT,
-  ADD COLUMN IF NOT EXISTS approval_status TEXT;
+  ADD COLUMN IF NOT EXISTS approval_status TEXT,
+  ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS share_count INTEGER NOT NULL DEFAULT 0;
 
 CREATE UNIQUE INDEX IF NOT EXISTS saved_briefs_public_slug_uidx
   ON saved_briefs(public_slug)
