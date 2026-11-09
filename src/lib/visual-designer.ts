@@ -151,7 +151,7 @@ export const MATERIAL_VISUALS: VisualOption[] = [
     note: "Grain-side leather that may be lightly corrected for a cleaner, more even appearance.",
     image: commons("Brown Leather.jpg"),
     bestFor: "Refined footwear, bags, wallets and wearable leather.",
-    credit: "Surface reference only. DREAMZ confirms the actual top-grain hide before production.",
+    credit: "Surface reference: Cbobdude / Wikimedia Commons, CC BY-SA 4.0. DREAMZ confirms the actual top-grain hide before production.",
   },
   {
     id: "suede",
@@ -192,7 +192,7 @@ export const FINISH_VISUALS: VisualOption[] = [
     note: "Oil- or wax-rich leather that becomes lighter where it bends or stretches, creating character.",
     image: commons("Red leather oxford shoes by Eugene Pik (2021) 03.jpg"),
     bestFor: "Rugged boots, travel bags, briefcases and heritage-style pieces.",
-    credit: "Pull-up behaviour reference: Eugene Pik / Wikimedia Commons.",
+    credit: "Pull-up behaviour reference: Eugene Pik / Wikimedia Commons, CC BY-SA 4.0.",
   },
   {
     id: "patent",
