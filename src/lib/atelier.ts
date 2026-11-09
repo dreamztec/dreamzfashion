@@ -296,12 +296,11 @@ const HEEL_QUESTIONS: AtelierQuestion[] = [
 ];
 
 const BAG_QUESTIONS: AtelierQuestion[] = [
-  { key: "dimensions", label: "Approximate size", type: "text", placeholder: "e.g. 38 × 30 × 12 cm" },
+  { key: "dimensions", label: "Approximate size / depth", type: "text", placeholder: "e.g. 38 × 30 × 12 cm" },
   { key: "carriage", label: "How should it be carried?", type: "select", options: ["Top handles", "Shoulder strap", "Crossbody strap", "Handles + strap"] },
   { key: "closure", label: "Closure", type: "select", options: ["Zip", "Flap + magnet", "Turn-lock", "Drawstring", "Open top"] },
   { key: "structure", label: "Structure", type: "select", options: ["Structured", "Soft", "Semi-structured"] },
   { key: "compartments", label: "Compartments", type: "select", options: ["Single space", "Two sections", "Three sections", "Laptop + essentials"], optional: true },
-  { key: "gusset", label: "Depth / gusset", type: "select", options: ["Slim", "Medium", "Wide", "Expandable"], optional: true },
 ];
 
 const BELT_QUESTIONS: AtelierQuestion[] = [
