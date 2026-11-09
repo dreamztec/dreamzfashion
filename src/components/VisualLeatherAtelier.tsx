@@ -366,6 +366,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
               primaryColour: answers.primaryColour,
               secondaryColour: answers.secondaryColour,
               image: pieceVisual?.image || null,
+              construction: answers.construction,
             },
             referenceIds,
           },
@@ -993,6 +994,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                 primaryColour: answers.primaryColour,
                 secondaryColour: answers.secondaryColour,
                 image: pieceVisual?.image || null,
+                construction: answers.construction,
               }}
             />
             <div className="mt-4 border border-ink/10 p-4 text-xs text-stone">
