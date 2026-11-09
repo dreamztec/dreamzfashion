@@ -16,6 +16,7 @@ import {
 } from "../../db/schema";
 import { getCurrentCustomer } from "./auth.server";
 import { getDesignerPlan, type DesignerPlanId } from "@/lib/designer-plans";
+import { dreamContestScore } from "@/lib/dream-contest";
 
 const PayloadSchema = z.object({
   answers: z.record(z.string(), z.unknown()).default({}),
@@ -201,11 +202,6 @@ async function designOrderStats(briefId: number): Promise<{ interestCount: numbe
     if (row.status === "verified") verifiedOrders += 1;
   }
   return { interestCount, verifiedOrders };
-}
-
-export function dreamContestScore(input: { verifiedOrders: number; likeCount: number; shareCount: number }): number {
-  // Commerce matters most; community reaction helps; raw views never affect ranking.
-  return input.verifiedOrders * 100 + input.likeCount * 5 + input.shareCount;
 }
 
 async function profileDesigns(profileId: number) {
