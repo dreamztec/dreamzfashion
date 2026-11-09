@@ -1,3 +1,4 @@
+// Applied Netlify migrations are immutable; add a new timestamped migration for future schema changes.
 import { describe, expect, it } from "vitest";
 import {
   DESIGNER_PLANS,
