@@ -171,7 +171,6 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             designSummary: payload.designSummary,
             renderPrompt: payload.renderPrompt,
             artisanBrief: payload.artisanBrief,
-            catalogue: [],
           } as AtelierResult);
         }
         setCurrentBriefId(response.design.id);
