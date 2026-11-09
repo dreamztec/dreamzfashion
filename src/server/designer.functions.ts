@@ -9,6 +9,7 @@ import {
   designLikes,
   designerProfiles,
   designerUpgradeRequests,
+  referrers,
   savedBriefs,
 } from "../../db/schema";
 import { getCurrentCustomer } from "./auth.server";
@@ -138,6 +139,15 @@ async function ensureDesignerProfile(
   return created;
 }
 
+async function approvedEarnCode(customerId: number): Promise<string | null> {
+  const [row] = await db
+    .select({ code: referrers.code })
+    .from(referrers)
+    .where(and(eq(referrers.customerId, customerId), eq(referrers.status, "approved")))
+    .limit(1);
+  return row?.code || null;
+}
+
 async function countLikes(briefId: number): Promise<number> {
   const rows = await db.select({ id: designLikes.id }).from(designLikes).where(eq(designLikes.briefId, briefId));
   return rows.length;
@@ -195,6 +205,7 @@ export const getMyDesignerState = createServerFn({ method: "GET" }).handler(asyn
     return {
       unauthenticated: false as const,
       profile: null,
+      earnCode: await approvedEarnCode(customer.id),
       plan: free,
       designs: [],
       used: 0,
@@ -215,6 +226,7 @@ export const getMyDesignerState = createServerFn({ method: "GET" }).handler(asyn
 
   return {
     unauthenticated: false as const,
+    earnCode: await approvedEarnCode(customer.id),
     profile: {
       id: profile.id,
       slug: profile.slug,
@@ -472,6 +484,7 @@ export const getPublicDesignerProfile = createServerFn({ method: "GET" })
     );
 
     return {
+      earnCode: await approvedEarnCode(profile.customerId),
       profile: {
         slug: profile.slug,
         displayName: profile.displayName,
@@ -529,6 +542,7 @@ export const getPublicDesign = createServerFn({ method: "GET" })
         displayName: profile.displayName,
         dreamStatement: profile.dreamStatement,
         foundingNumber: profile.id <= 200 ? profile.id : null,
+        earnCode: await approvedEarnCode(profile.customerId),
       },
     };
   });
