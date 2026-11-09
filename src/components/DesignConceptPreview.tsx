@@ -1,14 +1,15 @@
 import {
-  HARDWARE_VISUALS,
+  FINISH_VISUALS,
   MATERIAL_VISUALS,
-  SOLE_VISUALS,
   colourVisual,
+  constructionVisual,
   visualForPiece,
 } from "@/lib/visual-designer";
 
 export type ConceptPreviewData = {
   piece?: string | null;
   material?: string | null;
+  texture?: string | null;
   primaryColour?: string | null;
   secondaryColour?: string | null;
   image?: string | null;
@@ -34,14 +35,37 @@ export function DesignConceptPreview({
   const image = suppliedImage || piece?.image || null;
   const construction = preview.construction || {};
   const material = MATERIAL_VISUALS.find((item) => item.label === preview.material) || null;
-  const sole = SOLE_VISUALS.find((item) => item.label === construction.soleType) || null;
-  const hardware =
-    HARDWARE_VISUALS.find((item) => item.label === construction.buckleStyle) || null;
+  const finish = FINISH_VISUALS.find((item) => item.label === preview.texture) || null;
   const componentRefs = [
     material?.image ? { label: "Leather", value: material.label, image: material.image } : null,
-    sole?.image ? { label: "Sole", value: sole.label, image: sole.image } : null,
-    hardware?.image ? { label: "Hardware", value: hardware.label, image: hardware.image } : null,
-  ].filter((item): item is { label: string; value: string; image: string } => Boolean(item));
+    finish?.image ? { label: "Finish", value: finish.label, image: finish.image } : null,
+    construction.soleType
+      ? constructionVisual(construction.soleType)?.image
+        ? { label: "Sole", value: construction.soleType, image: constructionVisual(construction.soleType)!.image! }
+        : null
+      : null,
+    construction.toeShape
+      ? constructionVisual(construction.toeShape)?.image
+        ? { label: "Toe", value: construction.toeShape, image: constructionVisual(construction.toeShape)!.image! }
+        : null
+      : null,
+    construction.heelType
+      ? constructionVisual(construction.heelType)?.image
+        ? { label: "Heel", value: construction.heelType, image: constructionVisual(construction.heelType)!.image! }
+        : null
+      : null,
+    (construction.buckleStyle || construction.closure)
+      ? constructionVisual(construction.buckleStyle || construction.closure)?.image
+        ? {
+            label: construction.buckleStyle ? "Hardware" : "Closure",
+            value: construction.buckleStyle || construction.closure,
+            image: constructionVisual(construction.buckleStyle || construction.closure)!.image!,
+          }
+        : null
+      : null,
+  ]
+    .filter((item): item is { label: string; value: string; image: string } => Boolean(item))
+    .slice(0, 6);
 
   return (
     <div className="border border-ink/10 bg-ivory-deep/50 overflow-hidden">
@@ -99,6 +123,12 @@ export function DesignConceptPreview({
             {secondary?.hex && <span className="h-4 w-4 rounded-full border border-ink/15" style={{ backgroundColor: secondary.hex }} />}
           </div>
         </div>
+        {preview.texture && (
+          <div>
+            <p className="uppercase tracking-btn text-[0.58rem] text-stone">Finish</p>
+            <p className="mt-1">{preview.texture}</p>
+          </div>
+        )}
         {construction.soleType && (
           <div>
             <p className="uppercase tracking-btn text-[0.58rem] text-stone">Sole</p>
