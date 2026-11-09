@@ -8,6 +8,7 @@ import {
 } from "../src/lib/designer-plans";
 import {
   COLOUR_VISUALS,
+  FINISH_VISUALS,
   MATERIAL_VISUALS,
   PIECE_VISUALS,
   PROJECT_MODES,
@@ -52,11 +53,22 @@ describe("visual-first design library", () => {
     }
   });
 
-  it("uses leather-reference swatches and visual colour choices", () => {
+  it("uses separate leather-base and finish references without catalogue imagery", () => {
     const suede = MATERIAL_VISUALS.find((item) => item.id === "suede");
-    expect(suede?.image).toContain("/.netlify/images?");
-    expect(suede?.image).not.toContain("/img/products/");
-    expect(suede?.minPlan).toBeUndefined();
+    const patent = FINISH_VISUALS.find((item) => item.id === "patent");
+    expect(MATERIAL_VISUALS.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["full-grain", "top-grain", "suede", "nubuck"]),
+    );
+    expect(FINISH_VISUALS.map((item) => item.id)).toEqual(
+      expect.arrayContaining(["smooth", "pebbled", "pull-up", "patent", "embossed"]),
+    );
+    for (const item of [...MATERIAL_VISUALS, ...FINISH_VISUALS]) {
+      expect(item.image).toContain("/.netlify/images?");
+      expect(item.image).not.toContain("/img/products/");
+      expect(item.minPlan).toBeUndefined();
+    }
+    expect(suede?.image).toContain("suede");
+    expect(patent?.image).toContain("Patent");
     expect(COLOUR_VISUALS.length).toBeGreaterThanOrEqual(12);
     expect(COLOUR_VISUALS.every((item) => Boolean(item.hex))).toBe(true);
   });
@@ -100,11 +112,13 @@ describe("locked-data render prompt", () => {
     const prompt = buildRenderPrompt({
       ...minimal,
       material: "Suede",
+      texture: "Pebbled",
       primaryColour: "Oxblood",
       secondaryColour: "Cream",
       construction: { soleType: "Rubber sole", buckleStyle: "Single buckle" },
     });
     expect(prompt).toContain("Material selected: Suede");
+    expect(prompt).toContain("Texture / finish selected: Pebbled");
     expect(prompt).toContain("Primary colour selected: Oxblood");
     expect(prompt).toContain("Accent colour selected: Cream");
     expect(prompt).toContain("soleType: Rubber sole");
