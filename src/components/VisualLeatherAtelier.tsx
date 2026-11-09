@@ -17,11 +17,12 @@ import {
 } from "@/server/designer.functions";
 import {
   COLOUR_VISUALS,
-  HARDWARE_VISUALS,
   MATERIAL_VISUALS,
   PIECE_VISUALS,
   PROJECT_MODES,
-  SOLE_VISUALS,
+  categoryVisual,
+  constructionVisual,
+  recommendedMaterials,
   visualForPiece,
 } from "@/lib/visual-designer";
 import { designerPlanRank, getDesignerPlan } from "@/lib/designer-plans";
@@ -119,7 +120,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     () =>
       ATELIER_CATEGORIES.map((category) => ({
         ...category,
-        representative: PIECE_VISUALS.find((piece) => piece.category === category.key)?.image || "/img/hero-boot-of-many-colours.jpg",
+        representative: PIECE_VISUALS.find((piece) => piece.category === category.key)?.image || categoryVisual(category.key),
       })),
     [],
   );
@@ -536,7 +537,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
               {answers.category && (
                 <>
                   <h3 className="font-editorial text-2xl mt-10">Choose the piece</h3>
-                  <p className="text-xs text-stone mt-1">House photography is used as a visual guide. You are not editing the pictured DREAMZ product itself.</p>
+                  <p className="text-xs text-stone mt-1">These are blank Studio silhouettes, not DREAMZ catalogue products. Pick the form you want to create from scratch.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                     {ATELIER_CATEGORIES.find((category) => category.key === answers.category)?.pieces.map((piece) => {
                       const visual = visualForPiece(piece);
@@ -624,10 +625,11 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           {step === 2 && (
             <section>
               <h2 className="font-editorial text-3xl">Choose the leather</h2>
-              <p className="text-sm text-stone mt-2">Tap a visual guide instead of guessing technical terms. The atelier confirms the exact hide before production.</p>
+              <p className="text-sm text-stone mt-2">Tap a real leather reference instead of guessing technical terms. Swatches are illustrative; the atelier confirms the exact hide, shade and availability before production.</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
                 {MATERIAL_VISUALS.map((material) => {
                   const locked = !hasMinPlan(planId, material.minPlan);
+                  const recommended = recommendedMaterials(answers.category, answers.piece).includes(material.label);
                   return (
                     <button
                       type="button"
@@ -646,8 +648,11 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       </div>
                       <span className="block p-3">
                         <span className="font-editorial text-base">{material.label}</span>
+                        {recommended && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-forest">Recommended</span>}
                         {locked && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-gold">Creator+</span>}
                         <span className="block mt-1 text-[0.64rem] leading-relaxed text-stone">{material.note}</span>
+                        {material.bestFor && <span className="block mt-2 text-[0.58rem] leading-relaxed text-stone"><strong>Best for:</strong> {material.bestFor}</span>}
+                        {material.credit && <span className="block mt-2 text-[0.52rem] leading-relaxed text-stone/80">{material.credit}</span>}
                       </span>
                     </button>
                   );
@@ -692,111 +697,57 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
           {step === 3 && (
             <section>
-              <h2 className="font-editorial text-3xl">Shape the construction</h2>
-              <p className="text-sm text-stone mt-2">Only relevant questions are shown for your {answers.piece || "piece"}.</p>
-
-              {answers.category === "footwear" && (
-                <>
-                  <h3 className="font-editorial text-xl mt-6">Sole direction</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                    {SOLE_VISUALS.map((sole) => {
-                      const locked = !hasMinPlan(planId, sole.minPlan);
-                      return (
-                        <button
-                          type="button"
-                          key={sole.id}
-                          onClick={() => {
-                            if (locked) {
-                              setNotice(sole.label + " is available in Creator Pass.");
-                              return;
-                            }
-                            chooseConstruction("soleType", sole.label);
-                          }}
-                          className={"overflow-hidden border text-left " + (answers.construction.soleType === sole.label ? "border-ink" : "border-ink/10")}
-                        >
-                          <div className="aspect-[4/3] overflow-hidden bg-ivory-deep">
-                            <img src={sole.image} alt={sole.label + " example"} className="h-full w-full object-cover" />
-                          </div>
-                          <span className="block p-2 text-xs">{sole.label}{locked ? " · Creator+" : ""}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              {(answers.category === "footwear" || answers.category === "accessories") && (
-                <>
-                  <h3 className="font-editorial text-xl mt-7">Hardware / buckle direction</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-                    {HARDWARE_VISUALS.map((hardware) => {
-                      const locked = !hasMinPlan(planId, hardware.minPlan);
-                      return (
-                        <button
-                          type="button"
-                          key={hardware.id}
-                          onClick={() => {
-                            if (locked) {
-                              setNotice(hardware.label + " is available in Creator Pass.");
-                              return;
-                            }
-                            chooseConstruction("buckleStyle", hardware.label);
-                          }}
-                          className={"overflow-hidden border text-left " + (answers.construction.buckleStyle === hardware.label ? "border-ink" : "border-ink/10")}
-                        >
-                          <div className="aspect-[4/3] overflow-hidden bg-ivory-deep">
-                            {hardware.image && <img src={hardware.image} alt={hardware.label + " example"} className="h-full w-full object-cover" />}
-                          </div>
-                          <span className="block p-2 text-xs">{hardware.label}{locked ? " · Creator+" : ""}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
-              )}
-
-              {/heel/i.test(answers.piece) && (
-                <div className="mt-7">
-                  <h3 className="font-editorial text-xl">Heel type</h3>
-                  <p className="text-xs text-stone mt-1">Choose the construction direction. Exact heel engineering is confirmed before production.</p>
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {["Block heel", "Kitten heel", "Stiletto", "Wedge", "Sculpted heel"].map((heel) => (
-                      <button
-                        type="button"
-                        key={heel}
-                        onClick={() => chooseConstruction("heelType", heel)}
-                        className={"border px-3 py-2 text-xs " + (answers.construction.heelType === heel ? "border-ink bg-ink text-ivory" : "border-ink/15")}
-                      >
-                        {heel}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid sm:grid-cols-2 gap-4 mt-8">
+              <h2 className="font-editorial text-3xl">Choose the parts</h2>
+              <p className="text-sm text-stone mt-2">
+                Only the parts that matter for your {answers.piece || "piece"} appear here. Each visual is a neutral construction guide — never one of our sale products.
+              </p>
+              <div className="mt-6 space-y-7">
                 {constructionQuestionsForPiece.map((question) => (
-                  <label key={question.key}>
-                    <span className="text-xs uppercase tracking-btn">{question.label}</span>
+                  <div key={question.key}>
+                    <div className="flex items-end justify-between gap-3">
+                      <h3 className="font-editorial text-xl">{question.label}</h3>
+                      {question.optional && <span className="text-[0.58rem] uppercase tracking-btn text-stone">Optional</span>}
+                    </div>
                     {question.type === "select" ? (
-                      <select
-                        value={answers.construction[question.key] || ""}
-                        onChange={(event) => chooseConstruction(question.key, event.target.value)}
-                        className="input-lux mt-2"
-                      >
-                        <option value="">Choose</option>
-                        {question.options?.map((option) => <option key={option} value={option}>{option}</option>)}
-                      </select>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
+                        {question.options?.map((option) => {
+                          const visual = constructionVisual(option);
+                          const selected = answers.construction[question.key] === option;
+                          return (
+                            <button
+                              type="button"
+                              key={option}
+                              onClick={() => chooseConstruction(question.key, option)}
+                              className={"overflow-hidden border text-left transition " + (selected ? "border-ink bg-ivory-deep" : "border-ink/10 hover:border-ink/40")}
+                            >
+                              <div className="aspect-[4/3] overflow-hidden bg-ivory-deep">
+                                {visual?.image ? (
+                                  <img src={visual.image} alt={option + " construction example"} className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="h-full flex items-center justify-center p-4 text-center text-xs text-stone">{option}</div>
+                                )}
+                              </div>
+                              <span className="block p-3">
+                                <span className="block text-xs font-medium">{option}</span>
+                                {visual?.note && <span className="block mt-1 text-[0.62rem] leading-relaxed text-stone">{visual.note}</span>}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     ) : (
                       <input
                         value={answers.construction[question.key] || ""}
                         onChange={(event) => chooseConstruction(question.key, event.target.value)}
-                        className="input-lux mt-2"
+                        className="input-lux mt-3"
                         placeholder={question.placeholder}
                       />
                     )}
-                  </label>
+                  </div>
                 ))}
+              </div>
+              <div className="mt-7 border border-ink/10 bg-ivory-deep/40 p-4 text-xs text-stone">
+                Maximum build decisions are intentionally kept below ten. DREAMZ confirms final engineering, proportions and production feasibility on WhatsApp before quoting.
               </div>
             </section>
           )}
