@@ -7,6 +7,11 @@
   targetPort = 3000
   port = 8888
 
+# Public-domain / Creative Commons leather-reference imagery is proxied through
+# Netlify Image CDN so the Studio stays same-origin and mobile-optimized.
+[images]
+  remote_images = ['https://commons\.wikimedia\.org/.*', 'https://upload\.wikimedia\.org/.*']
+
 # Fingerprinted Vite bundles are immutable across deployments.
 [[headers]]
   for = "/assets/*"
