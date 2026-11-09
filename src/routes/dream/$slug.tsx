@@ -54,7 +54,11 @@ function DreamDesignPage() {
   };
 
   const share = async () => {
-    const url = window.location.href;
+    const directPath = "/dream/" + params.slug;
+    const sharePath = data.designer.earnCode
+      ? "/r/" + encodeURIComponent(data.designer.earnCode) + "?to=" + encodeURIComponent(directPath)
+      : directPath;
+    const url = window.location.origin + sharePath;
     const text = `Would you wear this? ${data.design.title}, designed with DREAMZ.`;
     if (navigator.share) {
       await navigator.share({ title: data.design.title, text, url }).catch(() => {});
@@ -64,8 +68,13 @@ function DreamDesignPage() {
     setNotice("Design link copied.");
   };
 
+  const directPath = "/dream/" + params.slug;
+  const attributedPath = data.designer.earnCode
+    ? "/r/" + encodeURIComponent(data.designer.earnCode) + "?to=" + encodeURIComponent(directPath)
+    : directPath;
+  const attributedUrl = typeof window !== "undefined" ? window.location.origin + attributedPath : directPath;
   const whatsapp = typeof window !== "undefined"
-    ? "https://wa.me/?text=" + encodeURIComponent(`Would you wear this? ${data.design.title}, designed with DREAMZ. ${window.location.href}`)
+    ? "https://wa.me/?text=" + encodeURIComponent(`Would you wear this? ${data.design.title}, designed with DREAMZ. ${attributedUrl}`)
     : "#";
 
   return (
@@ -111,6 +120,14 @@ function DreamDesignPage() {
           )}
 
           <div className="mt-8 border-t border-ink/10 pt-6">
+            <a
+              href={"https://wa.me/" + "2349038560517" + "?text=" + encodeURIComponent(`Hello DREAMZ, I want to order or commission this design: ${data.design.title}. Design link: ${attributedUrl}${data.designer.earnCode ? ` | Dreamer code: ${data.designer.earnCode}` : ""}`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-lux btn-lux-primary inline-block mb-5"
+            >
+              I Want This Design
+            </a>
             <p className="text-xs text-stone leading-relaxed">
               This is a design concept, not a ready-made stock promise. DREAMZ confirms leather availability, measurements, construction feasibility and final price before production.
             </p>
