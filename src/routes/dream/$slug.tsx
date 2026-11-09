@@ -1,6 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { getPublicDesign, toggleDesignLike } from "@/server/designer.functions";
+import { useEffect, useState } from "react";
+import { getPublicDesign, recordDesignShare, recordDesignView, toggleDesignLike } from "@/server/designer.functions";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { useAuth } from "@/lib/auth-client";
 import { BRAND } from "@/lib/config";
@@ -31,6 +31,18 @@ function DreamDesignPage() {
   const [liked, setLiked] = useState(data.design.likedByMe);
   const [likes, setLikes] = useState(data.design.likeCount);
   const [notice, setNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    const key = "dfk-viewed-dream-" + params.slug;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
+      void recordDesignView({ data: params.slug });
+    } catch {
+      void recordDesignView({ data: params.slug });
+    }
+  }, [params.slug]);
+
   const payload = data.design.payload as Record<string, unknown>;
   const preview = payload.visualPreview && typeof payload.visualPreview === "object"
     ? (payload.visualPreview as Record<string, unknown>)
@@ -55,6 +67,7 @@ function DreamDesignPage() {
   };
 
   const share = async () => {
+    void recordDesignShare({ data: params.slug }).catch(() => {});
     const directPath = "/dream/" + params.slug;
     const sharePath = data.designer.earnCode
       ? "/r/" + encodeURIComponent(data.designer.earnCode) + "?to=" + encodeURIComponent(directPath)
