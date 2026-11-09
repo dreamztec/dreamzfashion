@@ -88,6 +88,7 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
     primaryColour: typeof answers.primaryColour === "string" ? answers.primaryColour : "",
     secondaryColour: typeof answers.secondaryColour === "string" ? answers.secondaryColour : "",
     material: typeof answers.material === "string" ? answers.material : "",
+    texture: typeof answers.texture === "string" ? answers.texture : "",
   };
 
   const summaryLines = [
@@ -100,6 +101,7 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
       ? `Colours: ${safeAnswers.primaryColour}${safeAnswers.secondaryColour ? ` + ${safeAnswers.secondaryColour}` : ""}`
       : "",
     safeAnswers.material ? `Leather: ${safeAnswers.material}` : "",
+    safeAnswers.texture ? `Finish: ${safeAnswers.texture}` : "",
   ].filter(Boolean);
 
   const rawPreview =
@@ -135,6 +137,7 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
     visualPreview: {
       piece: safeAnswers.piece,
       material: safeAnswers.material,
+      texture: safeAnswers.texture,
       primaryColour: safeAnswers.primaryColour,
       secondaryColour: safeAnswers.secondaryColour,
       image: previewImage,

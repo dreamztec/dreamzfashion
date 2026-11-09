@@ -18,14 +18,9 @@
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
-# Long-cache the immutable generated route tree assets
+# Long-cache static image assets shipped with a versioned deploy.
 [[headers]]
   for = "/img/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 

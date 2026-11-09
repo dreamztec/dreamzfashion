@@ -17,17 +17,20 @@ import {
 } from "@/server/designer.functions";
 import {
   COLOUR_VISUALS,
+  FINISH_VISUALS,
   MATERIAL_VISUALS,
   PIECE_VISUALS,
   PROJECT_MODES,
   categoryVisual,
   constructionVisual,
+  recommendedFinishes,
   recommendedMaterials,
   visualForPiece,
 } from "@/lib/visual-designer";
 import { designerPlanRank, getDesignerPlan } from "@/lib/designer-plans";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { REFERENCE_LIMITS, precheckFile } from "@/lib/reference-upload";
+import { CONTACT } from "@/lib/contact";
 
 type AtelierResult = Extract<Awaited<ReturnType<typeof composeDreamToLeather>>, { ok: true }>;
 
@@ -168,7 +171,6 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             designSummary: payload.designSummary,
             renderPrompt: payload.renderPrompt,
             artisanBrief: payload.artisanBrief,
-            catalogue: [],
           } as AtelierResult);
         }
         setCurrentBriefId(response.design.id);
@@ -251,11 +253,11 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   };
 
   const chooseMaterial = (material: (typeof MATERIAL_VISUALS)[number]) => {
-    if (!hasMinPlan(planId, material.minPlan)) {
-      setNotice(material.label + " is in the Creator Pass visual library.");
-      return;
-    }
     set("material", material.label);
+  };
+
+  const chooseFinish = (finish: (typeof FINISH_VISUALS)[number]) => {
+    set("texture", finish.label);
   };
 
   const chooseColour = (field: "primaryColour" | "secondaryColour", label: string) => {
@@ -364,6 +366,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             visualPreview: {
               piece: answers.piece,
               material: answers.material,
+              texture: answers.texture,
               primaryColour: answers.primaryColour,
               secondaryColour: answers.secondaryColour,
               image: pieceVisual?.image || null,
@@ -483,48 +486,19 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         <div className="min-w-0">
           {step === 0 && (
             <section>
-              <h2 className="font-editorial text-3xl">Who are you designing for?</h2>
-              <p className="text-sm text-stone mt-2">You can design beyond your own gender or wardrobe. Choose the project, then the leather piece.</p>
-              <div className="grid sm:grid-cols-2 gap-3 mt-5">
-                {PROJECT_MODES.map((mode) => {
-                  const locked = !hasMinPlan(planId, mode.minPlan);
-                  return (
-                    <button
-                      type="button"
-                      key={mode.id}
-                      onClick={() => chooseProjectMode(mode.id as Answers["projectMode"], mode.minPlan)}
-                      className={
-                        "text-left border p-4 transition " +
-                        (answers.projectMode === mode.id ? "border-ink bg-ivory-deep" : "border-ink/10 hover:border-ink/40")
-                      }
-                    >
-                      <span className="font-editorial text-xl">{mode.label}</span>
-                      {locked && <span className="ml-2 text-[0.58rem] uppercase tracking-btn text-gold">Studio</span>}
-                      <span className="block text-xs text-stone mt-1">{mode.note}</span>
-                    </button>
-                  );
-                })}
-              </div>
-              {(answers.projectMode === "client" || answers.projectMode === "family") && (
-                <label className="block mt-5">
-                  <span className="text-xs uppercase tracking-btn">{answers.projectMode === "client" ? "Client/project name" : "Family/project name"}</span>
-                  <input
-                    value={answers.clientLabel}
-                    onChange={(event) => set("clientLabel", event.target.value)}
-                    className="input-lux mt-2"
-                    placeholder={answers.projectMode === "client" ? "e.g. David — wedding shoes" : "e.g. The Okafor Family"}
-                  />
-                </label>
-              )}
+              <h2 className="font-editorial text-3xl">What do you want to design?</h2>
+              <p className="text-sm text-stone mt-2">
+                Start with the product. Every option below is a blank Studio guide — never a DREAMZ product already listed for sale.
+              </p>
 
-              <h3 className="font-editorial text-2xl mt-10">Choose a category</h3>
+              <h3 className="font-editorial text-2xl mt-7">1. Choose a category</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                 {categories.map((category) => (
                   <button
                     type="button"
                     key={category.key}
                     onClick={() => chooseCategory(category.key)}
-                    className={"overflow-hidden border text-left " + (answers.category === category.key ? "border-ink" : "border-ink/10")}
+                    className={"overflow-hidden border text-left " + (answers.category === category.key ? "border-ink bg-ivory-deep" : "border-ink/10")}
                   >
                     <div className="aspect-[4/3] bg-ivory-deep overflow-hidden">
                       <img src={category.representative} alt="" className="h-full w-full object-cover" />
@@ -536,8 +510,8 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
               {answers.category && (
                 <>
-                  <h3 className="font-editorial text-2xl mt-10">Choose the piece</h3>
-                  <p className="text-xs text-stone mt-1">These are blank Studio silhouettes, not DREAMZ catalogue products. Pick the form you want to create from scratch.</p>
+                  <h3 className="font-editorial text-2xl mt-8">2. Choose the piece</h3>
+                  <p className="text-xs text-stone mt-1">Pick the form you want to create from scratch.</p>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                     {ATELIER_CATEGORIES.find((category) => category.key === answers.category)?.pieces.map((piece) => {
                       const visual = visualForPiece(piece);
@@ -546,13 +520,13 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                           key={piece}
                           type="button"
                           onClick={() => set("piece", piece)}
-                          className={"overflow-hidden border text-left " + (answers.piece === piece ? "border-ink" : "border-ink/10")}
+                          className={"overflow-hidden border text-left " + (answers.piece === piece ? "border-ink bg-ivory-deep" : "border-ink/10")}
                         >
                           <div className="aspect-square bg-ivory-deep overflow-hidden">
                             {visual ? (
-                              <img src={visual.image} alt={piece + " visual example"} className="h-full w-full object-cover" />
+                              <img src={visual.image} alt={piece + " blank Studio silhouette"} className="h-full w-full object-cover" />
                             ) : (
-                              <div className="h-full grid place-items-center px-4 text-center text-xs text-stone">Visual sample being added</div>
+                              <div className="h-full grid place-items-center px-4 text-center text-xs text-stone">Neutral silhouette</div>
                             )}
                           </div>
                           <span className="block p-3">
@@ -565,6 +539,41 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   </div>
                 </>
               )}
+
+              <details className="mt-8 border border-ink/10 p-4">
+                <summary className="cursor-pointer text-sm font-medium">Who are you designing for? <span className="text-stone">(optional)</span></summary>
+                <p className="text-xs text-stone mt-2">Myself is selected by default. Change it only if this is a gift, client or family project.</p>
+                <div className="grid grid-cols-2 gap-2 mt-4">
+                  {PROJECT_MODES.map((mode) => {
+                    const locked = !hasMinPlan(planId, mode.minPlan);
+                    return (
+                      <button
+                        type="button"
+                        key={mode.id}
+                        onClick={() => chooseProjectMode(mode.id as Answers["projectMode"], mode.minPlan)}
+                        className={
+                          "text-left border p-3 transition " +
+                          (answers.projectMode === mode.id ? "border-ink bg-ivory-deep" : "border-ink/10 hover:border-ink/40")
+                        }
+                      >
+                        <span className="font-editorial text-base">{mode.label}</span>
+                        {locked && <span className="ml-2 text-[0.55rem] uppercase tracking-btn text-gold">Studio</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+                {(answers.projectMode === "client" || answers.projectMode === "family") && (
+                  <label className="block mt-4">
+                    <span className="text-xs uppercase tracking-btn">{answers.projectMode === "client" ? "Client/project name" : "Family/project name"}</span>
+                    <input
+                      value={answers.clientLabel}
+                      onChange={(event) => set("clientLabel", event.target.value)}
+                      className="input-lux mt-2"
+                      placeholder={answers.projectMode === "client" ? "e.g. David — wedding shoes" : "e.g. The Okafor Family"}
+                    />
+                  </label>
+                )}
+              </details>
             </section>
           )}
 
@@ -584,28 +593,31 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   </button>
                 ))}
               </div>
-              <div className="grid sm:grid-cols-2 gap-4 mt-6">
-                <label>
-                  <span className="text-xs uppercase tracking-btn">My own meaning</span>
-                  <input value={answers.customMeaning} onChange={(e) => set("customMeaning", e.target.value)} className="input-lux mt-2" placeholder="e.g. Becoming the first graduate in my family" />
+              <details className="mt-6 border border-ink/10 p-4">
+                <summary className="cursor-pointer text-sm font-medium">Add story, occasion or style <span className="text-stone">(optional)</span></summary>
+                <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                  <label>
+                    <span className="text-xs uppercase tracking-btn">My own meaning</span>
+                    <input value={answers.customMeaning} onChange={(e) => set("customMeaning", e.target.value)} className="input-lux mt-2" placeholder="e.g. Becoming the first graduate in my family" />
+                  </label>
+                  <label>
+                    <span className="text-xs uppercase tracking-btn">For whom?</span>
+                    <input value={answers.forWhom} onChange={(e) => set("forWhom", e.target.value)} className="input-lux mt-2" placeholder="Me, my client, my brother…" />
+                  </label>
+                  <label>
+                    <span className="text-xs uppercase tracking-btn">Occasion</span>
+                    <input value={answers.occasion} onChange={(e) => set("occasion", e.target.value)} className="input-lux mt-2" placeholder="Everyday, wedding, graduation…" />
+                  </label>
+                  <label>
+                    <span className="text-xs uppercase tracking-btn">Style preference</span>
+                    <input value={answers.stylePreference} onChange={(e) => set("stylePreference", e.target.value)} className="input-lux mt-2" placeholder="Minimal, bold, masculine, feminine, unisex…" />
+                  </label>
+                </div>
+                <label className="block mt-4">
+                  <span className="text-xs uppercase tracking-btn">The story</span>
+                  <textarea value={answers.story} onChange={(e) => set("story", e.target.value)} className="input-lux mt-2 min-h-24" placeholder="Optional inspiration. Keep private contact details out of this field." />
                 </label>
-                <label>
-                  <span className="text-xs uppercase tracking-btn">For whom?</span>
-                  <input value={answers.forWhom} onChange={(e) => set("forWhom", e.target.value)} className="input-lux mt-2" placeholder="Me, my client, my brother…" />
-                </label>
-                <label>
-                  <span className="text-xs uppercase tracking-btn">Occasion</span>
-                  <input value={answers.occasion} onChange={(e) => set("occasion", e.target.value)} className="input-lux mt-2" placeholder="Everyday, wedding, graduation…" />
-                </label>
-                <label>
-                  <span className="text-xs uppercase tracking-btn">Style preference</span>
-                  <input value={answers.stylePreference} onChange={(e) => set("stylePreference", e.target.value)} className="input-lux mt-2" placeholder="Masculine, feminine, unisex, modest…" />
-                </label>
-              </div>
-              <label className="block mt-4">
-                <span className="text-xs uppercase tracking-btn">The story</span>
-                <textarea value={answers.story} onChange={(e) => set("story", e.target.value)} className="input-lux mt-2 min-h-28" placeholder="Tell DREAMZ what inspired the piece. Keep private contact details out of this field." />
-              </label>
+              </details>
               <h3 className="font-editorial text-xl mt-7">Design character</h3>
               <div className="flex flex-wrap gap-2 mt-3">
                 {CHARACTER_OPTIONS.map((feel) => (
@@ -625,31 +637,35 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           {step === 2 && (
             <section>
               <h2 className="font-editorial text-3xl">Choose the leather</h2>
-              <p className="text-sm text-stone mt-2">Tap a real leather reference instead of guessing technical terms. Swatches are illustrative; the atelier confirms the exact hide, shade and availability before production.</p>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
+              <p className="text-sm text-stone mt-2">
+                You do not need leather knowledge. Tap what looks and feels closest to your idea; DREAMZ confirms the exact hide before production.
+              </p>
+
+              <div className="mt-5 rounded-sm border border-gold/30 bg-gold/5 p-3 text-xs text-stone leading-relaxed">
+                <strong className="text-ink">Simple guide:</strong> full-grain and top-grain describe hide quality/processing, while suede and nubuck describe the surface feel. A photograph cannot prove leather grade, so grade is always confirmed by the atelier.
+              </div>
+
+              <h3 className="font-editorial text-xl mt-7">1. Leather base</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
                 {MATERIAL_VISUALS.map((material) => {
-                  const locked = !hasMinPlan(planId, material.minPlan);
                   const recommended = recommendedMaterials(answers.category, answers.piece).includes(material.label);
                   return (
                     <button
                       type="button"
                       key={material.id}
                       onClick={() => chooseMaterial(material)}
-                      className={"overflow-hidden border text-left " + (answers.material === material.label ? "border-ink" : "border-ink/10")}
+                      className={"overflow-hidden border text-left " + (answers.material === material.label ? "border-ink bg-ivory-deep" : "border-ink/10")}
                     >
                       <div className="aspect-square bg-ivory-deep overflow-hidden">
                         {optionImageUrl(material.image) ? (
-                          <img src={material.image} alt={material.label + " visual guide"} className="h-full w-full object-cover" />
+                          <img src={material.image} alt={material.label + " reference"} className="h-full w-full object-cover" />
                         ) : (
-                          <div className="h-full p-5 flex items-end bg-[radial-gradient(circle_at_30%_20%,rgba(0,0,0,.08),transparent_45%)]">
-                            <span className="font-editorial text-xl">{material.label}</span>
-                          </div>
+                          <div className="h-full p-5 flex items-end"><span className="font-editorial text-xl">{material.label}</span></div>
                         )}
                       </div>
                       <span className="block p-3">
                         <span className="font-editorial text-base">{material.label}</span>
                         {recommended && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-forest">Recommended</span>}
-                        {locked && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-gold">Creator+</span>}
                         <span className="block mt-1 text-[0.64rem] leading-relaxed text-stone">{material.note}</span>
                         {material.bestFor && <span className="block mt-2 text-[0.58rem] leading-relaxed text-stone"><strong>Best for:</strong> {material.bestFor}</span>}
                         {material.credit && <span className="block mt-2 text-[0.52rem] leading-relaxed text-stone/80">{material.credit}</span>}
@@ -659,7 +675,40 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                 })}
               </div>
 
-              <h3 className="font-editorial text-2xl mt-9">Primary colour</h3>
+              <h3 className="font-editorial text-xl mt-8">2. Surface / finish <span className="text-stone text-sm">(optional)</span></h3>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => set("texture", "")}
+                  className={"border p-4 text-left " + (!answers.texture ? "border-ink bg-ivory-deep" : "border-ink/10")}
+                >
+                  <span className="font-editorial text-base">Let DREAMZ advise</span>
+                  <span className="block mt-1 text-[0.64rem] text-stone">Best if you are unsure.</span>
+                </button>
+                {FINISH_VISUALS.map((finish) => {
+                  const recommended = recommendedFinishes(answers.category, answers.piece).includes(finish.label);
+                  return (
+                    <button
+                      type="button"
+                      key={finish.id}
+                      onClick={() => chooseFinish(finish)}
+                      className={"overflow-hidden border text-left " + (answers.texture === finish.label ? "border-ink bg-ivory-deep" : "border-ink/10")}
+                    >
+                      <div className="aspect-square bg-ivory-deep overflow-hidden">
+                        {finish.image && <img src={finish.image} alt={finish.label + " leather finish reference"} className="h-full w-full object-cover" />}
+                      </div>
+                      <span className="block p-3">
+                        <span className="font-editorial text-base">{finish.label}</span>
+                        {recommended && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-forest">Recommended</span>}
+                        <span className="block mt-1 text-[0.64rem] leading-relaxed text-stone">{finish.note}</span>
+                        {finish.credit && <span className="block mt-2 text-[0.52rem] leading-relaxed text-stone/80">{finish.credit}</span>}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <h3 className="font-editorial text-2xl mt-9">3. Primary colour</h3>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
                 {COLOUR_VISUALS.map((colour) => (
                   <button
@@ -677,7 +726,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                 ))}
               </div>
 
-              <h3 className="font-editorial text-xl mt-8">Optional accent colour</h3>
+              <h3 className="font-editorial text-xl mt-8">Accent colour <span className="text-stone text-sm">(optional)</span></h3>
               <div className="flex flex-wrap gap-2 mt-3">
                 <button type="button" onClick={() => chooseColour("secondaryColour", "")} className="border border-ink/15 px-3 py-2 text-xs">No accent</button>
                 {COLOUR_VISUALS.map((colour) => (
@@ -851,6 +900,25 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <p className="text-xs uppercase tracking-btn text-gold">Design summary</p>
                     <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-relaxed text-stone">{result.designSummary}</pre>
                   </div>
+                  <a
+                    href={
+                      "https://wa.me/" +
+                      CONTACT.whatsappNumber.replace(/\D/g, "") +
+                      "?text=" +
+                      encodeURIComponent(
+                        "Hello DREAMZ, I have finished a Dream Studio design and I want the price/production advice.\n\n" +
+                        result.designSummary
+                      )
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-lux btn-lux-primary inline-block mt-4"
+                  >
+                    Get My Price on WhatsApp
+                  </a>
+                  <p className="mt-2 text-xs text-stone">
+                    A DREAMZ adviser confirms feasibility, exact leather availability, measurements, production timeline and final price.
+                  </p>
                   <details className="mt-4 border border-ink/10 p-5">
                     <summary className="cursor-pointer text-xs uppercase tracking-btn">Professional render prompt</summary>
                     <pre className="mt-4 whitespace-pre-wrap text-xs leading-relaxed overflow-x-auto">{result.renderPrompt}</pre>
@@ -942,6 +1010,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
               preview={{
                 piece: answers.piece,
                 material: answers.material,
+                texture: answers.texture,
                 primaryColour: answers.primaryColour,
                 secondaryColour: answers.secondaryColour,
                 image: pieceVisual?.image || null,

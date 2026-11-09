@@ -4,8 +4,7 @@
  * The website's intelligence layer is NOT an image generator and NOT a
  * chatbot. Its job is to interview the client, translate ordinary language
  * into professional leathercraft language, detect missing requirements,
- * check basic feasibility, relate the brief to the real DREAMZ catalogue and
- * produce three deliverables: a design summary, a DREAMZ render prompt
+ * check basic feasibility and produce three deliverables: a design summary, a DREAMZ render prompt
  * (for the customer to run in a stronger external visual model) and an
  * artisan production brief — plus a structured quote brief for the house.
  *
@@ -469,19 +468,23 @@ export function buildRenderPrompt(b: AtelierBrief): string {
   const material = b.material
     ? safeLeatherMaterial(b.material)
     : "Material not selected — use a neutral realistic leather surface only as a rendering placeholder; do not invent or name a leather type.";
-  const grain = /suede|nubuck/i.test(material)
+  const finish = (b.texture || b.material || "").toLowerCase();
+  const grain = /suede|nubuck/i.test(finish)
     ? "matte velvety nap with natural texture variation"
-    : /pebble/i.test(material)
+    : /pebbl/i.test(finish)
       ? "distinct pebbled grain with natural depth"
-      : /embossed/i.test(material)
+      : /emboss/i.test(finish)
         ? "clearly defined embossed texture, crisp and regular"
-        : /patent/i.test(material)
+        : /patent|gloss/i.test(finish)
           ? "glossy patent finish with clean reflections"
-          : "fine natural grain with subtle burnished depth";
+          : /pull-up|waxy/i.test(finish)
+            ? "waxy, character-rich surface with controlled tonal pull-up at bends"
+            : "fine natural grain with subtle burnished depth";
   const lockedSelections = [
     `Product: ${b.piece}`,
     `Category: ${b.category}`,
     b.material ? `Material selected: ${safeLeatherMaterial(b.material)}` : "Material selected: none",
+    b.texture ? `Texture / finish selected: ${b.texture}` : "Texture / finish selected: none",
     b.primaryColour ? `Primary colour selected: ${b.primaryColour}` : "Primary colour selected: none",
     b.secondaryColour ? `Accent colour selected: ${b.secondaryColour}` : "Accent colour selected: none",
     Object.keys(b.construction || {}).length
@@ -515,7 +518,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     [
       "C. LEATHER & MATERIAL",
-      `${material}. Surface: ${grain}. Realistic thickness and stiffness appropriate to the piece; edge treatment finished with edge paint or burnishing as appropriate.`,
+      `${material}. Selected finish: ${b.texture || "none — keep neutral"}. Surface: ${grain}. Realistic thickness and stiffness appropriate to the piece; edge treatment finished with edge paint or burnishing as appropriate.`,
     ],
     [
       "D. COLOUR SYSTEM",
