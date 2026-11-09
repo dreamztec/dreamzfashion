@@ -67,8 +67,45 @@ function dreamSeedFromPayload(payload: z.infer<typeof PayloadSchema>): string {
 type CurrentCustomer = NonNullable<Awaited<ReturnType<typeof getCurrentCustomer>>>;
 
 function publicPayload(payload: Record<string, unknown>): Record<string, unknown> {
-  const { referenceIds: _privateReferenceIds, ...safe } = payload;
-  return safe;
+  const answers =
+    payload.answers && typeof payload.answers === "object"
+      ? (payload.answers as Record<string, unknown>)
+      : {};
+  const safeAnswers = {
+    category: typeof answers.category === "string" ? answers.category : null,
+    piece: typeof answers.piece === "string" ? answers.piece : null,
+    meaning: Array.isArray(answers.meaning)
+      ? answers.meaning.filter((value): value is string => typeof value === "string").slice(0, 3)
+      : [],
+    customMeaning: typeof answers.customMeaning === "string" ? answers.customMeaning.slice(0, 120) : "",
+    feel: Array.isArray(answers.feel)
+      ? answers.feel.filter((value): value is string => typeof value === "string").slice(0, 4)
+      : [],
+    primaryColour: typeof answers.primaryColour === "string" ? answers.primaryColour : "",
+    secondaryColour: typeof answers.secondaryColour === "string" ? answers.secondaryColour : "",
+    material: typeof answers.material === "string" ? answers.material : "",
+  };
+
+  const summaryLines = [
+    safeAnswers.piece ? `Product: ${safeAnswers.piece}` : "",
+    safeAnswers.meaning.length || safeAnswers.customMeaning
+      ? `Meaning: ${[...safeAnswers.meaning, safeAnswers.customMeaning].filter(Boolean).join(" — ")}`
+      : "",
+    safeAnswers.feel.length ? `Character: ${safeAnswers.feel.join(", ")}` : "",
+    safeAnswers.primaryColour
+      ? `Colours: ${safeAnswers.primaryColour}${safeAnswers.secondaryColour ? ` + ${safeAnswers.secondaryColour}` : ""}`
+      : "",
+    safeAnswers.material ? `Leather: ${safeAnswers.material}` : "",
+  ].filter(Boolean);
+
+  return {
+    answers: safeAnswers,
+    designSummary: summaryLines.join("\n"),
+    visualPreview:
+      payload.visualPreview && typeof payload.visualPreview === "object"
+        ? payload.visualPreview
+        : {},
+  };
 }
 
 async function ensureDesignerProfile(
