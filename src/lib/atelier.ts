@@ -384,7 +384,7 @@ const NEGATIVE_CONSTRAINTS = [
 
 /** DREAMZ branding appears only where physically realistic — never oversized. */
 const BRANDING_NOTE =
-  "Where DREAMZ branding is requested it appears only subtly: a small embossed mark, an insole stamp, a discreet hardware mark or the DREAMZ lightning motif — never an oversized logo covering the product.";
+  "Do not add DREAMZ branding unless the client explicitly selected or requested it. If requested, keep it subtle: a small embossed mark, an insole stamp, a discreet hardware mark or the DREAMZ lightning motif — never an oversized logo covering the product.";
 
 // ── Output 1 — Design summary ────────────────────────────────────────
 
@@ -439,7 +439,9 @@ export const RENDER_PROMPT_SECTIONS = [
 ] as const;
 
 export function buildRenderPrompt(b: AtelierBrief): string {
-  const material = b.material ? safeLeatherMaterial(b.material) : "full-grain leather (atelier suggestion, confirm availability)";
+  const material = b.material
+    ? safeLeatherMaterial(b.material)
+    : "Material not selected — use a neutral realistic leather surface only as a rendering placeholder; do not invent or name a leather type.";
   const grain = /suede|nubuck/i.test(material)
     ? "matte velvety nap with natural texture variation"
     : /pebble/i.test(material)
@@ -449,6 +451,32 @@ export function buildRenderPrompt(b: AtelierBrief): string {
         : /patent/i.test(material)
           ? "glossy patent finish with clean reflections"
           : "fine natural grain with subtle burnished depth";
+  const lockedSelections = [
+    `Product: ${b.piece}`,
+    `Category: ${b.category}`,
+    b.material ? `Material selected: ${safeLeatherMaterial(b.material)}` : "Material selected: none",
+    b.primaryColour ? `Primary colour selected: ${b.primaryColour}` : "Primary colour selected: none",
+    b.secondaryColour ? `Accent colour selected: ${b.secondaryColour}` : "Accent colour selected: none",
+    Object.keys(b.construction || {}).length
+      ? `Construction selected: ${summariseConstruction(b)}`
+      : "Construction selections: none beyond the chosen product type",
+    b.personalisation && b.personalisation.type !== "none"
+      ? `Personalisation selected: ${describePersonalisation(b)}`
+      : "Personalisation selected: none",
+  ].join("\n");
+
+  const sourceOfTruth = [
+    "SOURCE OF TRUTH — LOCKED CLIENT SELECTIONS",
+    lockedSelections,
+    "",
+    "NON-NEGOTIABLE GENERATION RULE:",
+    "Translate only the selections above and the explicit brief below into professional leathercraft language.",
+    "Do not invent a colour, material, texture, strap, buckle, heel, sole, trim, closure, ornament, logo, monogram or extra product feature that the client did not select.",
+    "If a field is unspecified, keep that area visually neutral and construction-standard rather than choosing a new named option.",
+    "Reference images, when supplied, are inspiration for proportion or direction only; do not copy third-party branding, logos or protected ornaments.",
+    "The output must remain physically manufacturable by a real leather artisan.",
+  ].join("\n");
+
   const sections: Array<[string, string]> = [
     [
       "A. PRODUCT IDENTITY",
@@ -464,7 +492,9 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     [
       "D. COLOUR SYSTEM",
-      `Primary colour: ${b.primaryColour || "rich cognac"}.${b.secondaryColour ? ` Accent colour: ${b.secondaryColour}.` : ""} Considered colour relationships — restrained palette${b.feel.some((f) => /bold|avant/i.test(f)) ? " with one deliberate bold accent" : ""}.`,
+      b.primaryColour
+        ? `Primary colour: ${b.primaryColour}.${b.secondaryColour ? ` Accent colour: ${b.secondaryColour}.` : " No accent colour selected."} Preserve the selected colour relationship exactly; do not introduce another colour.`
+        : "No colour selected. Keep the render chromatically neutral and do not choose a named colour on the client's behalf.",
     ],
     [
       "E. CONSTRUCTION",
@@ -474,7 +504,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
       "F. HARDWARE",
       b.construction.hardwareFinish || b.construction.buckleStyle
         ? `${[b.construction.buckleStyle, b.construction.hardwareFinish].filter(Boolean).join(", ")}. Realistic, correctly formed hardware proportioned to the piece.`
-        : "Minimal, realistic hardware proportioned to the piece; correctly formed buckles, zips or clasps only where the construction needs them.",
+        : "No decorative hardware was selected. Use only unavoidable standard functional hardware required for the chosen product type; do not invent a buckle, zip, clasp or ornament.",
     ],
     [
       "G. STITCHING & FINISH",
@@ -483,7 +513,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     [
       "H. PERSONALISATION",
       describePersonalisation(b) === "None — clean piece."
-        ? "No personalisation; a clean piece."
+        ? `No personalisation; a clean piece. ${BRANDING_NOTE}`
         : `${describePersonalisation(b)}. Any text is small, precise and physically realistic (embossed, stamped or engraved as appropriate). ${BRANDING_NOTE}`,
     ],
     [
@@ -501,7 +531,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ["L. REALISM REQUIREMENTS", `${REALISM_REQUIREMENTS} ${DREAMZ_DNA}`],
     ["M. NEGATIVE CONSTRAINTS", NEGATIVE_CONSTRAINTS],
   ];
-  return sections.map(([title, body]) => `${title}\n${body}`).join("\n\n");
+  return [sourceOfTruth, ...sections.map(([title, body]) => `${title}\n${body}`)].join("\n\n");
 }
 
 // ── Output 3 — Artisan production brief ──────────────────────────────
