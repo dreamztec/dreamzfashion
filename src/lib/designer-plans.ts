@@ -19,6 +19,7 @@ export type DesignerPlan = {
   name: string;
   priceKobo: number;
   designLimit: number;
+  durationDays: number | null;
   summary: string;
   features: DesignerFeature[];
   benefits: string[];
@@ -30,6 +31,7 @@ export const DESIGNER_PLANS: DesignerPlan[] = [
     name: "Dreamer",
     priceKobo: 0,
     designLimit: 3,
+    durationDays: null,
     summary: "Create, save and share your first three DREAMZ leather concepts.",
     features: ["public_profile", "share_links", "private_designs"],
     benefits: [
@@ -47,6 +49,7 @@ export const DESIGNER_PLANS: DesignerPlan[] = [
     name: "Creator Pass",
     priceKobo: 1_500_000,
     designLimit: 15,
+    durationDays: 90,
     summary: "For people who want to create and share more ideas during the season.",
     features: [
       "public_profile",
@@ -69,6 +72,7 @@ export const DESIGNER_PLANS: DesignerPlan[] = [
     name: "Studio",
     priceKobo: 5_000_000,
     designLimit: 50,
+    durationDays: 90,
     summary: "For stylists, sellers and designers creating for clients and families.",
     features: [
       "public_profile",
@@ -95,6 +99,7 @@ export const DESIGNER_PLANS: DesignerPlan[] = [
     name: "Pro Studio",
     priceKobo: 10_000_000,
     designLimit: 200,
+    durationDays: 90,
     summary: "For serious creators building a repeat DREAMZ design and sales workflow.",
     features: [
       "public_profile",
@@ -127,7 +132,7 @@ export function getDesignerPlan(id: string | null | undefined): DesignerPlan {
 
 export function designerPlanPriceLabel(plan: DesignerPlan): string {
   if (plan.priceKobo === 0) return "Free";
-  return "₦" + (plan.priceKobo / 100).toLocaleString("en-NG") + " / season";
+  return "₦" + (plan.priceKobo / 100).toLocaleString("en-NG") + " / 90-day pass";
 }
 
 export function designerPlanRank(id: string | null | undefined): number {
