@@ -49,8 +49,11 @@ function DreamerPage() {
           <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">
             Design Your Dream
           </Link>
-          <Link to="/studio-plans" className="btn-lux btn-lux-outline">
-            Creator Studio Plans
+          <Link to="/shop" className="btn-lux btn-lux-outline">
+            Shop DREAMZ Ready-Made
+          </Link>
+          <Link to="/dreams" className="nav-link text-xs self-center">
+            Top 100 Dreams →
           </Link>
         </div>
       </header>
@@ -105,7 +108,7 @@ function DreamerPage() {
                       <h3 className="font-editorial text-2xl mt-1">{design.title}</h3>
                       {summary && <p className="mt-2 text-xs text-stone leading-relaxed line-clamp-3">{summary}</p>}
                       <div className="mt-4 flex items-center justify-between text-[0.64rem] uppercase tracking-btn text-stone">
-                        <span>{design.likeCount} {design.likeCount === 1 ? "like" : "likes"}</span>
+                        <span>{design.verifiedOrders} orders · {design.likeCount} likes</span>
                         <span className="group-hover:text-ink">View dream →</span>
                       </div>
                     </div>

@@ -1,0 +1,19 @@
+name: Validate storefront
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm install --no-audit --no-fund
+      - run: npx vitest run tests/visual-studio.test.ts tests/leather-house.test.ts tests/storefront-rules.test.ts
+      - run: npm run build

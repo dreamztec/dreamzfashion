@@ -8,6 +8,7 @@ import {
   analyticsEvents,
   designApprovalFeedback,
   designLikes,
+  designOrderIntents,
   designerProfiles,
   designerUpgradeRequests,
   referrers,
@@ -15,6 +16,7 @@ import {
 } from "../../db/schema";
 import { getCurrentCustomer } from "./auth.server";
 import { getDesignerPlan, type DesignerPlanId } from "@/lib/designer-plans";
+import { dreamContestScore } from "@/lib/dream-contest";
 
 const PayloadSchema = z.object({
   answers: z.record(z.string(), z.unknown()).default({}),
@@ -123,12 +125,9 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
       .map((key) => [key, typeof rawConstruction[key] === "string" ? String(rawConstruction[key]).slice(0, 80) : ""])
       .filter(([, value]) => Boolean(value)),
   );
-  const previewImage =
-    typeof rawPreview.image === "string" &&
-    (/^\/img\/products\/[a-z0-9-]+\.jpg$/.test(rawPreview.image) ||
-      rawPreview.image === "/img/hero-boot-of-many-colours.jpg")
-      ? rawPreview.image
-      : null;
+  // Public Dream pages always rebuild from the neutral Studio silhouette.
+  // Old catalogue-image references are deliberately discarded.
+  const previewImage = null;
 
   return {
     answers: safeAnswers,
@@ -186,6 +185,20 @@ async function approvedEarnCode(customerId: number): Promise<string | null> {
 async function countLikes(briefId: number): Promise<number> {
   const rows = await db.select({ id: designLikes.id }).from(designLikes).where(eq(designLikes.briefId, briefId));
   return rows.length;
+}
+
+async function designOrderStats(briefId: number): Promise<{ interestCount: number; verifiedOrders: number }> {
+  const rows = await db
+    .select({ status: designOrderIntents.status })
+    .from(designOrderIntents)
+    .where(eq(designOrderIntents.briefId, briefId));
+  let interestCount = 0;
+  let verifiedOrders = 0;
+  for (const row of rows) {
+    if (row.status !== "cancelled") interestCount += 1;
+    if (row.status === "verified") verifiedOrders += 1;
+  }
+  return { interestCount, verifiedOrders };
 }
 
 async function profileDesigns(profileId: number) {
@@ -527,19 +540,26 @@ export const getPublicDesignerProfile = createServerFn({ method: "GET" })
       .limit(100);
 
     const designs = await Promise.all(
-      rows.map(async (row) => ({
-        id: row.id,
-        title: row.title,
-        category: row.category,
-        piece: row.piece,
-        publicSlug: row.publicSlug,
-        designVersion: row.designVersion,
-        updatedAt: row.updatedAt?.toISOString() || null,
-        payload: publicPayload(row.payload),
-        likeCount: await countLikes(row.id),
-        viewCount: row.viewCount,
-        shareCount: row.shareCount,
-      })),
+      rows.map(async (row) => {
+        const likeCount = await countLikes(row.id);
+        const orders = await designOrderStats(row.id);
+        return {
+          id: row.id,
+          title: row.title,
+          category: row.category,
+          piece: row.piece,
+          publicSlug: row.publicSlug,
+          designVersion: row.designVersion,
+          updatedAt: row.updatedAt?.toISOString() || null,
+          payload: publicPayload(row.payload),
+          likeCount,
+          viewCount: row.viewCount,
+          shareCount: row.shareCount,
+          interestCount: orders.interestCount,
+          verifiedOrders: orders.verifiedOrders,
+          contestScore: dreamContestScore({ verifiedOrders: orders.verifiedOrders, likeCount, shareCount: row.shareCount }),
+        };
+      }),
     );
 
     return {
@@ -583,6 +603,9 @@ export const getPublicDesign = createServerFn({ method: "GET" })
       likedByMe = Boolean(mine);
     }
 
+    const likeCount = await countLikes(design.id);
+    const orders = await designOrderStats(design.id);
+
     return {
       design: {
         id: design.id,
@@ -593,10 +616,13 @@ export const getPublicDesign = createServerFn({ method: "GET" })
         designVersion: design.designVersion,
         payload: publicPayload(design.payload),
         updatedAt: design.updatedAt?.toISOString() || null,
-        likeCount: await countLikes(design.id),
+        likeCount,
         likedByMe,
         viewCount: design.viewCount,
         shareCount: design.shareCount,
+        interestCount: orders.interestCount,
+        verifiedOrders: orders.verifiedOrders,
+        contestScore: dreamContestScore({ verifiedOrders: orders.verifiedOrders, likeCount, shareCount: design.shareCount }),
       },
       designer: {
         slug: profile.slug,
@@ -686,6 +712,101 @@ export const submitClientApproval = createServerFn({ method: "POST" })
 
     return { ok: true as const, status: data.decision };
   });
+
+export const recordDesignOrderIntent = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      slug: z.string().min(3).max(100),
+      sessionKey: z.string().regex(/^doi_[A-Za-z0-9_-]{12,80}$/),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const [design] = await db
+      .select({ id: savedBriefs.id, designerProfileId: savedBriefs.designerProfileId })
+      .from(savedBriefs)
+      .where(and(eq(savedBriefs.publicSlug, data.slug), eq(savedBriefs.visibility, "public")))
+      .limit(1);
+    if (!design) return { ok: false as const, reason: "missing" as const };
+
+    const customer = await getCurrentCustomer().catch(() => null);
+    await db
+      .insert(designOrderIntents)
+      .values({
+        briefId: design.id,
+        customerId: customer?.id ?? null,
+        sessionKey: data.sessionKey,
+        status: "intent",
+      })
+      .onConflictDoNothing();
+
+    const stats = await designOrderStats(design.id);
+    await db.insert(analyticsEvents).values({
+      eventName: "dream_design_order_intent",
+      metadata: { briefId: design.id, designerProfileId: design.designerProfileId },
+    });
+    return { ok: true as const, ...stats };
+  });
+
+export const getDreamLeaderboard = createServerFn({ method: "GET" }).handler(async () => {
+  const rows = await db
+    .select({
+      id: savedBriefs.id,
+      title: savedBriefs.title,
+      piece: savedBriefs.piece,
+      publicSlug: savedBriefs.publicSlug,
+      payload: savedBriefs.payload,
+      viewCount: savedBriefs.viewCount,
+      shareCount: savedBriefs.shareCount,
+      updatedAt: savedBriefs.updatedAt,
+      profileSlug: designerProfiles.slug,
+      displayName: designerProfiles.displayName,
+      dreamStatement: designerProfiles.dreamStatement,
+    })
+    .from(savedBriefs)
+    .innerJoin(designerProfiles, eq(savedBriefs.designerProfileId, designerProfiles.id))
+    .where(and(eq(savedBriefs.visibility, "public"), eq(designerProfiles.isPublic, true)))
+    .orderBy(desc(savedBriefs.updatedAt))
+    .limit(300);
+
+  const ranked = await Promise.all(
+    rows.map(async (row) => {
+      const likeCount = await countLikes(row.id);
+      const orders = await designOrderStats(row.id);
+      return {
+        id: row.id,
+        title: row.title,
+        piece: row.piece,
+        publicSlug: row.publicSlug,
+        payload: publicPayload(row.payload),
+        profileSlug: row.profileSlug,
+        displayName: row.displayName,
+        dreamStatement: row.dreamStatement,
+        likeCount,
+        shareCount: row.shareCount,
+        viewCount: row.viewCount,
+        interestCount: orders.interestCount,
+        verifiedOrders: orders.verifiedOrders,
+        contestScore: dreamContestScore({
+          verifiedOrders: orders.verifiedOrders,
+          likeCount,
+          shareCount: row.shareCount,
+        }),
+        updatedAt: row.updatedAt?.toISOString() || null,
+      };
+    }),
+  );
+
+  return ranked
+    .sort(
+      (a, b) =>
+        b.contestScore - a.contestScore ||
+        b.verifiedOrders - a.verifiedOrders ||
+        b.likeCount - a.likeCount ||
+        b.shareCount - a.shareCount,
+    )
+    .slice(0, 100)
+    .map((item, index) => ({ ...item, rank: index + 1 }));
+});
 
 export const recordDesignView = createServerFn({ method: "POST" })
   .inputValidator(z.string().min(3).max(100))

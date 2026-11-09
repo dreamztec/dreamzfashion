@@ -12,7 +12,8 @@ import {
   PIECE_VISUALS,
   PROJECT_MODES,
 } from "../src/lib/visual-designer";
-import { buildRenderPrompt, type AtelierBrief } from "../src/lib/atelier";
+import { buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
+import { dreamContestScore } from "../src/lib/dream-contest";
 
 describe("DREAMZ visual studio plans", () => {
   it("keeps the first three designs free and prices paid creation tiers correctly", () => {
@@ -43,19 +44,36 @@ describe("DREAMZ visual studio plans", () => {
 });
 
 describe("visual-first design library", () => {
-  it("provides real DREAMZ product photography for the main design paths", () => {
-    for (const piece of ["Oxford", "Loafer", "Boot", "Mule", "Slide", "Sandal", "Handbag", "Briefcase", "Belt", "Trouser"]) {
-      const visual = PIECE_VISUALS.find((item) => item.piece === piece);
-      expect(visual?.image).toMatch(/^\/img\/products\/.*\.jpg$/);
+  it("never uses DREAMZ catalogue products as Studio starting images", () => {
+    for (const piece of PIECE_VISUALS) {
+      expect(piece.image).toMatch(/^data:image\/svg\+xml,/);
+      expect(piece.image).not.toContain("/img/products/");
+      expect(piece.image).not.toContain("boot-of-many-colours");
     }
   });
 
-  it("shows a photographed suede guide and visual colour choices", () => {
+  it("uses leather-reference swatches and visual colour choices", () => {
     const suede = MATERIAL_VISUALS.find((item) => item.id === "suede");
-    expect(suede?.image).toBe("/img/products/crimson-pin.jpg");
+    expect(suede?.image).toContain("/.netlify/images?");
+    expect(suede?.image).not.toContain("/img/products/");
     expect(suede?.minPlan).toBeUndefined();
     expect(COLOUR_VISUALS.length).toBeGreaterThanOrEqual(12);
     expect(COLOUR_VISUALS.every((item) => Boolean(item.hex))).toBe(true);
+  });
+
+  it("keeps product construction beginner-friendly and below ten decisions", () => {
+    const paths = [
+      ["footwear", "Oxford"],
+      ["footwear", "Slide"],
+      ["footwear", "Boot"],
+      ["footwear", "Heel"],
+      ["bags", "Handbag"],
+      ["accessories", "Belt"],
+      ["wearable", "Jacket"],
+    ] as const;
+    for (const [category, piece] of paths) {
+      expect(constructionQuestions(category, piece).length).toBeLessThanOrEqual(9);
+    }
   });
 });
 
@@ -91,5 +109,18 @@ describe("locked-data render prompt", () => {
     expect(prompt).toContain("Accent colour selected: Cream");
     expect(prompt).toContain("soleType: Rubber sole");
     expect(prompt).toContain("buckleStyle: Single buckle");
+  });
+});
+
+
+describe("Dream design challenge scoring", () => {
+  it("makes verified orders much more valuable than vanity engagement", () => {
+    expect(dreamContestScore({ verifiedOrders: 1, likeCount: 0, shareCount: 0 })).toBe(100);
+    expect(dreamContestScore({ verifiedOrders: 0, likeCount: 10, shareCount: 0 })).toBe(50);
+    expect(
+      dreamContestScore({ verifiedOrders: 5, likeCount: 20, shareCount: 10 }),
+    ).toBeGreaterThan(
+      dreamContestScore({ verifiedOrders: 0, likeCount: 100, shareCount: 0 }),
+    );
   });
 });
