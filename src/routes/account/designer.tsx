@@ -141,6 +141,14 @@ function DesignerAccount() {
             </p>
           )}
           <Link to="/account/designs" className="nav-link inline-block mt-5 text-xs">Manage my designs →</Link>
+          {state.earnCode ? (
+            <p className="mt-4 text-xs text-forest">Earn with DREAMZ active · code {state.earnCode}</p>
+          ) : (
+            <div className="mt-4 border-t border-ink/10 pt-4">
+              <p className="text-xs text-stone leading-relaxed">Want verified sales from your shared links to qualify for earnings? Activate the free Earn with DREAMZ programme.</p>
+              <Link to="/earn" className="nav-link inline-block mt-2 text-xs">Activate Earn — free →</Link>
+            </div>
+          )}
         </aside>
       </div>
     </div>
