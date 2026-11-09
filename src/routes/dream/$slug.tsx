@@ -4,6 +4,7 @@ import { getPublicDesign, toggleDesignLike } from "@/server/designer.functions";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { useAuth } from "@/lib/auth-client";
 import { BRAND } from "@/lib/config";
+import { CONTACT } from "@/lib/contact";
 
 export const Route = createFileRoute("/dream/$slug")({
   loader: async ({ params }) => {
@@ -121,7 +122,7 @@ function DreamDesignPage() {
 
           <div className="mt-8 border-t border-ink/10 pt-6">
             <a
-              href={"https://wa.me/" + "2349038560517" + "?text=" + encodeURIComponent(`Hello DREAMZ, I want to order or commission this design: ${data.design.title}. Design link: ${attributedUrl}${data.designer.earnCode ? ` | Dreamer code: ${data.designer.earnCode}` : ""}`)}
+              href={"https://wa.me/" + CONTACT.whatsappNumber.replace(/\D/g, "") + "?text=" + encodeURIComponent(`Hello DREAMZ, I want to order or commission this design: ${data.design.title}. Design link: ${attributedUrl}${data.designer.earnCode ? ` | Dreamer code: ${data.designer.earnCode}` : ""}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-lux btn-lux-primary inline-block mb-5"
