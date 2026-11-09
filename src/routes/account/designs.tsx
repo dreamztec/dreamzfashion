@@ -115,6 +115,11 @@ function MyDesigns() {
                   </div>
                   <h2 className="font-editorial text-2xl mt-1">{design.title}</h2>
                   {design.clientLabel && <p className="text-xs text-stone mt-1">{design.clientLabel}</p>}
+                  {design.approvalStatus && (
+                    <p className="text-[0.62rem] uppercase tracking-btn mt-2 text-forest">
+                      Client review: {design.approvalStatus.replace("_", " ")}
+                    </p>
+                  )}
                   {summary && <p className="text-xs text-stone mt-3 leading-relaxed line-clamp-4">{summary}</p>}
                   <div className="mt-5 flex flex-wrap gap-3">
                     <Link
@@ -128,6 +133,11 @@ function MyDesigns() {
                       <Link to="/dream/$slug" params={{ slug: design.publicSlug }} className="btn-lux btn-lux-primary !py-2 !px-4">
                         View / Share
                       </Link>
+                    )}
+                    {design.approvalToken && (
+                      <a href={"/approve/" + design.approvalToken} target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-outline !py-2 !px-4">
+                        Client Approval Link
+                      </a>
                     )}
                   </div>
                 </div>
