@@ -21,12 +21,18 @@ import { BRAND } from "@/lib/config";
  * lazy-loaded; the catalogue grid is a plain database query.
  */
 
-const LeatherAtelier = lazy(() => import("@/components/LeatherAtelier").then((m) => ({ default: m.LeatherAtelier })));
+const VisualLeatherAtelier = lazy(() => import("@/components/VisualLeatherAtelier").then((m) => ({ default: m.VisualLeatherAtelier })));
 
 export const Route = createFileRoute("/custom")({
-  validateSearch: (search: Record<string, unknown>): { design?: string; t?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { design?: string; t?: string; start?: string; brief?: number } => ({
     design: typeof search.design === "string" && /^DZD-[A-Z0-9]{8}$/.test(search.design) ? search.design : undefined,
     t: typeof search.t === "string" && /^[A-Z0-9]{24}$/.test(search.t) ? search.t : undefined,
+    start: search.start === "1" ? "1" : undefined,
+    brief: typeof search.brief === "number" && Number.isInteger(search.brief) && search.brief > 0
+      ? search.brief
+      : typeof search.brief === "string" && /^\d+$/.test(search.brief)
+        ? Number(search.brief)
+        : undefined,
   }),
   loader: async () => {
     const customizable = await getCatalog({ data: { customizable: true, limit: 12 } });
@@ -37,7 +43,7 @@ export const Route = createFileRoute("/custom")({
       { title: `DREAMZ Leather Atelier — ${BRAND.name}` },
       {
         name: "description",
-        content: `Tell us the dream and we'll turn it into a leather design brief. The DREAMZ Leather Atelier designs custom leather footwear, bags, accessories and wearable pieces around your story.`,
+        content: `Design visually with DREAMZ: choose a leather piece, material, colour and construction using real house photography, then turn your choices into an artisan-ready brief.`,
       },
     ],
   }),
@@ -76,18 +82,18 @@ function Custom() {
   // campaign link without an old design reference.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (!params.get("design") && params.get("start") === "1") setAtelierOpen(true);
+    if (!params.get("design") && (params.get("start") === "1" || params.get("brief"))) setAtelierOpen(true);
   }, []);
 
   return (
     <div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-28 pb-10 text-center">
         <p className="overline-label mb-3">DREAMZ Leather Atelier</p>
-        <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Design Your Dream Pair in 5 Minutes</h1>
+        <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Design Your Dream in Leather</h1>
         <p className="mt-4 max-w-2xl mx-auto text-stone leading-relaxed">
-          Start with footwear or choose another leather piece. Answer a short guided
-          consultation and receive a professional DREAMZ design summary, render prompt
-          and artisan brief — designed to take about five minutes.
+          Pick a piece, see real DREAMZ visual references, tap your leather and colours,
+          shape the construction and watch your concept board build as you go. Your first
+          three saved designs are free.
         </p>
       </div>
 
@@ -101,22 +107,20 @@ function Custom() {
         )}
         {!atelierOpen ? (
           <div className="border border-gold/40 bg-gold/5 px-6 sm:px-10 py-8 text-center">
-            <p className="overline-label !text-gold mb-3">Your 5-Minute Dream-to-Leather Brief</p>
+            <p className="overline-label !text-gold mb-3">Visual DREAMZ Studio</p>
             <p className="text-sm leading-relaxed text-stone">
-              A guided consultation in eight short steps: the piece, the dream,
-              the person, the character, the leather, the construction, the
-              personalisation and your inspiration. At the end you receive a
-              design summary, a DREAMZ render prompt you can use in any strong
-              visual model, an artisan production brief — and the option to
-              send it to the house for a quote.
+              Design with pictures instead of technical guesswork. Choose a product,
+              material, colour, sole, hardware and relevant construction details. Upload
+              private reference images, save your work, change it later and publish only
+              when you want people to see and share it.
             </p>
             <p className="mt-3 text-xs text-stone">
-              No generated pictures are sold here — real leathercraft, reviewed
-              by real artisans.
+              The live board is a visual guide — final materials, measurements and buildability
+              are confirmed by the DREAMZ atelier before production.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button type="button" onClick={() => setAtelierOpen(true)} className="btn-lux btn-lux-primary">
-                Start My 5-Minute Design
+                Open the Visual Studio
               </button>
               <WhatsAppCTAButton
                 message={`Hello ${BRAND.shortName}, I'd like to design my own leather piece.`}
@@ -128,7 +132,7 @@ function Custom() {
           <ClientOnly fallback={<p className="text-center text-stone py-16">Opening the atelier…</p>}>
             <Suspense fallback={<p className="text-sm text-stone text-center py-6">Preparing the atelier…</p>}>
               <div className="border border-ink/15 bg-white/40 px-5 sm:px-10 py-8">
-                <LeatherAtelier />
+                <VisualLeatherAtelier briefId={search.brief} />
               </div>
             </Suspense>
           </ClientOnly>
@@ -141,9 +145,9 @@ function Custom() {
           <h2 className="font-editorial text-3xl mb-8">How the atelier works</h2>
           <ol className="grid gap-6 sm:grid-cols-3 text-sm">
             {[
-              ["01", "Tell us the dream", "A guided consultation turns ordinary language into a professional leather brief."],
-              ["02", "Receive your quote", "The atelier reviews the brief, confirms materials and confirms the price."],
-              ["03", "We craft it", "Made to order after payment, then delivered."],
+              ["01", "Design visually", "Tap real visual references for the piece, leather, colour and construction."],
+              ["02", "Save or share", "Keep it private, change it later, or publish a safe page people can share and like."],
+              ["03", "DREAMZ crafts", "When you are ready to order, the atelier confirms materials, measurements, feasibility and price."],
             ].map(([n, title, body]) => (
               <li key={n} className="border border-ink/10 px-6 py-8">
                 <p className="font-editorial text-2xl text-gold mb-3">{n}</p>
