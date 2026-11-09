@@ -20,6 +20,7 @@ const PayloadSchema = z.object({
   renderPrompt: z.string().max(12000).optional().or(z.literal("")),
   artisanBrief: z.string().max(6000).optional().or(z.literal("")),
   visualPreview: z.record(z.string(), z.unknown()).optional(),
+  referenceIds: z.array(z.string().regex(/^ref_[A-Z0-9]{20}$/)).max(4).optional(),
 });
 
 const SaveDesignSchema = z.object({
@@ -63,8 +64,15 @@ function dreamSeedFromPayload(payload: z.infer<typeof PayloadSchema>): string {
   return "";
 }
 
+type CurrentCustomer = NonNullable<Awaited<ReturnType<typeof getCurrentCustomer>>>;
+
+function publicPayload(payload: Record<string, unknown>): Record<string, unknown> {
+  const { referenceIds: _privateReferenceIds, ...safe } = payload;
+  return safe;
+}
+
 async function ensureDesignerProfile(
-  customer: Awaited<ReturnType<typeof getCurrentCustomer>>,
+  customer: CurrentCustomer,
   dreamSeed = "",
 ) {
   const [existing] = await db
@@ -421,7 +429,7 @@ export const getPublicDesignerProfile = createServerFn({ method: "GET" })
         publicSlug: row.publicSlug,
         designVersion: row.designVersion,
         updatedAt: row.updatedAt?.toISOString() || null,
-        payload: row.payload,
+        payload: publicPayload(row.payload),
         likeCount: await countLikes(row.id),
       })),
     );
@@ -474,7 +482,7 @@ export const getPublicDesign = createServerFn({ method: "GET" })
         piece: design.piece,
         projectMode: design.projectMode,
         designVersion: design.designVersion,
-        payload: design.payload,
+        payload: publicPayload(design.payload),
         updatedAt: design.updatedAt?.toISOString() || null,
         likeCount: await countLikes(design.id),
         likedByMe,
