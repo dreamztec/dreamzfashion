@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import { db } from "../../db/index";
 import {
   analyticsEvents,
+  designApprovalFeedback,
   designLikes,
   designerProfiles,
   designerUpgradeRequests,
@@ -172,6 +173,8 @@ async function profileDesigns(profileId: number) {
       projectMode: row.projectMode,
       clientLabel: row.clientLabel,
       designVersion: row.designVersion,
+      approvalToken: row.approvalToken,
+      approvalStatus: row.approvalStatus,
       createdAt: row.createdAt?.toISOString() || null,
       updatedAt: row.updatedAt?.toISOString() || null,
       payload: row.payload,
@@ -271,6 +274,8 @@ export const getMyDesignerDraft = createServerFn({ method: "GET" })
         projectMode: row.projectMode,
         clientLabel: row.clientLabel,
         designVersion: row.designVersion,
+        approvalToken: row.approvalToken,
+        approvalStatus: row.approvalStatus,
       },
     };
   });
@@ -301,6 +306,11 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
         data.publish && !existing.publicSlug
           ? (slugify(data.title) || "dream-design") + "-" + randomSuffix(7)
           : existing.publicSlug;
+      const isApprovalProject = data.projectMode === "client" || data.projectMode === "family";
+      const approvalToken = isApprovalProject
+        ? existing.approvalToken || randomSuffix(32).toUpperCase()
+        : null;
+      const approvalStatus = isApprovalProject ? "pending" : null;
 
       const [updated] = await db
         .update(savedBriefs)
@@ -315,6 +325,8 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
           projectMode: data.projectMode,
           clientLabel: data.clientLabel || null,
           designVersion: (existing.designVersion || 1) + 1,
+          approvalToken,
+          approvalStatus,
           updatedAt: new Date(),
         })
         .where(eq(savedBriefs.id, existing.id))
@@ -334,6 +346,8 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
         publicSlug: updated.publicSlug,
         visibility: updated.visibility,
         profileSlug: profile.slug,
+        approvalToken: updated.approvalToken,
+        approvalStatus: updated.approvalStatus,
         plan,
         remaining: Math.max(0, plan.designLimit - designs.length),
       };
@@ -357,6 +371,9 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
     const publicSlug = data.publish
       ? (slugify(data.title) || "dream-design") + "-" + randomSuffix(7)
       : null;
+    const isApprovalProject = data.projectMode === "client" || data.projectMode === "family";
+    const approvalToken = isApprovalProject ? randomSuffix(32).toUpperCase() : null;
+    const approvalStatus = isApprovalProject ? "pending" : null;
 
     const [created] = await db
       .insert(savedBriefs)
@@ -368,6 +385,8 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
         projectMode: data.projectMode,
         clientLabel: data.clientLabel || null,
         designVersion: 1,
+        approvalToken,
+        approvalStatus,
         title: data.title,
         category: data.category || null,
         piece: data.piece || null,
@@ -387,6 +406,8 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
       publicSlug: created.publicSlug,
       visibility: created.visibility,
       profileSlug: profile.slug,
+      approvalToken: created.approvalToken,
+      approvalStatus: created.approvalStatus,
       plan,
       remaining: Math.max(0, plan.designLimit - existingDesigns.length - 1),
     };
@@ -545,6 +566,85 @@ export const getPublicDesign = createServerFn({ method: "GET" })
         earnCode: await approvedEarnCode(profile.customerId),
       },
     };
+  });
+
+export const getClientApproval = createServerFn({ method: "GET" })
+  .inputValidator(z.string().regex(/^[A-Z0-9]{32}$/))
+  .handler(async ({ data: token }) => {
+    const [design] = await db
+      .select()
+      .from(savedBriefs)
+      .where(eq(savedBriefs.approvalToken, token))
+      .limit(1);
+    if (!design || !design.designerProfileId) return null;
+
+    const [profile] = await db
+      .select()
+      .from(designerProfiles)
+      .where(eq(designerProfiles.id, design.designerProfileId))
+      .limit(1);
+    if (!profile) return null;
+
+    const feedback = await db
+      .select()
+      .from(designApprovalFeedback)
+      .where(eq(designApprovalFeedback.briefId, design.id))
+      .orderBy(desc(designApprovalFeedback.createdAt))
+      .limit(10);
+
+    return {
+      design: {
+        title: design.title,
+        piece: design.piece,
+        designVersion: design.designVersion,
+        projectMode: design.projectMode,
+        approvalStatus: design.approvalStatus || "pending",
+        payload: publicPayload(design.payload),
+      },
+      designer: {
+        displayName: profile.displayName,
+        dreamStatement: profile.dreamStatement,
+      },
+      feedback: feedback.map((item) => ({
+        decision: item.decision,
+        message: item.message,
+        createdAt: item.createdAt?.toISOString() || null,
+      })),
+    };
+  });
+
+export const submitClientApproval = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      token: z.string().regex(/^[A-Z0-9]{32}$/),
+      decision: z.enum(["approved", "change_requested"]),
+      message: z.string().max(1000).optional().or(z.literal("")),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const [design] = await db
+      .select()
+      .from(savedBriefs)
+      .where(eq(savedBriefs.approvalToken, data.token))
+      .limit(1);
+    if (!design) return { ok: false as const, reason: "missing" as const };
+
+    await db.insert(designApprovalFeedback).values({
+      briefId: design.id,
+      decision: data.decision,
+      message: data.message?.trim() || null,
+    });
+    await db
+      .update(savedBriefs)
+      .set({ approvalStatus: data.decision, updatedAt: new Date() })
+      .where(eq(savedBriefs.id, design.id));
+
+    await db.insert(analyticsEvents).values({
+      eventName: "dream_design_client_decision",
+      metadata: { briefId: design.id, decision: data.decision },
+    });
+
+    return { ok: true as const, status: data.decision };
   });
 
 export const toggleDesignLike = createServerFn({ method: "POST" })
