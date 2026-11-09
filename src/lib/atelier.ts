@@ -263,20 +263,44 @@ export type AtelierQuestion = {
   placeholder?: string;
 };
 
-const FOOTWEAR_QUESTIONS: AtelierQuestion[] = [
+const FOOTWEAR_LACED_QUESTIONS: AtelierQuestion[] = [
   { key: "toeShape", label: "Toe shape", type: "select", options: ["Round", "Almond", "Square", "Pointed"] },
-  { key: "soleType", label: "Sole type", type: "select", options: ["Leather sole", "Rubber sole", "Commando sole", "Stacked heel"] },
-  { key: "closure", label: "Closure", type: "select", options: ["Lace-up", "Slip-on", "Monk strap", "Buckle", "Button"] },
-  { key: "stitchColour", label: "Stitch colour", type: "select", options: ["Tonal", "Contrast"], optional: true },
+  { key: "soleType", label: "Sole type", type: "select", options: ["Leather sole", "Rubber sole", "Commando sole", "Chunky sole"] },
+  { key: "closure", label: "Closure", type: "select", options: ["Lace-up", "Monk strap", "Buckle", "Slip-on"] },
+  { key: "stitchColour", label: "Stitching", type: "select", options: ["Tonal", "Contrast"], optional: true },
   { key: "fitNotes", label: "Fit notes", type: "text", optional: true, placeholder: "Wide foot, high instep…" },
 ];
 
+const FOOTWEAR_OPEN_QUESTIONS: AtelierQuestion[] = [
+  { key: "toeShape", label: "Front shape", type: "select", options: ["Round", "Almond", "Square", "Pointed"] },
+  { key: "soleType", label: "Sole type", type: "select", options: ["Leather sole", "Rubber sole", "Chunky sole"] },
+  { key: "strapStyle", label: "Upper / strap direction", type: "select", options: ["Single strap", "Double strap", "Cross straps", "Wide upper", "Minimal upper"] },
+  { key: "buckleStyle", label: "Buckle / hardware", type: "select", options: ["Minimal hardware", "Single buckle", "Double buckle", "No visible hardware"] },
+  { key: "fitNotes", label: "Fit notes", type: "text", optional: true, placeholder: "Wide foot, high instep…" },
+];
+
+const BOOT_QUESTIONS: AtelierQuestion[] = [
+  { key: "toeShape", label: "Toe shape", type: "select", options: ["Round", "Almond", "Square", "Pointed"] },
+  { key: "soleType", label: "Sole type", type: "select", options: ["Leather sole", "Rubber sole", "Commando sole", "Chunky sole"] },
+  { key: "shaftHeight", label: "Boot height", type: "select", options: ["Ankle", "Mid", "High"] },
+  { key: "closure", label: "Closure", type: "select", options: ["Lace-up", "Side zip", "Chelsea elastic", "Buckle", "Pull-on"] },
+  { key: "fitNotes", label: "Fit notes", type: "text", optional: true, placeholder: "Wide foot, calf notes, high instep…" },
+];
+
+const HEEL_QUESTIONS: AtelierQuestion[] = [
+  { key: "toeShape", label: "Front shape", type: "select", options: ["Round", "Almond", "Square", "Pointed"] },
+  { key: "heelType", label: "Heel type", type: "select", options: ["Round heel", "Block heel", "Kitten heel", "Stiletto", "Wedge", "Sculpted heel"] },
+  { key: "heelHeight", label: "Heel height", type: "select", options: ["Low 2–4 cm", "Mid 5–7 cm", "High 8–10 cm", "Very high 11+ cm"] },
+  { key: "closure", label: "Upper / closure", type: "select", options: ["Closed pump", "Slingback", "Ankle strap", "Buckle strap", "Open toe"] },
+  { key: "fitNotes", label: "Fit notes", type: "text", optional: true, placeholder: "Size, width, comfort notes…" },
+];
+
 const BAG_QUESTIONS: AtelierQuestion[] = [
-  { key: "dimensions", label: "Approximate dimensions", type: "text", placeholder: "e.g. 38 × 30 × 12 cm" },
-  { key: "carriage", label: "How will you carry it?", type: "select", options: ["Top handles", "Shoulder strap", "Crossbody strap", "Handles + strap"] },
-  { key: "compartments", label: "Compartments & pockets", type: "text", optional: true, placeholder: "Laptop sleeve, zip pocket…" },
+  { key: "dimensions", label: "Approximate size", type: "text", placeholder: "e.g. 38 × 30 × 12 cm" },
+  { key: "carriage", label: "How should it be carried?", type: "select", options: ["Top handles", "Shoulder strap", "Crossbody strap", "Handles + strap"] },
   { key: "closure", label: "Closure", type: "select", options: ["Zip", "Flap + magnet", "Turn-lock", "Drawstring", "Open top"] },
   { key: "structure", label: "Structure", type: "select", options: ["Structured", "Soft", "Semi-structured"] },
+  { key: "gusset", label: "Depth / gusset", type: "select", options: ["Slim", "Medium", "Wide", "Expandable"], optional: true },
 ];
 
 const BELT_QUESTIONS: AtelierQuestion[] = [
@@ -292,13 +316,13 @@ const WEARABLE_QUESTIONS: AtelierQuestion[] = [
   { key: "measurements", label: "Body measurements", type: "text", optional: true, placeholder: "Chest / waist / hip or your usual size" },
   { key: "closure", label: "Closure", type: "select", options: ["Zip", "Buttons", "Snaps", "Belt / wrap", "Open"] },
   { key: "lining", label: "Lining", type: "select", options: ["Fully lined", "Partially lined", "Unlined"], optional: true },
-  { key: "pockets", label: "Pocket requirements", type: "text", optional: true, placeholder: "Interior pockets, welt pockets…" },
+  { key: "pockets", label: "Pocket direction", type: "select", options: ["None", "Welt pockets", "Patch pockets", "Hidden pockets"], optional: true },
 ];
 
 const OTHER_QUESTIONS: AtelierQuestion[] = [
   { key: "usage", label: "How will it be used?", type: "text", placeholder: "Worn, carried, gifted, displayed…" },
   { key: "dimensions", label: "Approximate size", type: "text", optional: true, placeholder: "Dimensions or scale" },
-  { key: "closure", label: "Closure / fixing (if any)", type: "text", optional: true, placeholder: "Buckle, snap, zip, none…" },
+  { key: "closure", label: "Closure / fixing", type: "text", optional: true, placeholder: "Buckle, snap, zip, none…" },
 ];
 
 const ACCESSORY_QUESTIONS: AtelierQuestion[] = [
@@ -308,11 +332,14 @@ const ACCESSORY_QUESTIONS: AtelierQuestion[] = [
 ];
 
 export function constructionQuestions(category: AtelierCategory, piece: string): AtelierQuestion[] {
-  if (category === "footwear") return FOOTWEAR_QUESTIONS;
-  if (category === "bags") return BAG_QUESTIONS;
-  if (category === "accessories") {
-    return /belt/i.test(piece) ? BELT_QUESTIONS : ACCESSORY_QUESTIONS;
+  if (category === "footwear") {
+    if (/heel/i.test(piece)) return HEEL_QUESTIONS;
+    if (/boot|chelsea/i.test(piece)) return BOOT_QUESTIONS;
+    if (/mule|slide|sandal|loafer/i.test(piece)) return FOOTWEAR_OPEN_QUESTIONS;
+    return FOOTWEAR_LACED_QUESTIONS;
   }
+  if (category === "bags") return BAG_QUESTIONS;
+  if (category === "accessories") return /belt/i.test(piece) ? BELT_QUESTIONS : ACCESSORY_QUESTIONS;
   if (category === "wearable") return WEARABLE_QUESTIONS;
   return OTHER_QUESTIONS;
 }
