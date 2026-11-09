@@ -13,6 +13,7 @@ import {
   getMyDesignerDraft,
   getMyDesignerState,
   saveDesignerDesign,
+  recordDesignShare,
 } from "@/server/designer.functions";
 import {
   COLOUR_VISUALS,
@@ -1029,6 +1030,7 @@ function SharePanel({
     ? "/r/" + encodeURIComponent(earnCode) + "?to=" + encodeURIComponent(directPath)
     : directPath;
   const share = async () => {
+    void recordDesignShare({ data: publicSlug }).catch(() => {});
     const url = window.location.origin + path;
     if (navigator.share) {
       await navigator.share({ title, text: "I designed this dream leather piece with DREAMZ. Would you wear it?", url }).catch(() => {});
