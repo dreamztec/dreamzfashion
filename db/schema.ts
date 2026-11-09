@@ -1214,6 +1214,8 @@ export const savedBriefs = pgTable(
     designVersion: integer("design_version").notNull().default(1),
     approvalToken: text("approval_token"),
     approvalStatus: text("approval_status"),
+    viewCount: integer("view_count").notNull().default(0),
+    shareCount: integer("share_count").notNull().default(0),
     title: text("title").notNull(),
     category: text("category"),
     piece: text("piece"),
