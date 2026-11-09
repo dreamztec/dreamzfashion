@@ -30,7 +30,6 @@ import {
 import { designerPlanRank, getDesignerPlan } from "@/lib/designer-plans";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { REFERENCE_LIMITS, precheckFile } from "@/lib/reference-upload";
-import { CONTACT } from "@/lib/contact";
 
 type AtelierResult = Extract<Awaited<ReturnType<typeof composeDreamToLeather>>, { ok: true }>;
 
@@ -112,6 +111,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const [busy, setBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [published, setPublished] = useState<{ publicSlug: string; profileSlug: string } | null>(null);
   const [approvalToken, setApprovalToken] = useState<string | null>(null);
 
@@ -270,6 +270,29 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       construction: { ...current.construction, [key]: value },
     }));
     setResult(null);
+  };
+
+  const copyFullPrompt = async () => {
+    if (!result?.renderPrompt || typeof window === "undefined") return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(result.renderPrompt);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = result.renderPrompt;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedPrompt(true);
+      window.setTimeout(() => setCopiedPrompt(false), 2200);
+    } catch {
+      setNotice("Copy failed on this browser. Press and hold the prompt text to copy it manually.");
+    }
   };
 
   const compose = async () => {
@@ -898,34 +921,28 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
               ) : (
                 <>
                   <div className="mt-6 border border-ink/10 p-5">
-                    <p className="text-xs uppercase tracking-btn text-gold">Design summary</p>
-                    <pre className="mt-3 whitespace-pre-wrap font-sans text-sm leading-relaxed text-stone">{result.designSummary}</pre>
+                    <p className="text-xs uppercase tracking-btn text-gold">Detailed design specification</p>
+                    <p className="mt-2 text-xs text-stone">Everything you selected, organised as a buildable product specification.</p>
+                    <pre className="mt-4 whitespace-pre-wrap font-sans text-sm leading-relaxed text-stone">{result.designSummary}</pre>
                   </div>
-                  <a
-                    href={
-                      "https://wa.me/" +
-                      CONTACT.whatsappNumber.replace(/\D/g, "") +
-                      "?text=" +
-                      encodeURIComponent(
-                        "Hello DREAMZ, I have finished a Dream Studio design and I want the price/production advice.\n\n" +
-                        result.designSummary
-                      )
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-lux btn-lux-primary inline-block mt-4"
-                  >
-                    Get My Price on WhatsApp
-                  </a>
-                  <p className="mt-2 text-xs text-stone">
-                    A DREAMZ adviser confirms feasibility, exact leather availability, measurements, production timeline and final price.
-                  </p>
-                  <details className="mt-4 border border-ink/10 p-5">
-                    <summary className="cursor-pointer text-xs uppercase tracking-btn">Professional render prompt</summary>
-                    <pre className="mt-4 whitespace-pre-wrap text-xs leading-relaxed overflow-x-auto">{result.renderPrompt}</pre>
+                  <details open className="mt-4 border border-ink/10 p-5">
+                    <summary className="cursor-pointer text-xs uppercase tracking-btn">Full AI generation prompt</summary>
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs text-stone max-w-xl">
+                        This is the complete locked prompt built only from your Studio selections. Copy it into ChatGPT, Gemini, Grok or another image generator.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => void copyFullPrompt()}
+                        className="btn-lux btn-lux-primary !py-2.5"
+                      >
+                        {copiedPrompt ? "Prompt Copied ✓" : "Copy Full Prompt"}
+                      </button>
+                    </div>
+                    <pre className="mt-4 max-h-[34rem] overflow-auto whitespace-pre-wrap break-words border-t border-ink/10 pt-4 text-xs leading-relaxed">{result.renderPrompt}</pre>
                   </details>
                   <details className="mt-4 border border-ink/10 p-5">
-                    <summary className="cursor-pointer text-xs uppercase tracking-btn">Artisan production brief</summary>
+                    <summary className="cursor-pointer text-xs uppercase tracking-btn">Artisan production brief — manufacturing view</summary>
                     <pre className="mt-4 whitespace-pre-wrap text-xs leading-relaxed overflow-x-auto">{result.artisanBrief}</pre>
                   </details>
 
