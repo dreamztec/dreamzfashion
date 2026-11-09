@@ -13,7 +13,7 @@ import {
   PROJECT_MODES,
 } from "../src/lib/visual-designer";
 import { buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
-import { dreamContestScore } from "../src/server/designer.functions";
+import { dreamContestScore } from "../src/lib/dream-contest";
 
 describe("DREAMZ visual studio plans", () => {
   it("keeps the first three designs free and prices paid creation tiers correctly", () => {
