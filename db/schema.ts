@@ -1212,6 +1212,8 @@ export const savedBriefs = pgTable(
     projectMode: text("project_mode").notNull().default("self"),
     clientLabel: text("client_label"),
     designVersion: integer("design_version").notNull().default(1),
+    approvalToken: text("approval_token"),
+    approvalStatus: text("approval_status"),
     title: text("title").notNull(),
     category: text("category"),
     piece: text("piece"),
@@ -1228,7 +1230,22 @@ export const savedBriefs = pgTable(
     index("saved_briefs_designer_profile_idx").on(t.designerProfileId),
     index("saved_briefs_visibility_idx").on(t.visibility),
     uniqueIndex("saved_briefs_public_slug_uidx").on(t.publicSlug),
+    uniqueIndex("saved_briefs_approval_token_uidx").on(t.approvalToken),
   ],
+);
+
+export const designApprovalFeedback = pgTable(
+  "design_approval_feedback",
+  {
+    id: serial("id").primaryKey(),
+    briefId: integer("brief_id")
+      .notNull()
+      .references(() => savedBriefs.id, { onDelete: "cascade" }),
+    decision: text("decision").notNull(),
+    message: text("message"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [index("design_approval_feedback_brief_idx").on(t.briefId)],
 );
 
 export const designLikes = pgTable(
@@ -1301,5 +1318,6 @@ export type DesignerProfile = typeof designerProfiles.$inferSelect;
 export type DesignerUpgradeRequest = typeof designerUpgradeRequests.$inferSelect;
 export type SavedBrief = typeof savedBriefs.$inferSelect;
 export type DesignLike = typeof designLikes.$inferSelect;
+export type DesignApprovalFeedback = typeof designApprovalFeedback.$inferSelect;
 export type ProductSlugAlias = typeof productSlugAliases.$inferSelect;
 export type InspirationMessage = typeof inspirationMessages.$inferSelect;
