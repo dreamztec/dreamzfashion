@@ -2,8 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { db } from "../../db/index";
 import { analyticsEvents, designRequests } from "../../db/schema";
-import { getPublishedProducts } from "./catalog.server";
-import { seed } from "./seed.server";
 import { getCurrentCustomer } from "./auth.server";
 import { generateRequestNumber } from "@/lib/format";
 import { getBlobStore } from "./blobs.server";
@@ -69,8 +67,6 @@ const FREE_TEXT_FIELDS = ["story", "inspirationNotes", "customMeaning", "occasio
 export const composeDreamToLeather = createServerFn({ method: "POST" })
   .inputValidator(BriefSchema)
   .handler(async ({ data }) => {
-    await seed();
-
     // Classify before anything reaches the design engine: furniture,
     // automotive and upholstery requests are politely refused.
     for (const field of FREE_TEXT_FIELDS) {
@@ -95,15 +91,11 @@ export const composeDreamToLeather = createServerFn({ method: "POST" })
     const renderPrompt = stripPrivateInfo(buildRenderPrompt(brief));
     const artisanBrief = stripPrivateInfo(buildArtisanBrief(brief));
 
-    // Catalogue recommendations come only from the real database.
-    const catalogue = await recommendFromCatalogue(brief);
-
     return {
       ok: true as const,
       designSummary,
       renderPrompt,
       artisanBrief,
-      catalogue: catalogue.map((p) => ({ id: p.id, name: p.name, slug: p.slug, price: p.price, image: p.images[0]?.url ?? null })),
     };
   });
 
@@ -117,42 +109,6 @@ function normaliseBrief(data: AtelierBriefInput): AtelierBrief {
     meaning: data.meaning ?? [],
     construction: data.construction ?? {},
   };
-}
-
-/** Deterministic, DB-only catalogue search for "Start from a DREAMZ piece". */
-async function recommendFromCatalogue(brief: AtelierBrief) {
-  const all = await getPublishedProducts({ limit: 200 });
-  const categoryMap: Record<AtelierBrief["category"], string[]> = {
-    footwear: ["footwear"],
-    bags: ["bags"],
-    accessories: ["accessories"],
-    wearable: ["leather-wear", "footwear", "bags", "accessories"],
-    other: ["leather-wear", "footwear", "bags", "accessories"],
-  };
-  const inCategory = all.filter((p) => categoryMap[brief.category].includes(p.categorySlug));
-  const q = [
-    brief.piece,
-    brief.feel.join(" "),
-    brief.primaryColour,
-    brief.secondaryColour,
-    brief.material,
-    brief.occasion,
-    brief.meaning.join(" "),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  const scored = inCategory
-    .map((p) => {
-      const hay = `${p.name} ${p.subcategory ?? ""} ${p.shortDescription} ${p.theme ?? ""}`.toLowerCase();
-      let score = 0;
-      for (const token of q.split(/[^a-z0-9]+/).filter((t) => t.length > 2)) {
-        if (hay.includes(token)) score += token.length;
-      }
-      return { p, score };
-    })
-    .sort((a, b2) => b2.score - a.score);
-  return scored.slice(0, 3).map((s) => s.p);
 }
 
 // ── Submission: the quote brief is saved for the house ───────────────
@@ -181,8 +137,6 @@ const SubmitSchema = BriefSchema.extend({
 export const submitAtelierBrief = createServerFn({ method: "POST" })
   .inputValidator(SubmitSchema)
   .handler(async ({ data }) => {
-    await seed();
-
     // The classification gate runs again at submission — nothing unsuitable
     // ever reaches the design engine.
     for (const field of FREE_TEXT_FIELDS) {
