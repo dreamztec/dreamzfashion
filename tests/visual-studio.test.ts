@@ -121,7 +121,7 @@ describe("locked-data render prompt", () => {
     expect(prompt).toContain("Texture / finish selected: Pebbled");
     expect(prompt).toContain("Primary colour selected: Oxblood");
     expect(prompt).toContain("Accent colour selected: Cream");
-    expect(prompt).toContain("soleType: Rubber sole");
+    expect(prompt).toContain("Sole: Rubber sole");
     expect(prompt).toContain("Buckle: Single buckle");
     expect(prompt).toContain("N. FINAL IMAGE DELIVERABLE");
     expect(prompt).toContain("Generate one finished photorealistic product image");
