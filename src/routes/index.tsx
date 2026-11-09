@@ -1,12 +1,10 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { getHomePageDataFn } from "@/server/catalog.functions";
-import { ProductMedia, RainbowRule } from "@/components/brand";
+import { ProductMedia } from "@/components/brand";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
-import { AnniversaryBanner } from "@/components/AnniversaryBanner";
 import { BRAND } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
 import { formatNaira } from "@/lib/format";
-import { WaitlistSignup } from "@/components/WaitlistSignup";
 
 export const Route = createFileRoute("/")({
   loader: () => getHomePageDataFn(),
@@ -33,11 +31,9 @@ const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size:
 type HomeProduct = Awaited<ReturnType<typeof getHomePageDataFn>>["hero"];
 
 function Home() {
-  const { hero, frontOriginals, collectionPreviews, total } = Route.useLoaderData() as {
+  const { hero, frontOriginals, total } = Route.useLoaderData() as {
     hero: HomeProduct;
     frontOriginals: Array<NonNullable<HomeProduct>>;
-    collectionPreviews: { essentials: HomeProduct; originals: HomeProduct; royale: HomeProduct };
-    accessoriesPreview: HomeProduct;
     total: number;
   };
   const whatsappNumber = CONTACT.whatsappNumber;
@@ -72,6 +68,24 @@ function Home() {
           <p className="mt-3 text-xs text-stone tracking-wide">
             Handmade in Nigeria · Made to order or ready to wear · Delivery nationwide
           </p>
+        </div>
+
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 pb-12">
+          <Link
+            to="/dreams"
+            className="block border border-gold/50 bg-gold/5 px-5 py-6 sm:px-8 sm:py-7 text-center transition hover:border-gold"
+          >
+            <p className="overline-label !text-gold">DREAMZ 200 · Community Design Challenge</p>
+            <h2 className="font-editorial text-2xl sm:text-4xl mt-2">Design. Share. Get ordered.</h2>
+            <p className="mt-3 text-sm text-stone">
+              Planned ₦1,000,000 prize pool · 1st ₦500k · 2nd ₦300k · 3rd ₦200k · Target close 31 December 2026.
+            </p>
+            <p className="mt-2 text-[0.62rem] text-stone">
+              Verified orders carry the strongest ranking weight. Likes and shares help; views do not add points.
+              Prize activation is subject to the published challenge terms and required promotional approval.
+            </p>
+            <span className="nav-link inline-block mt-4 text-[0.68rem] uppercase tracking-btn">See Top 100 Dreams →</span>
+          </Link>
         </div>
 
         {/* The Boot of Many Colours — principal hero product, shown whole. */}
@@ -123,11 +137,11 @@ function Home() {
           <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
             <div>
               <p className="overline-label mb-3">DREAMZ Open Atelier</p>
-              <h2 className="font-editorial text-3xl sm:text-5xl">Design it. Share it. Let demand speak.</h2>
+              <h2 className="font-editorial text-3xl sm:text-5xl">Five minutes from idea to shareable design.</h2>
               <p className="mt-4 text-sm text-stone leading-relaxed max-w-xl">
-                You do not need to be a leather expert. DREAMZ gives you visual product, material,
-                colour and construction guides. Your first three saved designs are free, and your
-                Dreamer page is created automatically when you save your first concept.
+                Start from a blank product silhouette — never one of our catalogue pieces. Tap leather,
+                colours and the few construction choices that matter. Your first three saved designs are free,
+                and your Dreamer page is created automatically.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">
@@ -158,9 +172,6 @@ function Home() {
           </div>
         </div>
       </section>
-
-      {/* ── DREAMZ 5-Year Experience announcement (dismissible) ── */}
-      <AnniversaryBanner />
 
       {/* ── Curated Originals — explicit house order, never inferred ── */}
       {frontOriginals.length > 0 && (
@@ -249,68 +260,6 @@ function Home() {
         </div>
       </section>
 
-      {/* ── The three collections ───────────────────────────── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
-          <div className="text-center mb-12">
-            <p className="overline-label mb-3">The Collections</p>
-            <h2 className="font-editorial text-3xl sm:text-4xl">Three ways to wear DREAMZ</h2>
-            <RainbowRule className="mx-auto mt-6" />
-          </div>
-          <div className="grid gap-6 sm:grid-cols-3 max-w-5xl mx-auto">
-            {(
-              [
-                {
-                  tier: "essentials" as const,
-                  title: "Essentials",
-                  copy: "Ready-to-wear, accessible pieces with honest prices.",
-                  cta: "Shop Essentials",
-                  product: collectionPreviews.essentials,
-                },
-                {
-                  tier: "originals" as const,
-                  title: "Originals",
-                  copy: "Distinctive DREAMZ house designs — statements made to be remembered.",
-                  cta: "Shop Originals",
-                  product: collectionPreviews.originals,
-                },
-                {
-                  tier: "royale" as const,
-                  title: "Royale",
-                  copy: "Private Client Leather Service — commissions designed around you, priced after a considered quote.",
-                  cta: "Discover Royale",
-                  product: collectionPreviews.royale,
-                },
-              ]
-            ).map(({ tier, title, copy, cta, product }) => (
-              <Link
-                key={tier}
-                to={tier === "royale" ? "/royale" : "/shop/$category"}
-                params={tier === "royale" ? undefined : { category: tier }}
-                search={tier === "royale" ? undefined : CATEGORY_SEARCH}
-                className="block border border-ink/10 bg-ivory p-6 text-center transition-colors hover:border-ink/40"
-              >
-                {product?.images[0]?.url && (
-                  <ProductMedia
-                    url={product.images[0].url}
-                    alt={product.images[0].altText ?? `${title} collection`}
-                    aspect="aspect-[4/5]"
-                    width={720}
-                    sizes="(max-width: 640px) 88vw, 30vw"
-                    fit="cover"
-                    className="mb-5"
-                  />
-                )}
-                <h3 className="font-editorial text-2xl">{title}</h3>
-                <p className="text-sm text-stone mt-2 leading-relaxed">{copy}</p>
-                <span className="nav-link inline-block mt-4 text-[0.68rem] uppercase tracking-btn">{cta} →</span>
-              </Link>
-            ))}
-          </div>
-
-        </div>
-      </section>
-
       {/* ── Three distinct ways to work with DREAMZ ────────────── */}
       <section className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-24">
         <div className="text-center mb-10">
@@ -354,23 +303,6 @@ function Home() {
             <Link to="/partnerships" className="btn-lux btn-lux-outline mt-6">
               See Retail Models
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Anniversary: the DREAMZ 5-Year Experience ───────── */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16 lg:py-24 text-center">
-          <p className="overline-label mb-4">The DREAMZ 5-Year Experience · 12 June 2027</p>
-          <h2 className="font-editorial text-3xl sm:text-5xl leading-tight">The Billion-Naira Collection.</h2>
-          <div className="rule-gold mx-auto mt-6 mb-6" />
-          <p className="text-stone leading-relaxed max-w-xl mx-auto">
-            Five years of DREAMZ, building toward our most ambitious collection
-            yet. Join the free early-access list — waitlist members see each
-            piece first. No payment, no obligation.
-          </p>
-          <div className="mt-8 max-w-md mx-auto text-left">
-            <WaitlistSignup />
           </div>
         </div>
       </section>
