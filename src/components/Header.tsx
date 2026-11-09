@@ -12,7 +12,7 @@ const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> 
   { label: "Royale", to: "/royale" },
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
-  { label: "Leather Atelier", to: "/custom" },
+  { label: "Dream Studio", to: "/custom" },
 ];
 
 const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
@@ -22,10 +22,11 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Royale", to: "/royale" },
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
-  { label: "Leather Atelier", to: "/custom" },
+  { label: "Dream Studio", to: "/custom" },
   { label: "Earn with DREAMZ", to: "/earn" },
   { label: "Partner with DREAMZ", to: "/partner-with-dreamz" },
   { label: "Sell DREAMZ", to: "/partnerships" },
+  { label: "Studio Plans", to: "/studio-plans" },
 ];
 
 /** The /shop/$category search params that must be explicitly cleared. */

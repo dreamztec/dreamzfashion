@@ -21,7 +21,8 @@ const COLUMNS: Array<{
       { label: "Leather Wear", to: "/shop/leather-wear", shop: true },
       { label: "Bags", to: "/shop/bags", shop: true },
       { label: "Accessories", to: "/shop/accessories", shop: true },
-      { label: "Leather Atelier", to: "/custom", shop: true },
+      { label: "Dream Studio", to: "/custom" },
+      { label: "Studio Plans", to: "/studio-plans" },
     ],
   },
   {

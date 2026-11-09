@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 const HERO_BODY =
-  "Ready-to-wear and custom leather footwear, bags, accessories and wearable pieces, crafted around your story.";
+  "Choose the leather piece, material, colours and details visually. Save your dream, change it later, share it safely and let DREAMZ turn the strongest ideas into real leather.";
 const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
 /** /shop/$category takes its own search params (no `q`). */
 const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
@@ -59,12 +59,12 @@ function Home() {
             {HERO_BODY}
           </p>
           <div className="mt-9 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 fade-up fade-up-2">
-            <Link to="/custom" search={{ design: undefined, t: undefined }} className="btn-lux btn-lux-primary">
-              Design Your Dream Pair in 5 Minutes
+            <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">
+              Design Your Dream — 3 Free
             </Link>
-            <Link to="/shop" search={SHOP_SEARCH} className="btn-lux btn-lux-outline">
-              Shop the Collection
-            </Link>
+            <a href="#open-atelier" className="btn-lux btn-lux-outline">
+              See How It Works
+            </a>
           </div>
           <p className="mt-5 text-xs text-stone leading-relaxed fade-up fade-up-3">
             Answer a few guided questions and receive a ready-to-copy DREAMZ design prompt in about five minutes.
@@ -116,6 +116,47 @@ function Home() {
             </figure>
           </div>
         )}
+      </section>
+
+      <section id="open-atelier" className="border-t border-ink/10 bg-ivory-deep">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 py-14 lg:py-20">
+          <div className="grid gap-8 lg:grid-cols-[.8fr_1.2fr] lg:items-start">
+            <div>
+              <p className="overline-label mb-3">DREAMZ Open Atelier</p>
+              <h2 className="font-editorial text-3xl sm:text-5xl">Design it. Share it. Let demand speak.</h2>
+              <p className="mt-4 text-sm text-stone leading-relaxed max-w-xl">
+                You do not need to be a leather expert. DREAMZ gives you visual product, material,
+                colour and construction guides. Your first three saved designs are free, and your
+                Dreamer page is created automatically when you save your first concept.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">
+                  Start Designing
+                </Link>
+                <Link to="/studio-plans" className="btn-lux btn-lux-outline">
+                  Creator Studio Plans
+                </Link>
+              </div>
+              <p className="mt-4 text-xs text-stone">
+                The first 200 profile holders are marked as Founding Dreamers. Paid Studio access expands tools and capacity; it never buys votes or guarantees earnings.
+              </p>
+            </div>
+            <ol className="grid gap-3 sm:grid-cols-2">
+              {[
+                ["01", "Design visually", "Pick a piece, leather, colours, sole, hardware and the details that actually apply."],
+                ["02", "Save & change it", "Keep the design private, reopen it later and update the same versioned concept."],
+                ["03", "Publish safely", "Private references and client details stay hidden. You decide when a design becomes public."],
+                ["04", "Share & earn properly", "Approved Earn with DREAMZ members can share attributed links; earnings come only from qualifying verified sales."],
+              ].map(([number, title, copy]) => (
+                <li key={number} className="border border-ink/10 bg-ivory p-5">
+                  <p className="font-editorial text-2xl text-gold">{number}</p>
+                  <h3 className="font-editorial text-xl mt-2">{title}</h3>
+                  <p className="text-xs text-stone leading-relaxed mt-2">{copy}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
       </section>
 
       {/* ── DREAMZ 5-Year Experience announcement (dismissible) ── */}

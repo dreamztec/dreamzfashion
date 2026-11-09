@@ -1149,6 +1149,49 @@ export const waitlist = pgTable(
   (t) => [uniqueIndex("waitlist_email_source_uidx").on(t.email, t.source)],
 );
 
+
+// ── DREAMZ visual designers ──────────────────────────────────────────
+
+export const designerProfiles = pgTable(
+  "designer_profiles",
+  {
+    id: serial("id").primaryKey(),
+    customerId: integer("customer_id")
+      .notNull()
+      .unique()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    slug: text("slug").notNull().unique(),
+    displayName: text("display_name").notNull().default(""),
+    dreamStatement: text("dream_statement").notNull().default(""),
+    bio: text("bio").notNull().default(""),
+    plan: text("plan").notNull().default("free"),
+    planExpiresAt: timestamp("plan_expires_at"),
+    isPublic: boolean("is_public").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [index("designer_profiles_plan_idx").on(t.plan)],
+);
+
+export const designerUpgradeRequests = pgTable(
+  "designer_upgrade_requests",
+  {
+    id: serial("id").primaryKey(),
+    designerProfileId: integer("designer_profile_id")
+      .notNull()
+      .references(() => designerProfiles.id, { onDelete: "cascade" }),
+    requestedPlan: text("requested_plan").notNull(),
+    status: text("status").notNull().default("pending"),
+    note: text("note"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (t) => [
+    index("designer_upgrade_requests_profile_idx").on(t.designerProfileId),
+    index("designer_upgrade_requests_status_idx").on(t.status),
+  ],
+);
+
 // ── Saved design briefs (Leather Atelier) ────────────────────────────
 
 /**
@@ -1163,6 +1206,16 @@ export const savedBriefs = pgTable(
     customerId: integer("customer_id")
       .notNull()
       .references(() => customers.id, { onDelete: "cascade" }),
+    designerProfileId: integer("designer_profile_id").references(() => designerProfiles.id, { onDelete: "set null" }),
+    publicSlug: text("public_slug"),
+    visibility: text("visibility").notNull().default("private"),
+    projectMode: text("project_mode").notNull().default("self"),
+    clientLabel: text("client_label"),
+    designVersion: integer("design_version").notNull().default(1),
+    approvalToken: text("approval_token"),
+    approvalStatus: text("approval_status"),
+    viewCount: integer("view_count").notNull().default(0),
+    shareCount: integer("share_count").notNull().default(0),
     title: text("title").notNull(),
     category: text("category"),
     piece: text("piece"),
@@ -1174,7 +1227,45 @@ export const savedBriefs = pgTable(
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),
   },
-  (t) => [index("saved_briefs_customer_idx").on(t.customerId)],
+  (t) => [
+    index("saved_briefs_customer_idx").on(t.customerId),
+    index("saved_briefs_designer_profile_idx").on(t.designerProfileId),
+    index("saved_briefs_visibility_idx").on(t.visibility),
+    uniqueIndex("saved_briefs_public_slug_uidx").on(t.publicSlug),
+    uniqueIndex("saved_briefs_approval_token_uidx").on(t.approvalToken),
+  ],
+);
+
+export const designApprovalFeedback = pgTable(
+  "design_approval_feedback",
+  {
+    id: serial("id").primaryKey(),
+    briefId: integer("brief_id")
+      .notNull()
+      .references(() => savedBriefs.id, { onDelete: "cascade" }),
+    decision: text("decision").notNull(),
+    message: text("message"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [index("design_approval_feedback_brief_idx").on(t.briefId)],
+);
+
+export const designLikes = pgTable(
+  "design_likes",
+  {
+    id: serial("id").primaryKey(),
+    briefId: integer("brief_id")
+      .notNull()
+      .references(() => savedBriefs.id, { onDelete: "cascade" }),
+    customerId: integer("customer_id")
+      .notNull()
+      .references(() => customers.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("design_likes_brief_customer_uidx").on(t.briefId, t.customerId),
+    index("design_likes_brief_idx").on(t.briefId),
+  ],
 );
 
 // ── Admin users (role-based access: owner | sales | operations) ──────
@@ -1225,5 +1316,10 @@ export type Commission = typeof commissions.$inferSelect;
 export type PayoutRequest = typeof payoutRequests.$inferSelect;
 export type WaitlistEntry = typeof waitlist.$inferSelect;
 export type AdminUser = typeof adminUsers.$inferSelect;
+export type DesignerProfile = typeof designerProfiles.$inferSelect;
+export type DesignerUpgradeRequest = typeof designerUpgradeRequests.$inferSelect;
+export type SavedBrief = typeof savedBriefs.$inferSelect;
+export type DesignLike = typeof designLikes.$inferSelect;
+export type DesignApprovalFeedback = typeof designApprovalFeedback.$inferSelect;
 export type ProductSlugAlias = typeof productSlugAliases.$inferSelect;
 export type InspirationMessage = typeof inspirationMessages.$inferSelect;
