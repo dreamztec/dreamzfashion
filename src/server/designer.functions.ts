@@ -16,7 +16,7 @@ import {
 } from "../../db/schema";
 import { getCurrentCustomer } from "./auth.server";
 import { getDesignerPlan, type DesignerPlanId } from "@/lib/designer-plans";
-import { dreamContestScore } from "@/lib/dream-contest";
+import { dreamContestScore, isDreamPrizeEligible } from "@/lib/dream-contest";
 
 const PayloadSchema = z.object({
   answers: z.record(z.string(), z.unknown()).default({}),
@@ -622,6 +622,7 @@ export const getPublicDesign = createServerFn({ method: "GET" })
         shareCount: design.shareCount,
         interestCount: orders.interestCount,
         verifiedOrders: orders.verifiedOrders,
+        prizeEligible: isDreamPrizeEligible({ verifiedOrders: orders.verifiedOrders }),
         contestScore: dreamContestScore({ verifiedOrders: orders.verifiedOrders, likeCount, shareCount: design.shareCount }),
       },
       designer: {
@@ -799,6 +800,7 @@ export const getDreamLeaderboard = createServerFn({ method: "GET" }).handler(asy
   return ranked
     .sort(
       (a, b) =>
+        Number(b.prizeEligible) - Number(a.prizeEligible) ||
         b.contestScore - a.contestScore ||
         b.verifiedOrders - a.verifiedOrders ||
         b.likeCount - a.likeCount ||
