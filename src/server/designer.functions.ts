@@ -320,7 +320,7 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
           category: data.category || null,
           piece: data.piece || null,
           payload: data.payload as Record<string, unknown>,
-          visibility: data.publish ? "public" : existing.visibility,
+          visibility: data.publish ? "public" : "private",
           publicSlug,
           projectMode: data.projectMode,
           clientLabel: data.clientLabel || null,
