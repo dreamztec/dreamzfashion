@@ -108,6 +108,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const [uploadBusy, setUploadBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [published, setPublished] = useState<{ publicSlug: string; profileSlug: string } | null>(null);
+  const [approvalToken, setApprovalToken] = useState<string | null>(null);
 
   const plan = designerState && !designerState.unauthenticated ? designerState.plan : getDesignerPlan("free");
   const planId = plan.id;
@@ -385,6 +386,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       }
 
       setCurrentBriefId(response.id);
+      setApprovalToken(response.approvalToken || null);
       if (response.publicSlug && response.profileSlug && publish) {
         setPublished({ publicSlug: response.publicSlug, profileSlug: response.profileSlug });
         setNotice("Your dream is live. Share it boldly.");
@@ -926,6 +928,24 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     >
                       Sign in to save your 3 free designs →
                     </Link>
+                  )}
+
+                  {approvalToken && (answers.projectMode === "client" || answers.projectMode === "family") && (
+                    <div className="mt-7 border border-forest/30 bg-forest/5 p-5">
+                      <p className="overline-label !text-forest">Private Approval Link</p>
+                      <h3 className="font-editorial text-2xl mt-2">Send this to your {answers.projectMode === "family" ? "family" : "client"}.</h3>
+                      <p className="text-sm text-stone mt-2">Only someone with this private link can review, approve or request a change. It is never listed on your public Dreamer page.</p>
+                      <div className="mt-4 flex flex-wrap gap-3">
+                        <a href={"/approve/" + approvalToken} target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-outline !py-2.5">Open Approval Page</a>
+                        <button
+                          type="button"
+                          onClick={() => void navigator.clipboard.writeText(window.location.origin + "/approve/" + approvalToken)}
+                          className="btn-lux btn-lux-outline !py-2.5"
+                        >
+                          Copy Private Link
+                        </button>
+                      </div>
+                    </div>
                   )}
 
                   {published && (
