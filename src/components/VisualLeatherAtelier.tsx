@@ -929,7 +929,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   )}
 
                   {published && (
-                    <SharePanel publicSlug={published.publicSlug} profileSlug={published.profileSlug} title={designTitle(answers)} />
+                    <SharePanel
+                      publicSlug={published.publicSlug}
+                      profileSlug={published.profileSlug}
+                      title={designTitle(answers)}
+                      earnCode={designerState && !designerState.unauthenticated ? designerState.earnCode : null}
+                    />
                   )}
                 </>
               )}
@@ -992,12 +997,17 @@ function SharePanel({
   publicSlug,
   profileSlug,
   title,
+  earnCode,
 }: {
   publicSlug: string;
   profileSlug: string;
   title: string;
+  earnCode: string | null;
 }) {
-  const path = "/dream/" + publicSlug;
+  const directPath = "/dream/" + publicSlug;
+  const path = earnCode
+    ? "/r/" + encodeURIComponent(earnCode) + "?to=" + encodeURIComponent(directPath)
+    : directPath;
   const share = async () => {
     const url = window.location.origin + path;
     if (navigator.share) {
