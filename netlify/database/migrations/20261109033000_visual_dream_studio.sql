@@ -21,7 +21,9 @@ ALTER TABLE saved_briefs
   ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'private',
   ADD COLUMN IF NOT EXISTS project_mode TEXT NOT NULL DEFAULT 'self',
   ADD COLUMN IF NOT EXISTS client_label TEXT,
-  ADD COLUMN IF NOT EXISTS design_version INTEGER NOT NULL DEFAULT 1;
+  ADD COLUMN IF NOT EXISTS design_version INTEGER NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS approval_token TEXT,
+  ADD COLUMN IF NOT EXISTS approval_status TEXT;
 
 CREATE UNIQUE INDEX IF NOT EXISTS saved_briefs_public_slug_uidx
   ON saved_briefs(public_slug)
@@ -32,6 +34,10 @@ CREATE INDEX IF NOT EXISTS saved_briefs_designer_profile_idx
 
 CREATE INDEX IF NOT EXISTS saved_briefs_visibility_idx
   ON saved_briefs(visibility);
+
+CREATE UNIQUE INDEX IF NOT EXISTS saved_briefs_approval_token_uidx
+  ON saved_briefs(approval_token)
+  WHERE approval_token IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS design_likes (
   id SERIAL PRIMARY KEY,
@@ -58,3 +64,15 @@ CREATE INDEX IF NOT EXISTS designer_upgrade_requests_profile_idx
 
 CREATE INDEX IF NOT EXISTS designer_upgrade_requests_status_idx
   ON designer_upgrade_requests(status);
+
+
+CREATE TABLE IF NOT EXISTS design_approval_feedback (
+  id SERIAL PRIMARY KEY,
+  brief_id INTEGER NOT NULL REFERENCES saved_briefs(id) ON DELETE CASCADE,
+  decision TEXT NOT NULL,
+  message TEXT,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS design_approval_feedback_brief_idx
+  ON design_approval_feedback(brief_id);
