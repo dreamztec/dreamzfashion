@@ -110,7 +110,9 @@ function MyDesigns() {
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-[0.6rem] uppercase tracking-btn text-gold">Version {design.designVersion}</p>
                     <p className="text-[0.6rem] uppercase tracking-btn text-stone">
-                      {design.visibility === "public" ? "Public · " + design.likeCount + " likes" : "Private"}
+                      {design.visibility === "public"
+                        ? "Public · " + design.viewCount + " views · " + design.shareCount + " shares · " + design.likeCount + " likes"
+                        : "Private"}
                     </p>
                   </div>
                   <h2 className="font-editorial text-2xl mt-1">{design.title}</h2>
