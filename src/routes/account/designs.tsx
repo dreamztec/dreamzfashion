@@ -104,6 +104,10 @@ function MyDesigns() {
                     primaryColour: typeof preview.primaryColour === "string" ? preview.primaryColour : null,
                     secondaryColour: typeof preview.secondaryColour === "string" ? preview.secondaryColour : null,
                     image: typeof preview.image === "string" ? preview.image : null,
+                    construction:
+                      preview.construction && typeof preview.construction === "object"
+                        ? (preview.construction as Record<string, string>)
+                        : null,
                   }}
                 />
                 <div className="p-5">
