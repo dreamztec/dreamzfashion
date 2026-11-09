@@ -470,6 +470,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           <li key={label}>
             <button
               type="button"
+              aria-current={index === step ? "step" : undefined}
               onClick={() => index <= step && setStep(index)}
               className={
                 "whitespace-nowrap border px-3 py-2 text-[0.62rem] uppercase tracking-btn " +
