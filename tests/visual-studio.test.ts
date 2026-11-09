@@ -13,7 +13,7 @@ import {
   PROJECT_MODES,
 } from "../src/lib/visual-designer";
 import { buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
-import { dreamContestScore } from "../src/lib/dream-contest";
+import { dreamContestScore, isDreamPrizeEligible } from "../src/lib/dream-contest";
 
 describe("DREAMZ visual studio plans", () => {
   it("keeps the first three designs free and prices paid creation tiers correctly", () => {
@@ -114,6 +114,11 @@ describe("locked-data render prompt", () => {
 
 
 describe("Dream design challenge scoring", () => {
+  it("never allows a zero-order design to be cash-prize eligible", () => {
+    expect(isDreamPrizeEligible({ verifiedOrders: 0 })).toBe(false);
+    expect(isDreamPrizeEligible({ verifiedOrders: 1 })).toBe(true);
+  });
+
   it("makes verified orders much more valuable than vanity engagement", () => {
     expect(dreamContestScore({ verifiedOrders: 1, likeCount: 0, shareCount: 0 })).toBe(100);
     expect(dreamContestScore({ verifiedOrders: 0, likeCount: 10, shareCount: 0 })).toBe(50);
