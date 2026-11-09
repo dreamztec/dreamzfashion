@@ -14,6 +14,7 @@ export const DREAM_CHALLENGE = {
     recordedShare: 1,
     view: 0,
   },
+  minimumVerifiedOrdersForPrize: 1,
 } as const;
 
 export function dreamContestScore(input: {
@@ -26,4 +27,8 @@ export function dreamContestScore(input: {
     input.likeCount * DREAM_CHALLENGE.scoring.verifiedAccountLike +
     input.shareCount * DREAM_CHALLENGE.scoring.recordedShare
   );
+}
+
+export function isDreamPrizeEligible(input: { verifiedOrders: number }): boolean {
+  return input.verifiedOrders >= DREAM_CHALLENGE.minimumVerifiedOrdersForPrize;
 }
