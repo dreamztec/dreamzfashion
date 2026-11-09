@@ -23,6 +23,7 @@ const SECTIONS = [
   { to: "/account/partner", label: "Partner Dashboard" },
   { to: "/account/tasks", label: "Tasks & Progress" },
   { to: "/account/designs", label: "My Designs" },
+  { to: "/account/designer", label: "My Dreamer Page" },
   { to: "/account/royale", label: "Royale Requests" },
   { to: "/account/profile", label: "Profile" },
 ];
