@@ -83,9 +83,9 @@ function DreamLeaderboard() {
             </div>
           </div>
           <p className="text-xs text-stone leading-relaxed text-center mt-5 max-w-3xl mx-auto">
-            Views are shown for transparency but do not add points. A WhatsApp click is only interest:
-            an order contributes to the ranking only after DREAMZ verifies the real order. Suspicious activity,
-            cancelled orders and self-manipulation can be excluded under the final challenge terms.
+            Views are shown for transparency but do not add points. At least one DREAMZ-verified order is required
+            to be eligible for a cash prize. A WhatsApp click is only interest: it becomes an order only after DREAMZ
+            verifies the real sale. Suspicious activity, cancelled orders and self-manipulation can be excluded under the final challenge terms.
           </p>
         </div>
       </section>
@@ -139,9 +139,13 @@ function DreamLeaderboard() {
                       <div><p className="font-editorial text-lg">{design.shareCount}</p><p className="text-[0.5rem] uppercase tracking-btn text-stone">Shares</p></div>
                       <div><p className="font-editorial text-lg">{design.viewCount}</p><p className="text-[0.5rem] uppercase tracking-btn text-stone">Views</p></div>
                     </div>
-                    <p className="mt-4 text-xs uppercase tracking-btn">
-                      Score {design.contestScore} <span className="text-stone group-hover:text-ink">· View dream →</span>
-                    </p>
+                    <div className="mt-4 flex items-center justify-between gap-2 text-xs uppercase tracking-btn">
+                      <span>Score {design.contestScore}</span>
+                      <span className={design.prizeEligible ? "text-forest" : "text-stone"}>
+                        {design.prizeEligible ? "Prize eligible" : "Needs 1 verified order"}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-[0.6rem] uppercase tracking-btn text-stone group-hover:text-ink">View dream →</p>
                   </div>
                 </Link>
               );
