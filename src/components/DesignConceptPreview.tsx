@@ -25,7 +25,13 @@ export function DesignConceptPreview({
   const piece = visualForPiece(preview.piece);
   const primary = colourVisual(preview.primaryColour);
   const secondary = colourVisual(preview.secondaryColour);
-  const image = preview.image || piece?.image || "/img/hero-boot-of-many-colours.jpg";
+  const suppliedImage =
+    preview.image &&
+    !preview.image.startsWith("/img/products/") &&
+    preview.image !== "/img/hero-boot-of-many-colours.jpg"
+      ? preview.image
+      : null;
+  const image = suppliedImage || piece?.image || null;
   const construction = preview.construction || {};
   const material = MATERIAL_VISUALS.find((item) => item.label === preview.material) || null;
   const sole = SOLE_VISUALS.find((item) => item.label === construction.soleType) || null;
@@ -40,11 +46,17 @@ export function DesignConceptPreview({
   return (
     <div className="border border-ink/10 bg-ivory-deep/50 overflow-hidden">
       <div className={"relative overflow-hidden bg-white " + (compact ? "aspect-[4/3]" : "aspect-[5/4]")}>
-        <img
-          src={image}
-          alt={preview.piece ? preview.piece + " visual reference" : "DREAMZ leather design visual reference"}
-          className="absolute inset-0 h-full w-full object-cover"
-        />
+        {image ? (
+          <img
+            src={image}
+            alt={preview.piece ? preview.piece + " neutral design silhouette" : "DREAMZ blank design workspace"}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-stone">
+            <span className="font-editorial text-2xl">Choose a piece to begin</span>
+          </div>
+        )}
         {primary?.hex && (
           <div
             aria-hidden="true"
@@ -102,7 +114,7 @@ export function DesignConceptPreview({
       </div>
       {!compact && (
         <p className="px-4 pb-4 text-[0.66rem] text-stone leading-relaxed">
-          This board assembles real DREAMZ visual references for your selected direction. It is not a photorealistic final render. The atelier confirms the exact hide, component compatibility, colour placement and construction before production.
+          This is a blank concept board built from your selections — not a DREAMZ catalogue product. Leather swatches are visual references; the atelier confirms the exact hide, component compatibility, colour placement and construction before production.
         </p>
       )}
     </div>
