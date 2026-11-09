@@ -1268,6 +1268,28 @@ export const designLikes = pgTable(
   ],
 );
 
+export const designOrderIntents = pgTable(
+  "design_order_intents",
+  {
+    id: serial("id").primaryKey(),
+    briefId: integer("brief_id")
+      .notNull()
+      .references(() => savedBriefs.id, { onDelete: "cascade" }),
+    customerId: integer("customer_id").references(() => customers.id, { onDelete: "set null" }),
+    sessionKey: text("session_key").notNull(),
+    status: text("status").notNull().default("intent"), // intent | verified | cancelled
+    orderReference: text("order_reference"),
+    createdAt: timestamp("created_at").defaultNow(),
+    verifiedAt: timestamp("verified_at"),
+  },
+  (t) => [
+    uniqueIndex("design_order_intents_brief_session_uidx").on(t.briefId, t.sessionKey),
+    index("design_order_intents_brief_idx").on(t.briefId),
+    index("design_order_intents_status_idx").on(t.status),
+  ],
+);
+
+
 // ── Admin users (role-based access: owner | sales | operations) ──────
 
 export const adminUsers = pgTable(
@@ -1320,6 +1342,7 @@ export type DesignerProfile = typeof designerProfiles.$inferSelect;
 export type DesignerUpgradeRequest = typeof designerUpgradeRequests.$inferSelect;
 export type SavedBrief = typeof savedBriefs.$inferSelect;
 export type DesignLike = typeof designLikes.$inferSelect;
+export type DesignOrderIntent = typeof designOrderIntents.$inferSelect;
 export type DesignApprovalFeedback = typeof designApprovalFeedback.$inferSelect;
 export type ProductSlugAlias = typeof productSlugAliases.$inferSelect;
 export type InspirationMessage = typeof inspirationMessages.$inferSelect;
