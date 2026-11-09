@@ -76,7 +76,7 @@ export const MATERIAL_VISUALS: VisualOption[] = [
     id: "suede",
     label: "Suede",
     note: "Soft matte nap. Final hide colour and nap are confirmed by the atelier.",
-    minPlan: "creator",
+    image: "/img/products/crimson-pin.jpg",
   },
   {
     id: "nubuck",
