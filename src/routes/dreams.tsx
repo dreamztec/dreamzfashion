@@ -117,6 +117,7 @@ function DreamLeaderboard() {
                       preview={{
                         piece: typeof preview.piece === "string" ? preview.piece : design.piece,
                         material: typeof preview.material === "string" ? preview.material : null,
+                        texture: typeof preview.texture === "string" ? preview.texture : null,
                         primaryColour: typeof preview.primaryColour === "string" ? preview.primaryColour : null,
                         secondaryColour: typeof preview.secondaryColour === "string" ? preview.secondaryColour : null,
                         image: typeof preview.image === "string" ? preview.image : null,
