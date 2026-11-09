@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { desc, eq } from "drizzle-orm";
 import { db } from "../../db/index";
-import { customers, designerProfiles, designerUpgradeRequests } from "../../db/schema";
+import { customers, designOrderIntents, designerProfiles, designerUpgradeRequests, savedBriefs } from "../../db/schema";
 import { requireAdminRole } from "./admin-auth.server";
 import { getDesignerPlan } from "@/lib/designer-plans";
 
@@ -88,4 +88,62 @@ export const decideDesignerUpgradeAdmin = createServerFn({ method: "POST" })
       plan: plan.id,
       expiresAt: expiresAt.toISOString(),
     };
+  });
+
+
+export const listDesignOrderIntentsAdmin = createServerFn({ method: "GET" }).handler(async () => {
+  await requireAdminRole(["owner", "sales"]);
+  const rows = await db
+    .select({
+      id: designOrderIntents.id,
+      briefId: designOrderIntents.briefId,
+      status: designOrderIntents.status,
+      orderReference: designOrderIntents.orderReference,
+      createdAt: designOrderIntents.createdAt,
+      verifiedAt: designOrderIntents.verifiedAt,
+      designTitle: savedBriefs.title,
+      publicSlug: savedBriefs.publicSlug,
+      designerName: designerProfiles.displayName,
+      designerSlug: designerProfiles.slug,
+    })
+    .from(designOrderIntents)
+    .innerJoin(savedBriefs, eq(designOrderIntents.briefId, savedBriefs.id))
+    .leftJoin(designerProfiles, eq(savedBriefs.designerProfileId, designerProfiles.id))
+    .orderBy(desc(designOrderIntents.createdAt))
+    .limit(250);
+
+  return rows.map((row) => ({
+    ...row,
+    createdAt: row.createdAt?.toISOString() || null,
+    verifiedAt: row.verifiedAt?.toISOString() || null,
+  }));
+});
+
+export const decideDesignOrderIntentAdmin = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.number().int().positive(),
+      status: z.enum(["verified", "cancelled"]),
+      orderReference: z.string().max(100).optional().or(z.literal("")),
+    }),
+  )
+  .handler(async ({ data }) => {
+    await requireAdminRole(["owner", "sales"]);
+    const [row] = await db
+      .select()
+      .from(designOrderIntents)
+      .where(eq(designOrderIntents.id, data.id))
+      .limit(1);
+    if (!row) return { ok: false as const, reason: "missing" as const };
+
+    await db
+      .update(designOrderIntents)
+      .set({
+        status: data.status,
+        orderReference: data.orderReference?.trim() || row.orderReference,
+        verifiedAt: data.status === "verified" ? new Date() : null,
+      })
+      .where(eq(designOrderIntents.id, data.id));
+
+    return { ok: true as const, status: data.status };
   });
