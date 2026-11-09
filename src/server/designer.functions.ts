@@ -1,7 +1,7 @@
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { randomUUID } from "node:crypto";
 import { db } from "../../db/index";
 import {
@@ -175,6 +175,8 @@ async function profileDesigns(profileId: number) {
       designVersion: row.designVersion,
       approvalToken: row.approvalToken,
       approvalStatus: row.approvalStatus,
+      viewCount: row.viewCount,
+      shareCount: row.shareCount,
       createdAt: row.createdAt?.toISOString() || null,
       updatedAt: row.updatedAt?.toISOString() || null,
       payload: row.payload,
@@ -501,6 +503,8 @@ export const getPublicDesignerProfile = createServerFn({ method: "GET" })
         updatedAt: row.updatedAt?.toISOString() || null,
         payload: publicPayload(row.payload),
         likeCount: await countLikes(row.id),
+        viewCount: row.viewCount,
+        shareCount: row.shareCount,
       })),
     );
 
@@ -557,6 +561,8 @@ export const getPublicDesign = createServerFn({ method: "GET" })
         updatedAt: design.updatedAt?.toISOString() || null,
         likeCount: await countLikes(design.id),
         likedByMe,
+        viewCount: design.viewCount,
+        shareCount: design.shareCount,
       },
       designer: {
         slug: profile.slug,
@@ -645,6 +651,42 @@ export const submitClientApproval = createServerFn({ method: "POST" })
     });
 
     return { ok: true as const, status: data.decision };
+  });
+
+export const recordDesignView = createServerFn({ method: "POST" })
+  .inputValidator(z.string().min(3).max(100))
+  .handler(async ({ data: slug }) => {
+    const [design] = await db
+      .select({ id: savedBriefs.id })
+      .from(savedBriefs)
+      .where(and(eq(savedBriefs.publicSlug, slug), eq(savedBriefs.visibility, "public")))
+      .limit(1);
+    if (!design) return { ok: false as const };
+    await db
+      .update(savedBriefs)
+      .set({ viewCount: sql`${savedBriefs.viewCount} + 1` })
+      .where(eq(savedBriefs.id, design.id));
+    return { ok: true as const };
+  });
+
+export const recordDesignShare = createServerFn({ method: "POST" })
+  .inputValidator(z.string().min(3).max(100))
+  .handler(async ({ data: slug }) => {
+    const [design] = await db
+      .select({ id: savedBriefs.id, designerProfileId: savedBriefs.designerProfileId })
+      .from(savedBriefs)
+      .where(and(eq(savedBriefs.publicSlug, slug), eq(savedBriefs.visibility, "public")))
+      .limit(1);
+    if (!design) return { ok: false as const };
+    await db
+      .update(savedBriefs)
+      .set({ shareCount: sql`${savedBriefs.shareCount} + 1` })
+      .where(eq(savedBriefs.id, design.id));
+    await db.insert(analyticsEvents).values({
+      eventName: "dream_design_shared",
+      metadata: { briefId: design.id, designerProfileId: design.designerProfileId },
+    });
+    return { ok: true as const };
   });
 
 export const toggleDesignLike = createServerFn({ method: "POST" })
