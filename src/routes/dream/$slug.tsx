@@ -25,6 +25,7 @@ export const Route = createFileRoute("/dream/$slug")({
 
 function DreamDesignPage() {
   const data = Route.useLoaderData();
+  const params = Route.useParams();
   const { user } = useAuth();
   const [liked, setLiked] = useState(data.design.likedByMe);
   const [likes, setLikes] = useState(data.design.likeCount);
@@ -38,7 +39,7 @@ function DreamDesignPage() {
   const like = async () => {
     setNotice(null);
     try {
-      const response = await toggleDesignLike({ data: Route.useParams().slug });
+      const response = await toggleDesignLike({ data: params.slug });
       if (!response.ok) {
         if (response.reason === "signin") setNotice("Sign in to like this design.");
         else if (response.reason === "own_design") setNotice("This is your own design — share it and invite other people to react.");
@@ -104,7 +105,7 @@ function DreamDesignPage() {
           </div>
 
           {!user && (
-            <Link to="/account/login" search={{ reset: undefined, returnTo: Route.fullPath.replace("$slug", Route.useParams().slug) }} className="nav-link inline-block mt-4 text-xs">
+            <Link to="/account/login" search={{ reset: undefined, returnTo: "/dream/" + params.slug }} className="nav-link inline-block mt-4 text-xs">
               Sign in to like →
             </Link>
           )}
