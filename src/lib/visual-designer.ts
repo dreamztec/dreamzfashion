@@ -140,69 +140,75 @@ export const MATERIAL_VISUALS: VisualOption[] = [
   {
     id: "full-grain",
     label: "Full-grain leather",
-    note: "The grain surface is kept intact. Natural marks can remain; develops character with age.",
+    note: "Premium hide grade with the natural grain surface left intact. Marks and grain vary from hide to hide.",
     image: commons("LeatherTexture.jpg"),
     bestFor: "Premium shoes, boots, structured bags, belts and long-life accessories.",
+    credit: "Natural-grain visual reference. A photo cannot prove leather grade; DREAMZ confirms the actual hide before production.",
   },
   {
     id: "top-grain",
     label: "Top-grain leather",
-    note: "Grain-side leather that may be lightly corrected for a more even surface.",
-    image: commons("Leather023 8K Color.png"),
-    bestFor: "Refined footwear, bags, wallets and wearable leather where a cleaner finish is wanted.",
-  },
-  {
-    id: "smooth",
-    label: "Smooth leather",
-    note: "A clean, even finish that reads formal and minimal.",
-    image: commons("Leather021 8K Color.png"),
-    bestFor: "Oxford shoes, loafers, dress boots, belts, handbags and clean tailoring.",
-  },
-  {
-    id: "pebbled",
-    label: "Pebbled leather",
-    note: "Visible grain texture gives depth and helps disguise everyday scuffs.",
-    image: commons("Leather007 4K Color.png"),
-    bestFor: "Bags, wallets, casual footwear and high-touch accessories.",
+    note: "Grain-side leather that may be lightly corrected for a cleaner, more even appearance.",
+    image: commons("Brown Leather.jpg"),
+    bestFor: "Refined footwear, bags, wallets and wearable leather.",
+    credit: "Surface reference only. DREAMZ confirms the actual top-grain hide before production.",
   },
   {
     id: "suede",
     label: "Suede",
-    note: "Soft leather with a velvety nap. Colour and nap direction can vary by hide.",
-    image: commons("Leather002 4K Color.png"),
+    note: "Soft leather with a visible velvety nap. The nap can change shade when brushed.",
+    image: commons("A Derby of suede leather with brogues.jpg"),
     bestFor: "Loafers, mules, selected boots, bags and soft accent panels.",
+    credit: "Suede reference: Wikimedia Commons, CC0.",
   },
   {
     id: "nubuck",
     label: "Nubuck",
-    note: "Buffed grain leather with a fine velvety surface; softer-looking than smooth leather.",
-    image: commons("Velvety texture of nubuck leather.jpg"),
+    note: "Grain-side leather lightly buffed to create a fine, velvety surface.",
+    image: commons("Nubuk-Leder, Muster.jpg"),
     bestFor: "Premium casual boots, loafers, bags and tactile statement panels.",
-    credit: "Nubuck reference: Victor Adrian / Best For My Feet, CC BY-SA 4.0.",
+    credit: "Nubuck sample reference: Wikimedia Commons, public domain.",
+  },
+];
+
+export const FINISH_VISUALS: VisualOption[] = [
+  {
+    id: "smooth",
+    label: "Smooth",
+    note: "Clean, even surface with a formal and minimal appearance.",
+    image: commons("Leather021 8K Color.png"),
+    bestFor: "Oxford shoes, loafers, dress boots, belts and structured bags.",
+  },
+  {
+    id: "pebbled",
+    label: "Pebbled",
+    note: "Visible grain texture that adds depth and helps disguise everyday scuffs.",
+    image: commons("Leather007 4K Color.png"),
+    bestFor: "Bags, wallets, casual footwear and high-touch accessories.",
   },
   {
     id: "pull-up",
-    label: "Pull-up leather",
-    note: "Wax/oil-rich leather that lightens where bent or stretched, creating visible character.",
-    image: commons("Leather038 8K-PNG Color.png"),
+    label: "Pull-up / waxy",
+    note: "Oil- or wax-rich leather that becomes lighter where it bends or stretches, creating character.",
+    image: commons("Red leather oxford shoes by Eugene Pik (2021) 03.jpg"),
     bestFor: "Rugged boots, travel bags, briefcases and heritage-style pieces.",
-    minPlan: "creator",
+    credit: "Pull-up behaviour reference: Eugene Pik / Wikimedia Commons.",
   },
   {
     id: "patent",
-    label: "Patent leather",
-    note: "High-gloss coated finish for deliberate statement areas.",
-    image: commons("Leather027 8K Color.png"),
+    label: "Patent gloss",
+    note: "High-gloss coated finish for a polished statement look.",
+    image: commons("Patent leather shoes.jpg"),
     bestFor: "Heels, formal footwear and controlled accent panels.",
-    minPlan: "creator",
+    credit: "Patent leather reference: Kristin / Wikimedia Commons, CC BY 2.0.",
   },
   {
     id: "embossed",
-    label: "Embossed leather",
-    note: "A pressed surface pattern. DREAMZ confirms the available embossing before production.",
-    image: commons("Leather024 8K Color.png"),
+    label: "Embossed",
+    note: "Pattern pressed into the surface. DREAMZ confirms the actual embossing plate or hide available.",
+    image: commons("Cordoue 1.jpg"),
     bestFor: "Bags, belts, footwear panels and statement accessories.",
-    minPlan: "creator",
+    credit: "Embossed leather reference: Armorial / Wikimedia Commons, CC BY-SA 3.0.",
   },
 ];
 
@@ -307,11 +313,21 @@ export function colourVisual(name: string | null | undefined): VisualOption | nu
 }
 
 export function recommendedMaterials(category: AtelierCategory | null, piece: string): string[] {
-  if (category === "bags") return ["Full-grain leather","Top-grain leather","Pebbled leather","Pull-up leather"];
-  if (category === "wearable") return ["Top-grain leather","Smooth leather","Suede","Nubuck"];
-  if (category === "accessories") return ["Full-grain leather","Top-grain leather","Smooth leather","Pebbled leather"];
-  if (/heel|oxford/i.test(piece)) return ["Smooth leather","Top-grain leather","Patent leather","Suede"];
-  if (/boot/i.test(piece)) return ["Full-grain leather","Pull-up leather","Nubuck","Suede"];
-  if (/slide|sandal|mule|loafer/i.test(piece)) return ["Full-grain leather","Top-grain leather","Suede","Pebbled leather"];
-  return ["Full-grain leather","Top-grain leather","Smooth leather","Pebbled leather"];
+  if (category === "bags") return ["Full-grain leather","Top-grain leather","Nubuck"];
+  if (category === "wearable") return ["Top-grain leather","Suede","Nubuck"];
+  if (category === "accessories") return ["Full-grain leather","Top-grain leather"];
+  if (/heel|oxford/i.test(piece)) return ["Top-grain leather","Suede"];
+  if (/boot/i.test(piece)) return ["Full-grain leather","Nubuck","Suede"];
+  if (/slide|sandal|mule|loafer/i.test(piece)) return ["Full-grain leather","Top-grain leather","Suede"];
+  return ["Full-grain leather","Top-grain leather"];
+}
+
+export function recommendedFinishes(category: AtelierCategory | null, piece: string): string[] {
+  if (/heel/i.test(piece)) return ["Smooth","Patent gloss"];
+  if (/boot/i.test(piece)) return ["Smooth","Pull-up / waxy","Pebbled"];
+  if (/oxford|derby|loafer/i.test(piece)) return ["Smooth","Pebbled"];
+  if (category === "bags") return ["Pebbled","Smooth","Embossed"];
+  if (category === "accessories") return ["Smooth","Pebbled","Embossed"];
+  if (category === "wearable") return ["Smooth"];
+  return ["Smooth","Pebbled"];
 }
