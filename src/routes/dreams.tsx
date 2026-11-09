@@ -2,6 +2,7 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { getDreamLeaderboard } from "@/server/designer.functions";
 import { BRAND } from "@/lib/config";
+import { DREAM_CHALLENGE } from "@/lib/dream-contest";
 
 export const Route = createFileRoute("/dreams")({
   loader: () => getDreamLeaderboard(),
@@ -34,20 +35,20 @@ function DreamLeaderboard() {
         <div className="mt-7 grid grid-cols-3 gap-px border border-ink/10 bg-ink/10 max-w-xl mx-auto">
           <div className="bg-ivory p-4">
             <p className="text-[0.56rem] uppercase tracking-btn text-stone">1st</p>
-            <p className="font-editorial text-2xl mt-1">₦500k</p>
+            <p className="font-editorial text-2xl mt-1">₦{(DREAM_CHALLENGE.prizes[0].amountNaira / 1000).toLocaleString("en-NG")}k</p>
           </div>
           <div className="bg-ivory p-4">
             <p className="text-[0.56rem] uppercase tracking-btn text-stone">2nd</p>
-            <p className="font-editorial text-2xl mt-1">₦300k</p>
+            <p className="font-editorial text-2xl mt-1">₦{(DREAM_CHALLENGE.prizes[1].amountNaira / 1000).toLocaleString("en-NG")}k</p>
           </div>
           <div className="bg-ivory p-4">
             <p className="text-[0.56rem] uppercase tracking-btn text-stone">3rd</p>
-            <p className="font-editorial text-2xl mt-1">₦200k</p>
+            <p className="font-editorial text-2xl mt-1">₦{(DREAM_CHALLENGE.prizes[2].amountNaira / 1000).toLocaleString("en-NG")}k</p>
           </div>
         </div>
 
         <p className="mt-4 text-xs text-stone">
-          Planned DREAMZ prize pool: ₦1,000,000 · Target close: 31 December 2026.
+          Planned DREAMZ prize pool: ₦{DREAM_CHALLENGE.totalPrizeNaira.toLocaleString("en-NG")} · Target close: 31 December 2026.
           Prize activation and eligibility remain subject to the published challenge terms and required promotional approval.
         </p>
 
@@ -69,15 +70,15 @@ function DreamLeaderboard() {
         <div className="mx-auto max-w-5xl px-5 sm:px-8 py-7">
           <div className="grid gap-4 sm:grid-cols-3 text-center">
             <div>
-              <p className="font-editorial text-2xl">100 pts</p>
+              <p className="font-editorial text-2xl">{DREAM_CHALLENGE.scoring.verifiedOrder} pts</p>
               <p className="text-[0.6rem] uppercase tracking-btn text-stone mt-1">Each verified order</p>
             </div>
             <div>
-              <p className="font-editorial text-2xl">5 pts</p>
+              <p className="font-editorial text-2xl">{DREAM_CHALLENGE.scoring.verifiedAccountLike} pts</p>
               <p className="text-[0.6rem] uppercase tracking-btn text-stone mt-1">Each verified-account like</p>
             </div>
             <div>
-              <p className="font-editorial text-2xl">1 pt</p>
+              <p className="font-editorial text-2xl">{DREAM_CHALLENGE.scoring.recordedShare} pt</p>
               <p className="text-[0.6rem] uppercase tracking-btn text-stone mt-1">Each recorded share</p>
             </div>
           </div>
