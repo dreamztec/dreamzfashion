@@ -125,12 +125,9 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
       .map((key) => [key, typeof rawConstruction[key] === "string" ? String(rawConstruction[key]).slice(0, 80) : ""])
       .filter(([, value]) => Boolean(value)),
   );
-  const previewImage =
-    typeof rawPreview.image === "string" &&
-    (/^\/img\/products\/[a-z0-9-]+\.jpg$/.test(rawPreview.image) ||
-      rawPreview.image === "/img/hero-boot-of-many-colours.jpg")
-      ? rawPreview.image
-      : null;
+  // Public Dream pages always rebuild from the neutral Studio silhouette.
+  // Old catalogue-image references are deliberately discarded.
+  const previewImage = null;
 
   return {
     answers: safeAnswers,
