@@ -414,24 +414,73 @@ const BRANDING_NOTE =
 
 // ── Output 1 — Design summary ────────────────────────────────────────
 
+const CONSTRUCTION_LABELS: Record<string, string> = {
+  toeShape: "Toe shape",
+  soleType: "Sole",
+  heelType: "Heel",
+  heelHeight: "Heel height",
+  closure: "Closure",
+  buckleStyle: "Buckle",
+  hardwareFinish: "Hardware finish",
+  stitchColour: "Stitching",
+  edgeFinish: "Edge finish",
+  fit: "Fit",
+  shaftHeight: "Shaft height",
+  ankleProfile: "Ankle profile",
+  strapLayout: "Strap layout",
+  dimensions: "Dimensions / size",
+  carriage: "Carry style",
+  structure: "Structure",
+  compartments: "Compartments",
+  width: "Width",
+  length: "Length / waist",
+  measurements: "Measurements",
+  lining: "Lining",
+  pockets: "Pockets",
+  usage: "Use",
+};
+
+function constructionDetailLines(b: AtelierBrief): string[] {
+  return Object.entries(b.construction ?? {})
+    .filter(([, value]) => typeof value === "string" && value.trim())
+    .map(([key, value]) => `• ${CONSTRUCTION_LABELS[key] || key.replace(/([A-Z])/g, " $1").replace(/^./, (m) => m.toUpperCase())}: ${value}`);
+}
+
 export function buildDesignSummary(b: AtelierBrief): string {
+  const detailLines = constructionDetailLines(b);
   const lines = [
-    `Product: ${b.piece} (${b.category})`,
-    `Theme/meaning: ${meaningPhrase(b)}`,
-    `Customer intent: ${(b.story || "").trim() || "Not stated — atelier will explore at consultation."}`,
-    `Style: ${list(b.feel) || "To be refined at the atelier"}`,
-    `Colours: primary ${b.primaryColour || "open"}${b.secondaryColour ? `, accent ${b.secondaryColour}` : ""}${b.pattern ? `; pattern ${b.pattern}` : ""}${b.texture ? `; texture ${b.texture}` : ""}`,
-    `Leather: ${b.material ? safeLeatherMaterial(b.material) : "atelier recommendation (suggestion only)"}`,
-    `Main construction: ${summariseConstruction(b)}`,
-    `Personalisation: ${describePersonalisation(b)}`,
-    `Occasion: ${b.occasion || "not specified"}`,
-    `Size/measurements: ${b.sizeOrMeasurements || "to be confirmed"}`,
-    `Deadline: ${b.neededBy || "not specified"}`,
-    `Budget: ${b.budgetNaira ? `₦${b.budgetNaira}` : "not supplied"}`,
+    "DREAMZ DESIGN SPECIFICATION",
+    "",
+    "PRODUCT",
+    `• Piece: ${b.piece}`,
+    `• Category: ${b.category}`,
+    `• Intended meaning: ${meaningPhrase(b)}`,
+    `• Design character: ${list(b.feel) || "not specified"}`,
+    b.forWhom ? `• Designed for: ${b.forWhom}` : "",
+    b.stylePreference ? `• Style preference: ${b.stylePreference}` : "",
+    b.occasion ? `• Occasion: ${b.occasion}` : "",
+    "",
+    "MATERIAL & COLOUR",
+    `• Leather base: ${b.material ? safeLeatherMaterial(b.material) : "not selected"}`,
+    `• Surface / finish: ${b.texture || "not selected"}`,
+    `• Primary colour: ${b.primaryColour || "not selected"}`,
+    `• Accent colour: ${b.secondaryColour || "none selected"}`,
+    b.pattern ? `• Pattern / trim direction: ${b.pattern}` : "",
+    "",
+    "CONSTRUCTION",
+    ...(detailLines.length ? detailLines : ["• No additional construction options selected. Keep the piece standard and buildable for its product type."]),
+    "",
+    "PERSONALISATION",
+    `• ${describePersonalisation(b)}`,
+    "",
+    "FIT / PRACTICAL DETAILS",
+    `• Size / measurements: ${b.sizeOrMeasurements || "not supplied"}`,
+    `• Needed by: ${b.neededBy || "not supplied"}`,
+    `• Budget: ${b.budgetNaira ? `₦${b.budgetNaira}` : "not supplied"}`,
   ];
-  if (b.forWhom) lines.splice(2, 0, `For: ${b.forWhom}${b.stylePreference ? ` (${b.stylePreference})` : ""}`);
-  if (b.inspirationNotes) lines.push(`Inspiration direction: ${b.inspirationNotes}`);
-  return lines.join("\n");
+  if ((b.story || "").trim()) lines.push("", "DESIGN STORY", `• ${b.story!.trim()}`);
+  if (b.inspirationNotes) lines.push("", "REFERENCE / INSPIRATION NOTES", `• ${b.inspirationNotes}`);
+  return lines.filter((line) => line !== "").join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
 function summariseConstruction(b: AtelierBrief): string {
@@ -462,6 +511,7 @@ export const RENDER_PROMPT_SECTIONS = [
   "K. BACKGROUND",
   "L. REALISM REQUIREMENTS",
   "M. NEGATIVE CONSTRAINTS",
+  "N. FINAL IMAGE DELIVERABLE",
 ] as const;
 
 export function buildRenderPrompt(b: AtelierBrief): string {
@@ -488,7 +538,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     b.primaryColour ? `Primary colour selected: ${b.primaryColour}` : "Primary colour selected: none",
     b.secondaryColour ? `Accent colour selected: ${b.secondaryColour}` : "Accent colour selected: none",
     Object.keys(b.construction || {}).length
-      ? `Construction selected: ${summariseConstruction(b)}`
+      ? ["Construction selected:", ...constructionDetailLines(b)].join("\n")
       : "Construction selections: none beyond the chosen product type",
     b.personalisation && b.personalisation.type !== "none"
       ? `Personalisation selected: ${describePersonalisation(b)}`
@@ -514,7 +564,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     [
       "B. SILHOUETTE",
-      `Clear, confident ${b.piece.toLowerCase()} silhouette${b.feel.length ? `; overall character: ${list(b.feel).toLowerCase()}` : ""}. Balanced proportion between body, details and base; a controlled, memorable signature detail rather than ornament.`,
+      `Clear, confident ${b.piece.toLowerCase()} silhouette${b.feel.length ? `; overall character: ${list(b.feel).toLowerCase()}` : ""}. Preserve the defining geometry of a real ${b.piece.toLowerCase()}; keep all proportions physically plausible, balanced and wearable. Use the selected construction choices below to determine the visible shape. Do not add a new signature feature that was not selected.`,
     ],
     [
       "C. LEATHER & MATERIAL",
@@ -528,7 +578,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     [
       "E. CONSTRUCTION",
-      `${summariseConstruction(b)}. Correct panel assembly for a real ${b.piece.toLowerCase()}: believable seams, reinforcements and edge finishing; construction an artisan could actually build.`,
+      `${constructionDetailLines(b).length ? constructionDetailLines(b).join(" ") : "No extra construction options selected."} Translate every selected component literally into the visible product. Correct panel assembly for a real ${b.piece.toLowerCase()}: believable seams, reinforcements, attachment points and edge finishing; construction must be something an artisan could actually pattern, cut, stitch and assemble.`,
     ],
     [
       "F. HARDWARE",
@@ -560,6 +610,10 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     ["L. REALISM REQUIREMENTS", `${REALISM_REQUIREMENTS} ${DREAMZ_DNA}`],
     ["M. NEGATIVE CONSTRAINTS", NEGATIVE_CONSTRAINTS],
+    [
+      "N. FINAL IMAGE DELIVERABLE",
+      "Generate one finished photorealistic product image, not a sketch, mood board, collage or technical drawing. Show the complete product fully inside frame, large enough to inspect construction. Preserve every selected material, finish, colour and component exactly. If a selected detail is physically visible from the chosen angle, make it legible. Do not show captions, labels, arrows, specification text, packaging or unrelated props."
+    ],
   ];
   return [sourceOfTruth, ...sections.map(([title, body]) => `${title}\n${body}`)].join("\n\n");
 }

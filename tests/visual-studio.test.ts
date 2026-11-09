@@ -13,7 +13,7 @@ import {
   PIECE_VISUALS,
   PROJECT_MODES,
 } from "../src/lib/visual-designer";
-import { buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
+import { buildDesignSummary, buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
 import { dreamContestScore, isDreamPrizeEligible } from "../src/lib/dream-contest";
 
 describe("DREAMZ visual studio plans", () => {
@@ -121,8 +121,35 @@ describe("locked-data render prompt", () => {
     expect(prompt).toContain("Texture / finish selected: Pebbled");
     expect(prompt).toContain("Primary colour selected: Oxblood");
     expect(prompt).toContain("Accent colour selected: Cream");
-    expect(prompt).toContain("soleType: Rubber sole");
-    expect(prompt).toContain("buckleStyle: Single buckle");
+    expect(prompt).toContain("Sole: Rubber sole");
+    expect(prompt).toContain("Buckle: Single buckle");
+    expect(prompt).toContain("N. FINAL IMAGE DELIVERABLE");
+    expect(prompt).toContain("Generate one finished photorealistic product image");
+  });
+
+  it("produces a detailed human-readable design specification", () => {
+    const summary = buildDesignSummary({
+      ...minimal,
+      material: "Suede",
+      texture: "Pebbled",
+      primaryColour: "Oxblood",
+      secondaryColour: "Cream",
+      sizeOrMeasurements: "EU 45",
+      occasion: "Wedding",
+      construction: {
+        toeShape: "Round",
+        soleType: "Rubber sole",
+        buckleStyle: "Single buckle",
+        stitchColour: "Contrast",
+      },
+      personalisation: { type: "initials", text: "JO" },
+    });
+    expect(summary).toContain("DREAMZ DESIGN SPECIFICATION");
+    expect(summary).toContain("MATERIAL & COLOUR");
+    expect(summary).toContain("• Toe shape: Round");
+    expect(summary).toContain("• Sole: Rubber sole");
+    expect(summary).toContain("• Buckle: Single buckle");
+    expect(summary).toContain("• Size / measurements: EU 45");
   });
 });
 
