@@ -77,15 +77,13 @@ function DreamerPage() {
                 const preview = publicPreview(payload);
                 const summary = publicSummary(payload);
                 return (
-                  <Link
+                  <a
                     key={design.id}
-                    to={earnCode ? "/r/$code" : "/dream/$slug"}
-                    params={earnCode
-                      ? ({ code: earnCode } as never)
-                      : ({ slug: design.publicSlug || "" } as never)}
-                    search={earnCode
-                      ? ({ to: "/dream/" + (design.publicSlug || "") } as never)
-                      : undefined}
+                    href={
+                      earnCode
+                        ? "/r/" + encodeURIComponent(earnCode) + "?to=" + encodeURIComponent("/dream/" + (design.publicSlug || ""))
+                        : "/dream/" + (design.publicSlug || "")
+                    }
                     className="group border border-ink/10 bg-white/50"
                   >
                     <DesignConceptPreview
@@ -107,7 +105,7 @@ function DreamerPage() {
                         <span className="group-hover:text-ink">View dream →</span>
                       </div>
                     </div>
-                  </Link>
+                  </a>
                 );
               })}
             </div>
