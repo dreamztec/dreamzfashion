@@ -31,7 +31,7 @@ function publicSummary(payload: Record<string, unknown>): string {
 }
 
 function DreamerPage() {
-  const { profile, designs } = Route.useLoaderData();
+  const { profile, designs, earnCode } = Route.useLoaderData();
 
   return (
     <div>
@@ -79,8 +79,13 @@ function DreamerPage() {
                 return (
                   <Link
                     key={design.id}
-                    to="/dream/$slug"
-                    params={{ slug: design.publicSlug || "" }}
+                    to={earnCode ? "/r/$code" : "/dream/$slug"}
+                    params={earnCode
+                      ? ({ code: earnCode } as never)
+                      : ({ slug: design.publicSlug || "" } as never)}
+                    search={earnCode
+                      ? ({ to: "/dream/" + (design.publicSlug || "") } as never)
+                      : undefined}
                     className="group border border-ink/10 bg-white/50"
                   >
                     <DesignConceptPreview
