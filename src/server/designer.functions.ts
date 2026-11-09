@@ -100,13 +100,47 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
     safeAnswers.material ? `Leather: ${safeAnswers.material}` : "",
   ].filter(Boolean);
 
+  const rawPreview =
+    payload.visualPreview && typeof payload.visualPreview === "object"
+      ? (payload.visualPreview as Record<string, unknown>)
+      : {};
+  const rawConstruction =
+    rawPreview.construction && typeof rawPreview.construction === "object"
+      ? (rawPreview.construction as Record<string, unknown>)
+      : {};
+  const allowedConstructionKeys = [
+    "soleType",
+    "buckleStyle",
+    "hardwareFinish",
+    "heelType",
+    "closure",
+    "toeShape",
+    "stitchColour",
+    "edgeFinish",
+  ];
+  const safeConstruction = Object.fromEntries(
+    allowedConstructionKeys
+      .map((key) => [key, typeof rawConstruction[key] === "string" ? String(rawConstruction[key]).slice(0, 80) : ""])
+      .filter(([, value]) => Boolean(value)),
+  );
+  const previewImage =
+    typeof rawPreview.image === "string" &&
+    (/^\/img\/products\/[a-z0-9-]+\.jpg$/.test(rawPreview.image) ||
+      rawPreview.image === "/img/hero-boot-of-many-colours.jpg")
+      ? rawPreview.image
+      : null;
+
   return {
     answers: safeAnswers,
     designSummary: summaryLines.join("\n"),
-    visualPreview:
-      payload.visualPreview && typeof payload.visualPreview === "object"
-        ? payload.visualPreview
-        : {},
+    visualPreview: {
+      piece: safeAnswers.piece,
+      material: safeAnswers.material,
+      primaryColour: safeAnswers.primaryColour,
+      secondaryColour: safeAnswers.secondaryColour,
+      image: previewImage,
+      construction: safeConstruction,
+    },
   };
 }
 
