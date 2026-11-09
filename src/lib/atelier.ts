@@ -300,6 +300,7 @@ const BAG_QUESTIONS: AtelierQuestion[] = [
   { key: "carriage", label: "How should it be carried?", type: "select", options: ["Top handles", "Shoulder strap", "Crossbody strap", "Handles + strap"] },
   { key: "closure", label: "Closure", type: "select", options: ["Zip", "Flap + magnet", "Turn-lock", "Drawstring", "Open top"] },
   { key: "structure", label: "Structure", type: "select", options: ["Structured", "Soft", "Semi-structured"] },
+  { key: "compartments", label: "Compartments", type: "select", options: ["Single space", "Two sections", "Three sections", "Laptop + essentials"], optional: true },
   { key: "gusset", label: "Depth / gusset", type: "select", options: ["Slim", "Medium", "Wide", "Expandable"], optional: true },
 ];
 
