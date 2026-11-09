@@ -23,6 +23,7 @@ const NAV: Array<{ label: string; to: string; roles: AdminRole[] }> = [
   { label: "Media", to: "/admin/media", roles: ["owner", "operations"] },
   { label: "Corporate", to: "/admin/corporate", roles: ["owner", "sales"] },
   { label: "Partners", to: "/admin/partners", roles: ["owner", "sales"] },
+  { label: "Dream Studio", to: "/admin/studio", roles: ["owner"] },
   { label: "Bespoke", to: "/admin/bespoke", roles: ["owner", "sales"] },
    { label: "Design Requests", to: "/admin/design-requests", roles: ["owner", "sales"] },
    { label: "Messages", to: "/admin/messages", roles: ["owner", "operations"] },
