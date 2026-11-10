@@ -10,7 +10,7 @@ export const Route = createFileRoute("/")({
   loader: () => getHomePageDataFn(),
   head: () => ({
     meta: [
-      { title: `Design Your Dream Outfit — ${BRAND.name}` },
+      { title: `Design Your Dream Product in 5 Minutes — ${BRAND.name}` },
       { name: "description", content: HERO_BODY },
     ],
   }),
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
 });
 
 const HERO_BODY =
-  "Choose the leather piece, material, colours and details visually. Save your dream, change it later, share it safely and let DREAMZ turn the strongest ideas into real leather.";
+  "Choose a product, tap real leather references, select colours and construction details, then receive a complete design specification and copy-ready AI prompt.";
 const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
 /** /shop/$category takes its own search params (no `q`). */
 const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
@@ -43,34 +43,47 @@ function Home() {
   return (
     <div>
       {/* ── Opening: the offer first, then the hero product ─── */}
-      <section className="bg-ivory pt-28 sm:pt-28">
-        <div className="mx-auto max-w-7xl px-5 sm:px-8 pb-10 sm:pb-16 text-center">
-          {/* No fade-up on the H1 or hero image: the LCP element must paint
-              at full opacity immediately (transparent elements are skipped
-              as LCP candidates, so the entrance animation delayed it). */}
-          <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.02] uppercase tracking-tight">
-            Design Your Dream Outfit
-          </h1>
-          <p className="mt-6 max-w-xl mx-auto text-stone leading-relaxed sm:text-lg fade-up fade-up-1">
-            {HERO_BODY}
-          </p>
-          <div className="mt-9 flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 fade-up fade-up-2">
-            <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">
-              Design Your Dream — 3 Free
-            </Link>
-            <a href="#open-atelier" className="btn-lux btn-lux-outline">
-              See How It Works
-            </a>
+      <section className="bg-ivory">
+        <div className="bg-ink text-ivory">
+          <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-28 sm:pt-28 pb-12 sm:pb-16 text-center">
+            <p className="overline-label !text-gold-soft mb-4">DREAMZ OPEN ATELIER · SEASON OFFER</p>
+            <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.02] uppercase tracking-tight">
+              Design Your Dream Product in 5 Minutes
+            </h1>
+            <p className="mt-5 font-editorial text-2xl sm:text-3xl text-gold-soft">
+              We produce and deliver it in 7 days.
+            </p>
+            <p className="mt-5 max-w-2xl mx-auto text-sm sm:text-base text-ivory/75 leading-relaxed">
+              {HERO_BODY}
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+              <Link
+                to="/custom"
+                search={{ design: undefined, t: undefined, start: "1", brief: undefined }}
+                className="btn-lux btn-lux-gold"
+              >
+                Start My 5-Minute Design
+              </Link>
+              <Link
+                to="/shop"
+                search={SHOP_SEARCH}
+                className="btn-lux border border-ivory/40 text-ivory hover:border-ivory"
+              >
+                Shop Ready-Made
+              </Link>
+            </div>
+            <div className="mt-7 grid gap-2 sm:grid-cols-3 max-w-3xl mx-auto text-[0.66rem] uppercase tracking-btn text-ivory/70">
+              <span>3 saved designs free</span>
+              <span>Visual leather & component samples</span>
+              <span>Production + delivery in 7 days</span>
+            </div>
+            <p className="mt-5 text-[0.66rem] text-ivory/55">
+              The 7-day timeline starts after the final design, measurements and order are confirmed.
+            </p>
           </div>
-          <p className="mt-5 text-xs text-stone leading-relaxed fade-up fade-up-3">
-            Answer a few guided questions and receive a ready-to-copy DREAMZ design prompt in about five minutes.
-          </p>
-          <p className="mt-3 text-xs text-stone tracking-wide">
-            Handmade in Nigeria · Made to order or ready to wear · Delivery nationwide
-          </p>
         </div>
 
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 pb-12">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 pt-8 pb-12">
           <Link
             to="/dreams"
             className="block border border-gold/50 bg-gold/5 px-5 py-6 sm:px-8 sm:py-7 text-center transition hover:border-gold"

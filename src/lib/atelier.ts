@@ -380,6 +380,13 @@ function meaningPhrase(b: AtelierBrief): string {
   return words || "personal significance chosen by the client";
 }
 
+function effectiveSurfaceLabel(b: AtelierBrief): string {
+  if (b.texture?.trim()) return b.texture.trim();
+  if (/suede/i.test(b.material || "")) return "Natural suede nap";
+  if (/nubuck/i.test(b.material || "")) return "Natural nubuck nap";
+  return "not selected";
+}
+
 /**
  * DREAMZ design DNA — carried by every prompt. Distinctive, not noisy.
  */
@@ -462,7 +469,7 @@ export function buildDesignSummary(b: AtelierBrief): string {
     "",
     "MATERIAL & COLOUR",
     `• Leather base: ${b.material ? safeLeatherMaterial(b.material) : "not selected"}`,
-    `• Surface / finish: ${b.texture || "not selected"}`,
+    `• Surface / finish: ${effectiveSurfaceLabel(b)}`,
     `• Primary colour: ${b.primaryColour || "not selected"}`,
     `• Accent colour: ${b.secondaryColour || "none selected"}`,
     b.pattern ? `• Pattern / trim direction: ${b.pattern}` : "",
@@ -518,7 +525,8 @@ export function buildRenderPrompt(b: AtelierBrief): string {
   const material = b.material
     ? safeLeatherMaterial(b.material)
     : "Material not selected — use a neutral realistic leather surface only as a rendering placeholder; do not invent or name a leather type.";
-  const finish = (b.texture || b.material || "").toLowerCase();
+  const effectiveSurface = effectiveSurfaceLabel(b);
+  const finish = (effectiveSurface || b.material || "").toLowerCase();
   const grain = /suede|nubuck/i.test(finish)
     ? "matte velvety nap with natural texture variation"
     : /pebbl/i.test(finish)
@@ -534,7 +542,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     `Product: ${b.piece}`,
     `Category: ${b.category}`,
     b.material ? `Material selected: ${safeLeatherMaterial(b.material)}` : "Material selected: none",
-    b.texture ? `Texture / finish selected: ${b.texture}` : "Texture / finish selected: none",
+    `Texture / finish selected: ${effectiveSurface}`,
     b.primaryColour ? `Primary colour selected: ${b.primaryColour}` : "Primary colour selected: none",
     b.secondaryColour ? `Accent colour selected: ${b.secondaryColour}` : "Accent colour selected: none",
     Object.keys(b.construction || {}).length
@@ -568,7 +576,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     [
       "C. LEATHER & MATERIAL",
-      `${material}. Selected finish: ${b.texture || "none — keep neutral"}. Surface: ${grain}. Realistic thickness and stiffness appropriate to the piece; edge treatment finished with edge paint or burnishing as appropriate.`,
+      `${material}. Selected finish: ${effectiveSurface}. Surface: ${grain}. Realistic thickness and stiffness appropriate to the piece; edge treatment finished with edge paint or burnishing as appropriate.`,
     ],
     [
       "D. COLOUR SYSTEM",
@@ -626,7 +634,7 @@ export function buildArtisanBrief(b: AtelierBrief): string {
     "ARTISAN PRODUCTION BRIEF — DREAMZ LEATHER ATELIER",
     `Product type: ${b.piece} (${b.category})`,
     `Upper/body leather: ${material ?? "AT ARTELIER DISCRETION — recommend and confirm with client"} [ARTISAN CONFIRMATION REQUIRED]`,
-    `Leather finish: ${b.texture || "to match selected leather"} [ARTISAN CONFIRMATION REQUIRED]`,
+    `Leather finish: ${effectiveSurfaceLabel(b)} [ARTISAN CONFIRMATION REQUIRED]`,
     "Lining: appropriate to the piece; confirm colour and material [ARTISAN CONFIRMATION REQUIRED]",
     `Sole/base: ${b.construction.soleType || "n/a for this piece"}`,
     `Major parts: standard pattern for a ${b.piece.toLowerCase()}, adjusted to the silhouette notes below`,

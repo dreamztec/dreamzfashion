@@ -3,6 +3,7 @@ import {
   MATERIAL_VISUALS,
   colourVisual,
   constructionVisual,
+  materialSurfaceLabel,
   visualForPiece,
 } from "@/lib/visual-designer";
 
@@ -123,10 +124,10 @@ export function DesignConceptPreview({
             {secondary?.hex && <span className="h-4 w-4 rounded-full border border-ink/15" style={{ backgroundColor: secondary.hex }} />}
           </div>
         </div>
-        {preview.texture && (
+        {preview.material && (
           <div>
-            <p className="uppercase tracking-btn text-[0.58rem] text-stone">Finish</p>
-            <p className="mt-1">{preview.texture}</p>
+            <p className="uppercase tracking-btn text-[0.58rem] text-stone">Surface</p>
+            <p className="mt-1">{materialSurfaceLabel(preview.material, preview.texture)}</p>
           </div>
         )}
         {construction.soleType && (
@@ -144,7 +145,7 @@ export function DesignConceptPreview({
       </div>
       {!compact && (
         <p className="px-4 pb-4 text-[0.66rem] text-stone leading-relaxed">
-          This is a blank concept board built from your selections — not a DREAMZ catalogue product. Leather swatches are visual references; the atelier confirms the exact hide, component compatibility, colour placement and construction before production.
+          This is a blank concept board built from your selections — not a DREAMZ catalogue product. The colour overlay and material cards update as you choose. Leather swatches are visual references; the atelier confirms the exact hide, component compatibility and construction before production.
         </p>
       )}
     </div>

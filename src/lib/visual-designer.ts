@@ -238,7 +238,7 @@ export const SOLE_VISUALS: VisualOption[] = [
   { id:"leather", label:"Leather sole", note:"Slim, formal and refined.", image:svgCard("Leather sole","sole") },
   { id:"rubber", label:"Rubber sole", note:"Everyday grip and easier wet-weather wear.", image:svgCard("Rubber sole","sole","#444") },
   { id:"commando", label:"Commando sole", note:"Deeper tread for boots and rugged footwear.", image:svgCard("Commando sole","sole","#2d2d2d") },
-  { id:"chunky", label:"Chunky sole", note:"Thicker modern profile.", image:svgCard("Chunky sole","sole","#222"), minPlan:"creator" },
+  { id:"chunky", label:"Chunky sole", note:"Thicker modern profile.", image:svgCard("Chunky sole","sole","#222") },
 ];
 
 export const HEEL_VISUALS: VisualOption[] = [
@@ -320,6 +320,23 @@ export function recommendedMaterials(category: AtelierCategory | null, piece: st
   if (/boot/i.test(piece)) return ["Full-grain leather","Nubuck","Suede"];
   if (/slide|sandal|mule|loafer/i.test(piece)) return ["Full-grain leather","Top-grain leather","Suede"];
   return ["Full-grain leather","Top-grain leather"];
+}
+
+export function compatibleFinishLabels(materialLabel: string | null | undefined): string[] {
+  const material = (materialLabel || "").toLowerCase();
+  if (!material) return [];
+  if (material.includes("suede") || material.includes("nubuck")) return [];
+  if (material.includes("full-grain")) return ["Smooth", "Pebbled", "Pull-up / waxy"];
+  if (material.includes("top-grain")) return ["Smooth", "Pebbled", "Patent gloss", "Embossed"];
+  return FINISH_VISUALS.map((item) => item.label);
+}
+
+export function materialSurfaceLabel(materialLabel: string | null | undefined, finishLabel: string | null | undefined): string {
+  if (finishLabel) return finishLabel;
+  const material = (materialLabel || "").toLowerCase();
+  if (material.includes("suede")) return "Natural suede nap";
+  if (material.includes("nubuck")) return "Natural nubuck nap";
+  return "Not selected";
 }
 
 export function recommendedFinishes(category: AtelierCategory | null, piece: string): string[] {

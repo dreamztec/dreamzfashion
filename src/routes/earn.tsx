@@ -17,6 +17,10 @@ export const Route = createFileRoute("/earn")({
       },
     ],
   }),
+  headers: () => ({
+    "Netlify-CDN-Cache-Control": "public, durable, max-age=300, stale-while-revalidate=1800",
+  }),
+  staleTime: 60_000,
   component: EarnPage,
 });
 
