@@ -349,6 +349,45 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     setPublished(null);
   };
 
+  const automaticLandingHeadline = () =>
+    answers.landingHeadline.trim() ||
+    (answers.productName.trim()
+      ? answers.productName.trim() + " — Designed Around a Dream"
+      : "A Dream Turned Into Leather");
+
+  const automaticLandingStory = () => {
+    if (answers.landingStory.trim()) return answers.landingStory.trim();
+    const dream = answers.dreamGoal.trim() || "turn a personal dream into something real";
+    const name = answers.productName.trim() || answers.piece || "leather piece";
+    const audience = answers.designAudience ? " with a " + answers.designAudience.toLowerCase() + " design direction" : "";
+    const art = answers.paintingChoice === "yes"
+      ? " It includes artwork/painting inspired by " + (answers.paintingNotes.trim() || "the story behind the dream") + "."
+      : "";
+    return "My dream is to " + dream + ". I created " + name + audience + " with DREAMZ as a physical expression of that dream." + art;
+  };
+
+  const payloadFor = (currentResult: AtelierResult, imageRefId = generatedImageRefId) => ({
+    answers,
+    designSummary: currentResult.designSummary,
+    renderPrompt: currentResult.renderPrompt,
+    artisanBrief: currentResult.artisanBrief,
+    visualPreview: {
+      piece: answers.piece,
+      material: answers.material,
+      texture: answers.texture,
+      primaryColour: answers.primaryColour,
+      secondaryColour: answers.secondaryColour,
+      image: pieceVisual?.image || null,
+      construction: answers.construction,
+    },
+    referenceIds,
+    generatedImageRefId: imageRefId || undefined,
+    landingPage: {
+      headline: automaticLandingHeadline(),
+      story: automaticLandingStory(),
+    },
+  });
+
   const copyFullPrompt = async () => {
     if (!result?.renderPrompt || typeof window === "undefined") return;
     try {
@@ -437,6 +476,33 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       }
       setResult(response);
       setStep(5);
+
+      // The first completed Studio design is saved privately automatically for signed-in users.
+      // Existing designs are not silently changed from public to private.
+      if (user && !currentBriefId) {
+        try {
+          const draft = await saveDesignerDesign({
+            data: {
+              title: answers.productName.trim() || designTitle(answers),
+              category: answers.category || "",
+              piece: answers.piece,
+              projectMode: answers.projectMode,
+              clientLabel: answers.clientLabel,
+              publish: false,
+              payload: payloadFor(response),
+            },
+          });
+          if (draft.ok) {
+            setCurrentBriefId(draft.id);
+            setApprovalToken(draft.approvalToken || null);
+            const refreshed = await getMyDesignerState();
+            setDesignerState(refreshed);
+            setNotice("Design composed and saved privately. Copy the prompt, generate the image, then return here to finish the Dream page.");
+          }
+        } catch {
+          // Session storage still preserves the completed steps if the private autosave fails.
+        }
+      }
     } catch {
       setNotice("The studio couldn't compose the design just now. Your selections are still here.");
     } finally {
@@ -453,44 +519,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     sessionStorage.setItem("dfk-auth-return-to", currentBriefId ? "/custom?brief=" + currentBriefId : "/custom?start=1");
   };
 
-  const automaticLandingHeadline = () =>
-    answers.landingHeadline.trim() ||
-    (answers.productName.trim()
-      ? answers.productName.trim() + " — Designed Around a Dream"
-      : "A Dream Turned Into Leather");
 
-  const automaticLandingStory = () => {
-    if (answers.landingStory.trim()) return answers.landingStory.trim();
-    const dream = answers.dreamGoal.trim() || "turn a personal dream into something real";
-    const name = answers.productName.trim() || answers.piece || "leather piece";
-    const audience = answers.designAudience ? " with a " + answers.designAudience.toLowerCase() + " design direction" : "";
-    const art = answers.paintingChoice === "yes"
-      ? " It includes artwork/painting inspired by " + (answers.paintingNotes.trim() || "the story behind the dream") + "."
-      : "";
-    return "My dream is to " + dream + ". I created " + name + audience + " with DREAMZ as a physical expression of that dream." + art;
-  };
-
-  const payloadFor = (currentResult: AtelierResult, imageRefId = generatedImageRefId) => ({
-    answers,
-    designSummary: currentResult.designSummary,
-    renderPrompt: currentResult.renderPrompt,
-    artisanBrief: currentResult.artisanBrief,
-    visualPreview: {
-      piece: answers.piece,
-      material: answers.material,
-      texture: answers.texture,
-      primaryColour: answers.primaryColour,
-      secondaryColour: answers.secondaryColour,
-      image: pieceVisual?.image || null,
-      construction: answers.construction,
-    },
-    referenceIds,
-    generatedImageRefId: imageRefId || undefined,
-    landingPage: {
-      headline: automaticLandingHeadline(),
-      story: automaticLandingStory(),
-    },
-  });
 
   const save = async (publish: boolean) => {
     if (!result) {
@@ -1413,34 +1442,62 @@ function SharePanel({
   title: string;
   earnCode: string | null;
 }) {
+  const [shareNotice, setShareNotice] = useState("");
   const directPath = "/dream/" + publicSlug;
   const path = earnCode
     ? "/r/" + encodeURIComponent(earnCode) + "?to=" + encodeURIComponent(directPath)
     : directPath;
-  const share = async () => {
+
+  const shareUrl = () => window.location.origin + path;
+  const shareText = () => "I designed " + title + " with DREAMZ. See the story behind it.";
+
+  const track = () => {
     void recordDesignShare({ data: publicSlug }).catch(() => {});
-    const url = window.location.origin + path;
+  };
+
+  const nativeShare = async (platform?: string) => {
+    track();
+    const url = shareUrl();
     if (navigator.share) {
-      await navigator.share({ title, text: "I designed this dream leather piece with DREAMZ. Would you wear it?", url }).catch(() => {});
+      await navigator.share({ title, text: shareText(), url }).catch(() => {});
       return;
     }
     await navigator.clipboard.writeText(url);
+    setShareNotice(platform ? "Link copied. Paste it into " + platform + "." : "Dream link copied.");
   };
-  const whatsapp = typeof window !== "undefined"
-    ? "https://wa.me/?text=" + encodeURIComponent("I designed this dream leather piece with DREAMZ. Would you wear it? " + window.location.origin + path)
-    : "#";
+
+  const directShare = (platform: "whatsapp" | "telegram" | "facebook") => {
+    track();
+    const url = encodeURIComponent(shareUrl());
+    const text = encodeURIComponent(shareText());
+    const target =
+      platform === "whatsapp"
+        ? "https://wa.me/?text=" + text + "%20" + url
+        : platform === "telegram"
+          ? "https://t.me/share/url?url=" + url + "&text=" + text
+          : "https://www.facebook.com/sharer/sharer.php?u=" + url;
+    window.open(target, "_blank", "noopener,noreferrer");
+  };
 
   return (
     <div className="mt-7 border border-gold/40 bg-gold/5 p-5">
       <p className="overline-label !text-gold">Your Dream Is Live</p>
-      <h3 className="font-editorial text-2xl mt-2">Share it boldly.</h3>
-      <p className="text-sm text-stone mt-2">Your private references and client details are not shown publicly.</p>
-      <div className="mt-4 flex flex-wrap gap-3">
-        <Link to="/dream/$slug" params={{ slug: publicSlug }} className="btn-lux btn-lux-primary !py-2.5">View My Design</Link>
-        <button type="button" onClick={() => void share()} className="btn-lux btn-lux-outline !py-2.5">Share / Copy Link</button>
-        <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-outline !py-2.5">WhatsApp</a>
+      <h3 className="font-editorial text-2xl mt-2">Share the image and its story.</h3>
+      <p className="text-sm text-stone mt-2">
+        Your private references stay hidden. Likes, views, shares and orders remain attached to this unique Dream page.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link to="/dream/$slug" params={{ slug: publicSlug }} className="btn-lux btn-lux-primary !py-2.5">View Landing Page</Link>
+        <button type="button" onClick={() => void nativeShare("Instagram")} className="btn-lux btn-lux-outline !py-2.5">Instagram</button>
+        <button type="button" onClick={() => void nativeShare("TikTok")} className="btn-lux btn-lux-outline !py-2.5">TikTok</button>
+        <button type="button" onClick={() => void nativeShare("YouTube")} className="btn-lux btn-lux-outline !py-2.5">YouTube</button>
+        <button type="button" onClick={() => directShare("facebook")} className="btn-lux btn-lux-outline !py-2.5">Facebook</button>
+        <button type="button" onClick={() => directShare("whatsapp")} className="btn-lux btn-lux-outline !py-2.5">WhatsApp</button>
+        <button type="button" onClick={() => directShare("telegram")} className="btn-lux btn-lux-outline !py-2.5">Telegram</button>
+        <button type="button" onClick={() => void nativeShare()} className="btn-lux btn-lux-outline !py-2.5">More Apps</button>
         <Link to="/dreamer/$slug" params={{ slug: profileSlug }} className="nav-link text-xs self-center">My Dreamer Page →</Link>
       </div>
+      {shareNotice && <p className="mt-3 text-xs text-stone">{shareNotice}</p>}
     </div>
   );
 }
