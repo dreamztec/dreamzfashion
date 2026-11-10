@@ -11,6 +11,8 @@ import {
   FINISH_VISUALS,
   MATERIAL_VISUALS,
   PIECE_VISUALS,
+  compatibleFinishLabels,
+  materialSurfaceLabel,
   PROJECT_MODES,
 } from "../src/lib/visual-designer";
 import { buildDesignSummary, buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
@@ -73,6 +75,21 @@ describe("visual-first design library", () => {
     expect(COLOUR_VISUALS.every((item) => Boolean(item.hex))).toBe(true);
   });
 
+
+  it("prevents impossible leather and finish combinations", () => {
+    expect(compatibleFinishLabels("Suede")).toEqual([]);
+    expect(compatibleFinishLabels("Nubuck")).toEqual([]);
+    expect(compatibleFinishLabels("Full-grain leather")).toEqual(
+      expect.arrayContaining(["Smooth", "Pebbled", "Pull-up / waxy"]),
+    );
+    expect(compatibleFinishLabels("Full-grain leather")).not.toContain("Patent gloss");
+    expect(compatibleFinishLabels("Top-grain leather")).toEqual(
+      expect.arrayContaining(["Smooth", "Pebbled", "Patent gloss", "Embossed"]),
+    );
+    expect(materialSurfaceLabel("Suede", "")).toBe("Natural suede nap");
+    expect(materialSurfaceLabel("Nubuck", "")).toBe("Natural nubuck nap");
+  });
+
   it("keeps product construction beginner-friendly and below ten decisions", () => {
     const paths = [
       ["footwear", "Oxford"],
@@ -125,6 +142,17 @@ describe("locked-data render prompt", () => {
     expect(prompt).toContain("Buckle: Single buckle");
     expect(prompt).toContain("N. FINAL IMAGE DELIVERABLE");
     expect(prompt).toContain("Generate one finished photorealistic product image");
+  });
+
+  it("describes suede and nubuck surfaces even when no extra finish is selected", () => {
+    const prompt = buildRenderPrompt({
+      ...minimal,
+      material: "Suede",
+      primaryColour: "Black",
+      construction: { soleType: "Rubber sole", strapStyle: "Single strap", buckleStyle: "Minimal hardware" },
+    });
+    expect(prompt).toContain("Texture / finish selected: Natural suede nap");
+    expect(prompt).toContain("Selected finish: Natural suede nap");
   });
 
   it("produces a detailed human-readable design specification", () => {
