@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth-client";
 import {
   ATELIER_CATEGORIES,
@@ -116,6 +116,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [published, setPublished] = useState<{ publicSlug: string; profileSlug: string } | null>(null);
   const [approvalToken, setApprovalToken] = useState<string | null>(null);
+  const studioTopRef = useRef<HTMLDivElement>(null);
 
   const plan = designerState && !designerState.unauthenticated ? designerState.plan : getDesignerPlan("free");
   const planId = plan.id;
@@ -133,6 +134,13 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       })),
     [],
   );
+
+  useEffect(() => {
+    if (step === 0 || typeof window === "undefined") return;
+    window.requestAnimationFrame(() => {
+      studioTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [step]);
 
   useEffect(() => {
     let cancelled = false;
@@ -238,6 +246,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       };
     });
     setResult(null);
+    setPublished(null);
   };
 
   const chooseCategory = (category: AtelierCategory) => {
@@ -248,6 +257,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       construction: {},
     }));
     setResult(null);
+    setPublished(null);
   };
 
   const chooseProjectMode = (mode: Answers["projectMode"], minPlan: string) => {
@@ -287,6 +297,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       construction: { ...current.construction, [key]: value },
     }));
     setResult(null);
+    setPublished(null);
   };
 
   const copyFullPrompt = async () => {
@@ -482,6 +493,8 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       const url = URL.createObjectURL(file);
       setReferenceIds((items) => [...items, json.refId!]);
       setReferencePreviews((items) => [...items, { id: json.refId!, name: file.name, url }]);
+      setResult(null);
+      setPublished(null);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The reference image could not be uploaded.");
     } finally {
@@ -516,7 +529,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const steps = ["Piece", "Dream", "Leather", "Details", "Personalise", "Review"];
 
   return (
-    <div>
+    <div ref={studioTopRef} className="scroll-mt-24">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="overline-label">DREAMZ Visual Studio</p>
@@ -742,7 +755,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       )}
                       <div className="aspect-square bg-ivory-deep overflow-hidden">
                         {optionImageUrl(material.image) ? (
-                          <img src={material.image} alt={material.label + " reference"} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
+                          <img src={material.image} alt={material.label + " reference"} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
                         ) : (
                           <div className="h-full p-5 flex items-end"><span className="font-editorial text-xl">{material.label}</span></div>
                         )}
@@ -814,7 +827,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                           <span className="absolute right-2 top-2 z-10 bg-ink px-2 py-1 text-[0.52rem] uppercase tracking-btn text-ivory">Selected ✓</span>
                         )}
                         <div className="aspect-square bg-ivory-deep overflow-hidden">
-                          {finish.image && <img src={finish.image} alt={finish.label + " leather finish reference"} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />}
+                          {finish.image && <img src={finish.image} alt={finish.label + " leather finish reference"} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />}
                         </div>
                         <span className="block p-3">
                           <span className="font-editorial text-base">{finish.label}</span>
@@ -875,7 +888,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   <div key={question.key}>
                     <div className="flex items-end justify-between gap-3">
                       <h3 className="font-editorial text-xl">{question.label}</h3>
-                      {question.optional && <span className="text-[0.58rem] uppercase tracking-btn text-stone">Optional</span>}
+                      <span className={"text-[0.58rem] uppercase tracking-btn " + (question.optional ? "text-stone" : "text-oxblood")}>
+                        {question.optional ? "Optional" : "Required"}
+                      </span>
                     </div>
                     {question.type === "select" ? (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-3">
@@ -991,6 +1006,8 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                           onClick={() => {
                             setReferenceIds((items) => items.filter((id) => id !== image.id));
                             setReferencePreviews((items) => items.filter((item) => item.id !== image.id));
+                            setResult(null);
+                            setPublished(null);
                           }}
                           className="text-[0.62rem] underline mt-2"
                         >
