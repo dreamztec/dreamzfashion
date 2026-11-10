@@ -348,3 +348,17 @@ select.input-lux {
   background-size: 800px 100%;
   animation: dfk-shimmer 1.4s infinite linear;
 }
+
+/* DREAMZ spectrum: restrained accents derived from the multicolour brand mark. */
+.dreamz-spectrum-border {
+  position: relative;
+  padding-top: 0.85rem;
+}
+.dreamz-spectrum-border::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3159c9 0%, #d9344f 24%, #1f7a45 48%, #d4a62a 70%, #161616 100%);
+}

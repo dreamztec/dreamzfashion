@@ -115,6 +115,42 @@ function optionImageUrl(url: string | undefined) {
   return url;
 }
 
+const AI_VISUAL_TOOLS = [
+  { name: "ChatGPT", href: "https://chatgpt.com/" },
+  { name: "Gemini", href: "https://gemini.google.com/" },
+  { name: "Grok", href: "https://grok.com/" },
+  { name: "Copilot", href: "https://copilot.microsoft.com/" },
+] as const;
+
+async function optimiseImageForUpload(file: File): Promise<File> {
+  if (typeof window === "undefined") return file;
+  if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size < 900_000) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const maxSide = 1800;
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", 0.88),
+    );
+    if (!blob || blob.size >= file.size) return file;
+    return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webp", {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } catch {
+    return file;
+  }
+}
+
 export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const { user } = useAuth();
   const [step, setStep] = useState(0);
@@ -229,8 +265,8 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   }, [briefId, user]);
 
   useEffect(() => {
-    if (!user || typeof window === "undefined" || briefId) return;
-    const raw = sessionStorage.getItem(STUDIO_SESSION_KEY);
+    if (typeof window === "undefined" || briefId) return;
+    const raw = localStorage.getItem(STUDIO_SESSION_KEY);
     if (!raw) return;
     try {
       const pending = JSON.parse(raw) as {
@@ -258,16 +294,16 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         );
       }
       if (typeof pending.step === "number") setStep(Math.max(0, Math.min(5, pending.step)));
-      sessionStorage.removeItem(STUDIO_SESSION_KEY);
+      localStorage.removeItem(STUDIO_SESSION_KEY);
     } catch {
-      sessionStorage.removeItem(STUDIO_SESSION_KEY);
+      localStorage.removeItem(STUDIO_SESSION_KEY);
     }
-  }, [user, briefId]);
+  }, [briefId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || briefId) return;
     try {
-      sessionStorage.setItem(
+      localStorage.setItem(
         STUDIO_SESSION_KEY,
         JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
       );
@@ -278,7 +314,10 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
   const set = <K extends keyof Answers>(key: K, value: Answers[K]) => {
     setAnswers((current) => ({ ...current, [key]: value }));
-    setResult(null);
+    // Product naming and landing-page copy happen after the render prompt is composed.
+    // Editing them must never throw the customer back out of the completed Review step.
+    const presentationOnly = key === "productName" || key === "landingHeadline" || key === "landingStory";
+    if (!presentationOnly) setResult(null);
     setPublished(null);
   };
 
@@ -512,7 +551,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
   const stashForSignIn = () => {
     if (typeof window === "undefined") return;
-    sessionStorage.setItem(
+    localStorage.setItem(
       STUDIO_SESSION_KEY,
       JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
     );
@@ -596,8 +635,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     setUploadBusy(true);
     setNotice(null);
     try {
+      const uploadFile = await optimiseImageForUpload(file);
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", uploadFile);
       const response = await fetch("/api/design-references", { method: "POST", body: form });
       const json = (await response.json()) as { refId?: string; error?: string };
       if (!response.ok || !json.refId) throw new Error(json.error || "Upload failed.");
@@ -622,8 +662,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     setUploadBusy(true);
     setNotice(null);
     try {
+      const uploadFile = await optimiseImageForUpload(file);
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", uploadFile);
       const response = await fetch("/api/design-references", { method: "POST", body: form });
       const json = (await response.json()) as { refId?: string; error?: string };
       if (!response.ok || !json.refId) throw new Error(json.error || "Upload failed.");
@@ -635,6 +676,32 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       setNotice(error instanceof Error ? error.message : "The generated design image could not be uploaded.");
     } finally {
       setUploadBusy(false);
+    }
+  };
+
+  const openAiVisualTool = async (tool: (typeof AI_VISUAL_TOOLS)[number]) => {
+    if (!result?.renderPrompt || typeof window === "undefined") return;
+    try {
+      localStorage.setItem(
+        STUDIO_SESSION_KEY,
+        JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step: 5 }),
+      );
+      const returnInstruction =
+        "\n\nAFTER GENERATING THE IMAGE: show the finished image first, then tell the customer: " +
+        "\"Save/download this image. Your DREAMZ Studio is still open in the previous tab. Return there to upload it, or stay here and save the image manually before returning.\"";
+      await navigator.clipboard.writeText(result.renderPrompt + returnInstruction);
+      const opened = window.open(tool.href, "_blank");
+      if (!opened) {
+        setNotice("Your prompt is copied and your DREAMZ design is saved. Your browser blocked the new tab — allow pop-ups, then tap " + tool.name + " again.");
+        return;
+      }
+      opened.opener = null;
+      setHasCopiedPrompt(true);
+      setCopiedPrompt(true);
+      setNotice(tool.name + " opened with your DREAMZ prompt copied. Keep this DREAMZ tab open; your design is saved here.");
+      window.setTimeout(() => setCopiedPrompt(false), 2200);
+    } catch {
+      setNotice("Your design is saved. Copy the prompt manually, open your preferred AI image tool, then return here to upload the result.");
     }
   };
 
@@ -1070,6 +1137,26 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   />
                 ))}
               </div>
+              <div className="mt-7 grid gap-4 sm:grid-cols-2">
+                <label>
+                  <span className="text-xs uppercase tracking-btn">Type a primary colour not shown</span>
+                  <input
+                    value={answers.primaryColour}
+                    onChange={(e) => chooseColour("primaryColour", e.target.value)}
+                    className="input-lux mt-2"
+                    placeholder="e.g. Dusty rose, teal, champagne gold"
+                  />
+                </label>
+                <label>
+                  <span className="text-xs uppercase tracking-btn">Type an accent colour not shown</span>
+                  <input
+                    value={answers.secondaryColour}
+                    onChange={(e) => chooseColour("secondaryColour", e.target.value)}
+                    className="input-lux mt-2"
+                    placeholder="Optional custom accent"
+                  />
+                </label>
+              </div>
             </section>
           )}
 
@@ -1077,7 +1164,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             <section>
               <h2 className="font-editorial text-3xl">Choose the parts</h2>
               <p className="text-sm text-stone mt-2">
-                Only the parts that matter for your {answers.piece || "piece"} appear here. Each visual is a neutral construction guide — never one of our sale products.
+                Only the parts that matter for your {answers.piece || "piece"} appear here. Each card uses real leather/product photography as a shape or construction reference. Your final design is still created from your own selections.
               </p>
               <div className="mt-6 space-y-7">
                 {constructionQuestionsForPiece.map((question) => (
@@ -1257,9 +1344,24 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
                   <div className="mt-6 border border-gold/30 bg-gold/5 p-5">
                     <p className="overline-label !text-gold">Turn the AI image into your Dream page</p>
-                    <h3 className="font-editorial text-2xl mt-2">1. Copy prompt → 2. Generate image → 3. Upload it here</h3>
+                    <h3 className="font-editorial text-2xl mt-2">Generate → return → upload → name → publish</h3>
                     <p className="mt-2 text-sm text-stone">
-                      Generate the product image with ChatGPT, Gemini, Grok or another image tool using the prompt above. Then upload that finished image here. Your completed Studio choices remain saved.
+                      Choose an AI tool below. DREAMZ copies your exact locked prompt and opens the tool in a new tab, while this Studio keeps your completed design safely saved. Generate and save the image, then return here and upload it.
+                    </p>
+                    <div className="dreamz-spectrum-border mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      {AI_VISUAL_TOOLS.map((tool) => (
+                        <button
+                          key={tool.name}
+                          type="button"
+                          onClick={() => void openAiVisualTool(tool)}
+                          className="btn-lux btn-lux-outline !py-3"
+                        >
+                          Open {tool.name}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-[0.64rem] text-stone">
+                      Your prompt is copied automatically. DREAMZ stays open in its original tab so you can return without losing your design.
                     </p>
                     {!hasCopiedPrompt && !generatedImageRefId ? (
                       <p className="mt-4 border border-ink/10 bg-ivory px-4 py-3 text-xs text-stone">Copy the Full AI Prompt above first.</p>
@@ -1272,14 +1374,34 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                               <p className="font-editorial text-xl">Generated image added ✓</p>
                               <label className="btn-lux btn-lux-outline !py-2.5 mt-3 cursor-pointer inline-flex">
                                 Replace Image
-                                <input type="file" accept={REFERENCE_LIMITS.accept} className="hidden" onChange={(e) => e.target.files?.[0] && void handleGeneratedImageUpload(e.target.files[0])} />
+                                <input
+                                  type="file"
+                                  accept={REFERENCE_LIMITS.accept}
+                                  className="hidden"
+                                  disabled={uploadBusy}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void handleGeneratedImageUpload(file);
+                                    e.currentTarget.value = "";
+                                  }}
+                                />
                               </label>
                             </div>
                           </div>
                         ) : (
                           <label className="btn-lux btn-lux-primary cursor-pointer inline-flex">
                             {uploadBusy ? "Uploading…" : "Upload Generated Design Image"}
-                            <input type="file" accept={REFERENCE_LIMITS.accept} className="hidden" onChange={(e) => e.target.files?.[0] && void handleGeneratedImageUpload(e.target.files[0])} />
+                            <input
+                                  type="file"
+                                  accept={REFERENCE_LIMITS.accept}
+                                  className="hidden"
+                                  disabled={uploadBusy}
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) void handleGeneratedImageUpload(file);
+                                    e.currentTarget.value = "";
+                                  }}
+                                />
                           </label>
                         )}
                       </div>

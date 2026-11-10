@@ -68,7 +68,11 @@ export const ATELIER_CATEGORIES = [
     label: "Wearable Leather",
     pieces: [
       "Jacket",
+      "Leather Jacket",
       "Trouser",
+      "Leather Trouser / Pants",
+      "Leather Shirt",
+      "Leather T-shirt",
       "Skirt",
       "Vest",
       "Fashion harness",
