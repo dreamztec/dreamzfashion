@@ -6,6 +6,7 @@ import {
   CHARACTER_OPTIONS,
   DREAM_THEMES,
   constructionQuestions,
+  formatPromptFor,
   type AtelierCategory,
 } from "@/lib/atelier";
 import { composeDreamToLeather } from "@/server/atelier.functions";
@@ -116,10 +117,10 @@ function optionImageUrl(url: string | undefined) {
 }
 
 const AI_VISUAL_TOOLS = [
-  { name: "ChatGPT", href: "https://chatgpt.com/" },
-  { name: "Gemini", href: "https://gemini.google.com/" },
-  { name: "Grok", href: "https://grok.com/" },
-  { name: "Copilot", href: "https://copilot.microsoft.com/" },
+  { name: "ChatGPT", href: "https://chatgpt.com/", format: "chatgpt" },
+  { name: "Gemini", href: "https://gemini.google.com/", format: "gemini" },
+  { name: "Grok", href: "https://grok.com/", format: "grok" },
+  { name: "Copilot", href: "https://copilot.microsoft.com/", format: "universal" },
 ] as const;
 
 async function optimiseImageForUpload(file: File): Promise<File> {
@@ -687,9 +688,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step: 5 }),
       );
       const returnInstruction =
-        "\n\nAFTER GENERATING THE IMAGE: show the finished image first, then tell the customer: " +
-        "\"Save/download this image. Your DREAMZ Studio is still open in the previous tab. Return there to upload it, or stay here and save the image manually before returning.\"";
-      await navigator.clipboard.writeText(result.renderPrompt + returnInstruction);
+        "\n\nAFTER GENERATING THE IMAGE: show the finished image first, then give the customer exactly these two next-step choices:\n" +
+        "1. RETURN TO DREAMZ — go back to the DREAMZ Studio tab and use Paste Copied Image or Upload Generated Design Image.\n" +
+        "2. STAY HERE — save/download the generated image first, then return to DREAMZ later and upload it manually.\n" +
+        "Do not change the selected design details while presenting these choices.";
+      const tailoredPrompt = formatPromptFor(result.renderPrompt, tool.format);
+      await navigator.clipboard.writeText(tailoredPrompt + returnInstruction);
       const opened = window.open(tool.href, "_blank");
       if (!opened) {
         setNotice("Your prompt is copied and your DREAMZ design is saved. Your browser blocked the new tab — allow pop-ups, then tap " + tool.name + " again.");
@@ -702,6 +706,32 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       window.setTimeout(() => setCopiedPrompt(false), 2200);
     } catch {
       setNotice("Your design is saved. Copy the prompt manually, open your preferred AI image tool, then return here to upload the result.");
+    }
+  };
+
+  const pasteGeneratedImage = async () => {
+    if (typeof navigator === "undefined" || !navigator.clipboard?.read) {
+      setNotice("Clipboard image paste is not supported on this browser. Use Upload Generated Design Image instead.");
+      return;
+    }
+    setUploadBusy(true);
+    setNotice(null);
+    try {
+      const items = await navigator.clipboard.read();
+      for (const item of items) {
+        const imageType = item.types.find((type) => type.startsWith("image/"));
+        if (!imageType) continue;
+        const blob = await item.getType(imageType);
+        const extension = imageType.includes("png") ? "png" : imageType.includes("webp") ? "webp" : "jpg";
+        const file = new File([blob], "dreamz-generated-image." + extension, { type: imageType, lastModified: Date.now() });
+        await handleGeneratedImageUpload(file);
+        return;
+      }
+      setNotice("No copied image was found. Copy the generated image from the AI tool, then tap Paste Copied Image again.");
+    } catch {
+      setNotice("This browser blocked clipboard image access. Use Upload Generated Design Image instead.");
+    } finally {
+      setUploadBusy(false);
     }
   };
 
@@ -1361,7 +1391,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       ))}
                     </div>
                     <p className="mt-3 text-[0.64rem] text-stone">
-                      Your prompt is copied automatically. DREAMZ stays open in its original tab so you can return without losing your design.
+                      Each button copies a prompt tuned for that AI tool. DREAMZ stays open in the original tab so your design is not lost.
                     </p>
                     {!hasCopiedPrompt && !generatedImageRefId ? (
                       <p className="mt-4 border border-ink/10 bg-ivory px-4 py-3 text-xs text-stone">Copy the Full AI Prompt above first.</p>
@@ -1389,9 +1419,18 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                             </div>
                           </div>
                         ) : (
-                          <label className="btn-lux btn-lux-primary cursor-pointer inline-flex">
-                            {uploadBusy ? "Uploading…" : "Upload Generated Design Image"}
-                            <input
+                          <div className="flex flex-wrap gap-3">
+                            <button
+                              type="button"
+                              onClick={() => void pasteGeneratedImage()}
+                              disabled={uploadBusy}
+                              className="btn-lux btn-lux-primary"
+                            >
+                              {uploadBusy ? "Adding image…" : "Paste Copied Image"}
+                            </button>
+                            <label className="btn-lux btn-lux-outline cursor-pointer inline-flex">
+                              {uploadBusy ? "Uploading…" : "Upload Generated Design Image"}
+                              <input
                                   type="file"
                                   accept={REFERENCE_LIMITS.accept}
                                   className="hidden"
@@ -1402,7 +1441,8 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                                     e.currentTarget.value = "";
                                   }}
                                 />
-                          </label>
+                            </label>
+                          </div>
                         )}
                       </div>
                     )}
