@@ -155,10 +155,27 @@ describe("locked-data render prompt", () => {
     expect(prompt).toContain("Selected finish: Natural suede nap");
   });
 
+  it("carries the person's dream, design audience and painting choice into the prompt", () => {
+    const prompt = buildRenderPrompt({
+      ...minimal,
+      material: "Top-grain leather",
+      primaryColour: "Navy",
+      designAudience: "Male",
+      dreamGoal: "become a pilot and fly people safely around the world",
+      paintingChoice: "yes",
+      paintingNotes: "a subtle airplane line-art on one side panel",
+      construction: { soleType: "Rubber sole", strapStyle: "Single strap", buckleStyle: "Minimal hardware" },
+    });
+    expect(prompt).toContain("Design audience selected: Male");
+    expect(prompt).toContain("Dream/story selected: become a pilot");
+    expect(prompt).toContain("Painting / artwork selected: yes");
+    expect(prompt).toContain("subtle airplane line-art");
+  });
+
   it("produces a detailed human-readable design specification", () => {
     const summary = buildDesignSummary({
       ...minimal,
-      material: "Suede",
+      material: "Top-grain leather",
       texture: "Pebbled",
       primaryColour: "Oxblood",
       secondaryColour: "Cream",
