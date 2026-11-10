@@ -122,7 +122,6 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const pieceVisual = visualForPiece(answers.piece);
 
   const selectedMaterial = MATERIAL_VISUALS.find((item) => item.label === answers.material) || null;
-  const selectedFinish = FINISH_VISUALS.find((item) => item.label === answers.texture) || null;
   const compatibleFinishSet = new Set(compatibleFinishLabels(answers.material));
   const compatibleFinishes = FINISH_VISUALS.filter((item) => compatibleFinishSet.has(item.label));
 
