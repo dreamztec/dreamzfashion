@@ -22,7 +22,9 @@ import {
   PIECE_VISUALS,
   PROJECT_MODES,
   categoryVisual,
+  compatibleFinishLabels,
   constructionVisual,
+  materialSurfaceLabel,
   recommendedFinishes,
   recommendedMaterials,
   visualForPiece,
@@ -118,6 +120,11 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const plan = designerState && !designerState.unauthenticated ? designerState.plan : getDesignerPlan("free");
   const planId = plan.id;
   const pieceVisual = visualForPiece(answers.piece);
+
+  const selectedMaterial = MATERIAL_VISUALS.find((item) => item.label === answers.material) || null;
+  const selectedFinish = FINISH_VISUALS.find((item) => item.label === answers.texture) || null;
+  const compatibleFinishSet = new Set(compatibleFinishLabels(answers.material));
+  const compatibleFinishes = FINISH_VISUALS.filter((item) => compatibleFinishSet.has(item.label));
 
   const categories = useMemo(
     () =>
@@ -253,10 +260,21 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   };
 
   const chooseMaterial = (material: (typeof MATERIAL_VISUALS)[number]) => {
-    set("material", material.label);
+    const allowed = new Set(compatibleFinishLabels(material.label));
+    setAnswers((current) => ({
+      ...current,
+      material: material.label,
+      texture: current.texture && allowed.has(current.texture) ? current.texture : "",
+    }));
+    setResult(null);
+    setPublished(null);
   };
 
   const chooseFinish = (finish: (typeof FINISH_VISUALS)[number]) => {
+    if (!compatibleFinishSet.has(finish.label)) {
+      setNotice("Choose a compatible finish for " + (answers.material || "this leather") + ".");
+      return;
+    }
     set("texture", finish.label);
   };
 
@@ -299,6 +317,19 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     if (!answers.category || !answers.piece) {
       setNotice("Choose the leather piece first.");
       setStep(0);
+      return;
+    }
+    if (!answers.material || !answers.primaryColour) {
+      setNotice("Choose a leather type and primary colour before composing your design.");
+      setStep(2);
+      return;
+    }
+    const missingForCompose = constructionQuestions(answers.category, answers.piece)
+      .filter((question) => !question.optional && !(answers.construction[question.key] || "").trim())
+      .map((question) => question.label);
+    if (missingForCompose.length > 0) {
+      setNotice("Complete the required design parts: " + missingForCompose.join(", ") + ".");
+      setStep(3);
       return;
     }
     setBusy(true);
@@ -462,6 +493,26 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const constructionQuestionsForPiece = answers.category && answers.piece
     ? constructionQuestions(answers.category, answers.piece)
     : [];
+  const missingRequiredConstruction = constructionQuestionsForPiece
+    .filter((question) => !question.optional && !(answers.construction[question.key] || "").trim())
+    .map((question) => question.label);
+
+  const nextStep = () => {
+    if (step === 0 && (!answers.category || !answers.piece)) {
+      setNotice("Choose a product category and piece before continuing.");
+      return;
+    }
+    if (step === 2 && (!answers.material || !answers.primaryColour)) {
+      setNotice("Choose a leather type and primary colour so your design has enough material detail.");
+      return;
+    }
+    if (step === 3 && missingRequiredConstruction.length > 0) {
+      setNotice("Complete the required design parts: " + missingRequiredConstruction.join(", ") + ".");
+      return;
+    }
+    setNotice(null);
+    setStep((current) => Math.min(5, current + 1));
+  };
 
   const steps = ["Piece", "Dream", "Leather", "Details", "Personalise", "Review"];
 
@@ -479,6 +530,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         <Link to="/studio-plans" className="nav-link text-[0.68rem] uppercase tracking-btn">
           Plans & features →
         </Link>
+      </div>
+
+      <div className="mb-6 border border-gold/40 bg-ink px-4 py-4 text-center text-ivory sm:px-6">
+        <p className="text-[0.62rem] uppercase tracking-[0.2em] text-gold-soft">DREAMZ 7-Day Build Promise</p>
+        <p className="font-editorial text-xl sm:text-2xl mt-1">Design in about 5 minutes · Production + delivery in 7 days</p>
+        <p className="mt-1 text-[0.66rem] text-ivory/70">The 7-day timeline starts after the design, measurements and order are confirmed.</p>
       </div>
 
       {notice && (
@@ -677,12 +734,16 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <button
                       type="button"
                       key={material.id}
+                      aria-pressed={answers.material === material.label}
                       onClick={() => chooseMaterial(material)}
-                      className={"overflow-hidden border text-left " + (answers.material === material.label ? "border-ink bg-ivory-deep" : "border-ink/10")}
+                      className={"relative overflow-hidden border text-left transition " + (answers.material === material.label ? "border-ink bg-ivory-deep ring-1 ring-ink" : "border-ink/10 hover:border-ink/40")}
                     >
+                      {answers.material === material.label && (
+                        <span className="absolute right-2 top-2 z-10 bg-ink px-2 py-1 text-[0.52rem] uppercase tracking-btn text-ivory">Selected ✓</span>
+                      )}
                       <div className="aspect-square bg-ivory-deep overflow-hidden">
                         {optionImageUrl(material.image) ? (
-                          <img src={material.image} alt={material.label + " reference"} className="h-full w-full object-cover" />
+                          <img src={material.image} alt={material.label + " reference"} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
                         ) : (
                           <div className="h-full p-5 flex items-end"><span className="font-editorial text-xl">{material.label}</span></div>
                         )}
@@ -699,40 +760,76 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                 })}
               </div>
 
-              <h3 className="font-editorial text-xl mt-8">2. Surface / finish <span className="text-stone text-sm">(optional)</span></h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => set("texture", "")}
-                  className={"border p-4 text-left " + (!answers.texture ? "border-ink bg-ivory-deep" : "border-ink/10")}
-                >
-                  <span className="font-editorial text-base">Let DREAMZ advise</span>
-                  <span className="block mt-1 text-[0.64rem] text-stone">Best if you are unsure.</span>
-                </button>
-                {FINISH_VISUALS.map((finish) => {
-                  const recommended = recommendedFinishes(answers.category, answers.piece).includes(finish.label);
-                  return (
-                    <button
-                      type="button"
-                      key={finish.id}
-                      onClick={() => chooseFinish(finish)}
-                      className={"overflow-hidden border text-left " + (answers.texture === finish.label ? "border-ink bg-ivory-deep" : "border-ink/10")}
-                    >
-                      <div className="aspect-square bg-ivory-deep overflow-hidden">
-                        {finish.image && <img src={finish.image} alt={finish.label + " leather finish reference"} className="h-full w-full object-cover" />}
-                      </div>
-                      <span className="block p-3">
-                        <span className="font-editorial text-base">{finish.label}</span>
-                        {recommended && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-forest">Recommended</span>}
-                        <span className="block mt-1 text-[0.64rem] leading-relaxed text-stone">{finish.note}</span>
-                        {finish.credit && <span className="block mt-2 text-[0.52rem] leading-relaxed text-stone/80">{finish.credit}</span>}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+              {selectedMaterial && (
+                <div className="mt-5 grid gap-4 border border-ink/15 bg-ivory-deep/60 p-4 sm:grid-cols-[160px_1fr] sm:items-center">
+                  <div className="aspect-square overflow-hidden bg-white">
+                    {selectedMaterial.image ? (
+                      <img src={selectedMaterial.image} alt={selectedMaterial.label + " enlarged sample"} className="h-full w-full object-cover" />
+                    ) : null}
+                  </div>
+                  <div>
+                    <p className="text-[0.58rem] uppercase tracking-btn text-forest">Selected leather</p>
+                    <h4 className="font-editorial text-2xl mt-1">{selectedMaterial.label}</h4>
+                    <p className="mt-2 text-xs text-stone leading-relaxed">{selectedMaterial.note}</p>
+                    {selectedMaterial.bestFor && (
+                      <p className="mt-2 text-xs"><strong>Best for:</strong> {selectedMaterial.bestFor}</p>
+                    )}
+                    <p className="mt-3 text-[0.62rem] text-stone">
+                      Surface now: {materialSurfaceLabel(answers.material, answers.texture)}
+                    </p>
+                  </div>
+                </div>
+              )}
 
-              <h3 className="font-editorial text-2xl mt-9">3. Primary colour</h3>
+              <h3 className="font-editorial text-xl mt-8">2. Surface / finish <span className="text-stone text-sm">(optional)</span></h3>
+              {!answers.material ? (
+                <div className="mt-3 border border-ink/10 p-4 text-xs text-stone">Choose a leather type first. We will show only finishes that work with it.</div>
+              ) : compatibleFinishes.length === 0 ? (
+                <div className="mt-3 border border-forest/20 bg-forest/5 p-4 text-xs leading-relaxed text-stone">
+                  <strong className="text-ink">{answers.material}</strong> already defines its visible surface. No extra finish is needed.
+                  Your prompt will use <strong className="text-ink">{materialSurfaceLabel(answers.material, "")}</strong>.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-4">
+                  <button
+                    type="button"
+                    aria-pressed={!answers.texture}
+                    onClick={() => set("texture", "")}
+                    className={"border p-4 text-left transition " + (!answers.texture ? "border-ink bg-ivory-deep" : "border-ink/10 hover:border-ink/40")}
+                  >
+                    <span className="font-editorial text-base">Natural / advise me</span>
+                    <span className="block mt-1 text-[0.64rem] text-stone">Keep the selected leather natural and let DREAMZ confirm the exact surface.</span>
+                  </button>
+                  {compatibleFinishes.map((finish) => {
+                    const recommended = recommendedFinishes(answers.category, answers.piece).includes(finish.label);
+                    const selected = answers.texture === finish.label;
+                    return (
+                      <button
+                        type="button"
+                        key={finish.id}
+                        aria-pressed={selected}
+                        onClick={() => chooseFinish(finish)}
+                        className={"relative overflow-hidden border text-left transition " + (selected ? "border-ink bg-ivory-deep ring-1 ring-ink" : "border-ink/10 hover:border-ink/40")}
+                      >
+                        {selected && (
+                          <span className="absolute right-2 top-2 z-10 bg-ink px-2 py-1 text-[0.52rem] uppercase tracking-btn text-ivory">Selected ✓</span>
+                        )}
+                        <div className="aspect-square bg-ivory-deep overflow-hidden">
+                          {finish.image && <img src={finish.image} alt={finish.label + " leather finish reference"} className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />}
+                        </div>
+                        <span className="block p-3">
+                          <span className="font-editorial text-base">{finish.label}</span>
+                          {recommended && <span className="ml-2 text-[0.56rem] uppercase tracking-btn text-forest">Recommended</span>}
+                          <span className="block mt-1 text-[0.64rem] leading-relaxed text-stone">{finish.note}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              <h3 className="font-editorial text-2xl mt-9">3. Primary colour <span className="text-oxblood text-sm">*</span></h3>
+              <p className="mt-1 text-xs text-stone">Required so the final prompt has a definite colour direction.</p>
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 mt-4">
                 {COLOUR_VISUALS.map((colour) => (
                   <button
@@ -820,7 +917,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                 ))}
               </div>
               <div className="mt-7 border border-ink/10 bg-ivory-deep/40 p-4 text-xs text-stone">
-                Maximum build decisions are intentionally kept below ten. DREAMZ confirms final engineering, proportions and production feasibility on WhatsApp before quoting.
+                Maximum build decisions are intentionally kept below ten. DREAMZ confirms final engineering, proportions and production feasibility before production.
               </div>
             </section>
           )}
@@ -1012,8 +1109,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             {step < 5 && (
               <button
                 type="button"
-                disabled={step === 0 && (!answers.category || !answers.piece)}
-                onClick={() => setStep((current) => Math.min(5, current + 1))}
+                onClick={nextStep}
                 className="btn-lux btn-lux-primary !py-2.5"
               >
                 Continue →
