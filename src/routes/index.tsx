@@ -152,9 +152,7 @@ function Home() {
               <p className="overline-label mb-3">DREAMZ Open Atelier</p>
               <h2 className="font-editorial text-3xl sm:text-5xl">Five minutes from idea to shareable design.</h2>
               <p className="mt-4 text-sm text-stone leading-relaxed max-w-xl">
-                Start from a blank product silhouette — never one of our catalogue pieces. Tap leather,
-                colours and the few construction choices that matter. Your first three saved designs are free,
-                and your Dreamer page is created automatically.
+                Start from real product, leather and component references, then choose the colours and construction details that matter to your own design. Your first three saved designs are free, and your Dreamer page is created automatically.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">

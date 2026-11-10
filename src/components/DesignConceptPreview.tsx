@@ -29,8 +29,7 @@ export function DesignConceptPreview({
   const secondary = colourVisual(preview.secondaryColour);
   const suppliedImage =
     preview.image &&
-    !preview.image.startsWith("/img/products/") &&
-    preview.image !== "/img/hero-boot-of-many-colours.jpg"
+    preview.image
       ? preview.image
       : null;
   const image = suppliedImage || piece?.image || null;
@@ -74,8 +73,8 @@ export function DesignConceptPreview({
         {image ? (
           <img
             src={image}
-            alt={preview.piece ? preview.piece + " neutral design silhouette" : "DREAMZ blank design workspace"}
-            className="absolute inset-0 h-full w-full object-cover"
+            alt={preview.piece ? preview.piece + " real visual reference" : "DREAMZ visual design workspace"}
+            className="absolute inset-0 h-full w-full object-contain p-3"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-stone">
@@ -90,7 +89,7 @@ export function DesignConceptPreview({
           />
         )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pt-12 pb-4 text-white">
-          <p className="text-[0.62rem] uppercase tracking-btn opacity-80">Live concept board</p>
+          <p className="text-[0.62rem] uppercase tracking-btn opacity-80">Live reference board</p>
           <p className="font-editorial text-xl">{preview.piece || "Choose a leather piece"}</p>
         </div>
       </div>
@@ -145,7 +144,7 @@ export function DesignConceptPreview({
       </div>
       {!compact && (
         <p className="px-4 pb-4 text-[0.66rem] text-stone leading-relaxed">
-          This is a blank concept board built from your selections — not a DREAMZ catalogue product. The colour overlay and material cards update as you choose. Leather swatches are visual references; the atelier confirms the exact hide, component compatibility and construction before production.
+          This board uses real product, leather and component photography as visual references while your selected colours and details build the direction. References are not a promise of exact stock or construction; the atelier confirms the final hide, measurements, component compatibility and buildability before production.
         </p>
       )}
     </div>
