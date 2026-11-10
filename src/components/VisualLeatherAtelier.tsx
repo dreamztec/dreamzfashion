@@ -45,6 +45,13 @@ type Answers = {
   story: string;
   forWhom: string;
   stylePreference: string;
+  designAudience: "Male" | "Female" | "Unisex" | "";
+  dreamGoal: string;
+  paintingChoice: "yes" | "no";
+  paintingNotes: string;
+  productName: string;
+  landingHeadline: string;
+  landingStory: string;
   occasion: string;
   sizeOrMeasurements: string;
   neededBy: string;
@@ -71,6 +78,13 @@ const INITIAL: Answers = {
   story: "",
   forWhom: "",
   stylePreference: "",
+  designAudience: "",
+  dreamGoal: "",
+  paintingChoice: "no",
+  paintingNotes: "",
+  productName: "",
+  landingHeadline: "",
+  landingStory: "",
   occasion: "",
   sizeOrMeasurements: "",
   neededBy: "",
@@ -114,6 +128,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const [uploadBusy, setUploadBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [hasCopiedPrompt, setHasCopiedPrompt] = useState(false);
+  const [generatedImageRefId, setGeneratedImageRefId] = useState("");
+  const [generatedImagePreview, setGeneratedImagePreview] = useState("");
   const [published, setPublished] = useState<{ publicSlug: string; profileSlug: string } | null>(null);
   const [approvalToken, setApprovalToken] = useState<string | null>(null);
   const studioTopRef = useRef<HTMLDivElement>(null);
@@ -167,8 +184,22 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           renderPrompt?: string;
           artisanBrief?: string;
           referenceIds?: string[];
+          generatedImageRefId?: string;
+          landingPage?: { headline?: string; story?: string };
         };
         if (payload.answers) setAnswers({ ...INITIAL, ...payload.answers });
+        if (payload.generatedImageRefId) {
+          setGeneratedImageRefId(payload.generatedImageRefId);
+          setGeneratedImagePreview("/api/design-references/" + payload.generatedImageRefId);
+          setHasCopiedPrompt(true);
+        }
+        if (payload.landingPage) {
+          setAnswers((current) => ({
+            ...current,
+            landingHeadline: payload.landingPage?.headline || current.landingHeadline,
+            landingStory: payload.landingPage?.story || current.landingStory,
+          }));
+        }
         if (Array.isArray(payload.referenceIds)) {
           setReferenceIds(payload.referenceIds);
           setReferencePreviews(
@@ -206,10 +237,16 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         answers?: Partial<Answers>;
         result?: AtelierResult | null;
         referenceIds?: string[];
+        generatedImageRefId?: string;
         step?: number;
       };
       if (pending.answers) setAnswers({ ...INITIAL, ...pending.answers });
       if (pending.result) setResult(pending.result);
+      if (pending.generatedImageRefId) {
+        setGeneratedImageRefId(pending.generatedImageRefId);
+        setGeneratedImagePreview("/api/design-references/" + pending.generatedImageRefId);
+        setHasCopiedPrompt(true);
+      }
       if (Array.isArray(pending.referenceIds)) {
         setReferenceIds(pending.referenceIds);
         setReferencePreviews(
@@ -226,6 +263,18 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       sessionStorage.removeItem(STUDIO_SESSION_KEY);
     }
   }, [user, briefId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || briefId) return;
+    try {
+      sessionStorage.setItem(
+        STUDIO_SESSION_KEY,
+        JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
+      );
+    } catch {
+      // Browser storage is a convenience only.
+    }
+  }, [answers, result, referenceIds, generatedImageRefId, step, briefId]);
 
   const set = <K extends keyof Answers>(key: K, value: Answers[K]) => {
     setAnswers((current) => ({ ...current, [key]: value }));
@@ -317,6 +366,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         document.body.removeChild(textarea);
       }
       setCopiedPrompt(true);
+      setHasCopiedPrompt(true);
       window.setTimeout(() => setCopiedPrompt(false), 2200);
     } catch {
       setNotice("Copy failed on this browser. Press and hold the prompt text to copy it manually.");
@@ -354,6 +404,10 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           story: answers.story,
           forWhom: answers.forWhom,
           stylePreference: answers.stylePreference,
+          designAudience: answers.designAudience,
+          dreamGoal: answers.dreamGoal,
+          paintingChoice: answers.paintingChoice,
+          paintingNotes: answers.paintingNotes,
           occasion: answers.occasion,
           sizeOrMeasurements: answers.sizeOrMeasurements,
           neededBy: answers.neededBy,
@@ -394,14 +448,57 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     if (typeof window === "undefined") return;
     sessionStorage.setItem(
       STUDIO_SESSION_KEY,
-      JSON.stringify({ answers, result, referenceIds, step }),
+      JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
     );
     sessionStorage.setItem("dfk-auth-return-to", currentBriefId ? "/custom?brief=" + currentBriefId : "/custom?start=1");
   };
 
+  const automaticLandingHeadline = () =>
+    answers.landingHeadline.trim() ||
+    (answers.productName.trim()
+      ? answers.productName.trim() + " — Designed Around a Dream"
+      : "A Dream Turned Into Leather");
+
+  const automaticLandingStory = () => {
+    if (answers.landingStory.trim()) return answers.landingStory.trim();
+    const dream = answers.dreamGoal.trim() || "turn a personal dream into something real";
+    const name = answers.productName.trim() || answers.piece || "leather piece";
+    const audience = answers.designAudience ? " with a " + answers.designAudience.toLowerCase() + " design direction" : "";
+    const art = answers.paintingChoice === "yes"
+      ? " It includes artwork/painting inspired by " + (answers.paintingNotes.trim() || "the story behind the dream") + "."
+      : "";
+    return "My dream is to " + dream + ". I created " + name + audience + " with DREAMZ as a physical expression of that dream." + art;
+  };
+
+  const payloadFor = (currentResult: AtelierResult, imageRefId = generatedImageRefId) => ({
+    answers,
+    designSummary: currentResult.designSummary,
+    renderPrompt: currentResult.renderPrompt,
+    artisanBrief: currentResult.artisanBrief,
+    visualPreview: {
+      piece: answers.piece,
+      material: answers.material,
+      texture: answers.texture,
+      primaryColour: answers.primaryColour,
+      secondaryColour: answers.secondaryColour,
+      image: pieceVisual?.image || null,
+      construction: answers.construction,
+    },
+    referenceIds,
+    generatedImageRefId: imageRefId || undefined,
+    landingPage: {
+      headline: automaticLandingHeadline(),
+      story: automaticLandingStory(),
+    },
+  });
+
   const save = async (publish: boolean) => {
     if (!result) {
       await compose();
+      return;
+    }
+    if (publish && (!answers.productName.trim() || !answers.dreamGoal.trim() || !answers.designAudience || !generatedImageRefId)) {
+      setNotice("Before sharing, name the product, state the dream, choose Male/Female/Unisex design direction, and upload the image generated from your copied prompt.");
       return;
     }
     if (!user) {
@@ -416,28 +513,13 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       const response = await saveDesignerDesign({
         data: {
           id: currentBriefId,
-          title: designTitle(answers),
+          title: answers.productName.trim() || designTitle(answers),
           category: answers.category || "",
           piece: answers.piece,
           projectMode: answers.projectMode,
           clientLabel: answers.clientLabel,
           publish,
-          payload: {
-            answers,
-            designSummary: result.designSummary,
-            renderPrompt: result.renderPrompt,
-            artisanBrief: result.artisanBrief,
-            visualPreview: {
-              piece: answers.piece,
-              material: answers.material,
-              texture: answers.texture,
-              primaryColour: answers.primaryColour,
-              secondaryColour: answers.secondaryColour,
-              image: pieceVisual?.image || null,
-              construction: answers.construction,
-            },
-            referenceIds,
-          },
+          payload: payloadFor(result),
         },
       });
 
@@ -502,6 +584,31 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     }
   };
 
+  const handleGeneratedImageUpload = async (file: File) => {
+    const problem = precheckFile(file);
+    if (problem) {
+      setNotice(problem);
+      return;
+    }
+    setUploadBusy(true);
+    setNotice(null);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch("/api/design-references", { method: "POST", body: form });
+      const json = (await response.json()) as { refId?: string; error?: string };
+      if (!response.ok || !json.refId) throw new Error(json.error || "Upload failed.");
+      setGeneratedImageRefId(json.refId);
+      setGeneratedImagePreview(URL.createObjectURL(file));
+      setPublished(null);
+      setNotice("Generated design image added. Name the product and review the landing-page story before publishing.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The generated design image could not be uploaded.");
+    } finally {
+      setUploadBusy(false);
+    }
+  };
+
   const constructionQuestionsForPiece = answers.category && answers.piece
     ? constructionQuestions(answers.category, answers.piece)
     : [];
@@ -512,6 +619,10 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const nextStep = () => {
     if (step === 0 && (!answers.category || !answers.piece)) {
       setNotice("Choose a product category and piece before continuing.");
+      return;
+    }
+    if (step === 1 && (!answers.dreamGoal.trim() || !answers.designAudience)) {
+      setNotice("Tell us the dream and choose Male, Female or Unisex design direction before continuing.");
       return;
     }
     if (step === 2 && (!answers.material || !answers.primaryColour)) {
@@ -674,6 +785,62 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             <section>
               <h2 className="font-editorial text-3xl">What should this piece mean?</h2>
               <p className="text-sm text-stone mt-2">Choose up to three themes or tell us the story in your own words.</p>
+              <div className="mt-6 grid gap-5 sm:grid-cols-2">
+                <label className="sm:col-span-2">
+                  <span className="text-xs uppercase tracking-btn">What is your dream? *</span>
+                  <input
+                    value={answers.dreamGoal}
+                    onChange={(e) => set("dreamGoal", e.target.value)}
+                    className="input-lux mt-2"
+                    maxLength={180}
+                    placeholder="e.g. Become a pilot, become a lawyer, make people happy, build my company"
+                  />
+                </label>
+                <div>
+                  <p className="text-xs uppercase tracking-btn">Design direction *</p>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {(["Male", "Female", "Unisex"] as const).map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={answers.designAudience === value}
+                        onClick={() => set("designAudience", value)}
+                        className={"border px-3 py-3 text-xs " + (answers.designAudience === value ? "border-ink bg-ink text-ivory" : "border-ink/15")}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-btn">Do you want painting/artwork on it?</p>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {([["no", "No"], ["yes", "Yes"]] as const).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={answers.paintingChoice === value}
+                        onClick={() => set("paintingChoice", value)}
+                        className={"border px-3 py-3 text-xs " + (answers.paintingChoice === value ? "border-ink bg-ink text-ivory" : "border-ink/15")}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {answers.paintingChoice === "yes" && (
+                  <label className="sm:col-span-2">
+                    <span className="text-xs uppercase tracking-btn">What should the painting show?</span>
+                    <input
+                      value={answers.paintingNotes}
+                      onChange={(e) => set("paintingNotes", e.target.value)}
+                      className="input-lux mt-2"
+                      maxLength={240}
+                      placeholder="e.g. a subtle airplane line-art, family symbol, abstract joy motif"
+                    />
+                  </label>
+                )}
+              </div>
               <div className="flex flex-wrap gap-2 mt-5">
                 {DREAM_THEMES.map((theme) => (
                   <button
@@ -1059,6 +1226,75 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <pre className="mt-4 whitespace-pre-wrap text-xs leading-relaxed overflow-x-auto">{result.artisanBrief}</pre>
                   </details>
 
+                  <div className="mt-6 border border-gold/30 bg-gold/5 p-5">
+                    <p className="overline-label !text-gold">Turn the AI image into your Dream page</p>
+                    <h3 className="font-editorial text-2xl mt-2">1. Copy prompt → 2. Generate image → 3. Upload it here</h3>
+                    <p className="mt-2 text-sm text-stone">
+                      Generate the product image with ChatGPT, Gemini, Grok or another image tool using the prompt above. Then upload that finished image here. Your completed Studio choices remain saved.
+                    </p>
+                    {!hasCopiedPrompt && !generatedImageRefId ? (
+                      <p className="mt-4 border border-ink/10 bg-ivory px-4 py-3 text-xs text-stone">Copy the Full AI Prompt above first.</p>
+                    ) : (
+                      <div className="mt-5">
+                        {generatedImagePreview ? (
+                          <div className="grid gap-4 sm:grid-cols-[180px_1fr] sm:items-center">
+                            <img src={generatedImagePreview} alt="Generated dream product" className="aspect-square w-full object-cover border border-ink/10 bg-white" />
+                            <div>
+                              <p className="font-editorial text-xl">Generated image added ✓</p>
+                              <label className="btn-lux btn-lux-outline !py-2.5 mt-3 cursor-pointer inline-flex">
+                                Replace Image
+                                <input type="file" accept={REFERENCE_LIMITS.accept} className="hidden" onChange={(e) => e.target.files?.[0] && void handleGeneratedImageUpload(e.target.files[0])} />
+                              </label>
+                            </div>
+                          </div>
+                        ) : (
+                          <label className="btn-lux btn-lux-primary cursor-pointer inline-flex">
+                            {uploadBusy ? "Uploading…" : "Upload Generated Design Image"}
+                            <input type="file" accept={REFERENCE_LIMITS.accept} className="hidden" onChange={(e) => e.target.files?.[0] && void handleGeneratedImageUpload(e.target.files[0])} />
+                          </label>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-6 grid gap-5">
+                      <label>
+                        <span className="text-xs uppercase tracking-btn">Name your product before sharing *</span>
+                        <input
+                          value={answers.productName}
+                          onChange={(e) => set("productName", e.target.value)}
+                          className="input-lux mt-2"
+                          maxLength={120}
+                          placeholder="e.g. The Ascension Oxford, Wings of Vision, Joy Tote"
+                        />
+                      </label>
+                      <details className="border border-ink/10 p-4">
+                        <summary className="cursor-pointer text-sm font-medium">Customise my landing page <span className="text-stone">(optional)</span></summary>
+                        <div className="mt-4 grid gap-4">
+                          <label>
+                            <span className="text-xs uppercase tracking-btn">Headline</span>
+                            <input
+                              value={answers.landingHeadline}
+                              onChange={(e) => set("landingHeadline", e.target.value)}
+                              className="input-lux mt-2"
+                              maxLength={140}
+                              placeholder={automaticLandingHeadline()}
+                            />
+                          </label>
+                          <label>
+                            <span className="text-xs uppercase tracking-btn">My story</span>
+                            <textarea
+                              value={answers.landingStory}
+                              onChange={(e) => set("landingStory", e.target.value)}
+                              className="input-lux mt-2 min-h-28"
+                              maxLength={1200}
+                              placeholder={automaticLandingStory()}
+                            />
+                          </label>
+                        </div>
+                      </details>
+                    </div>
+                  </div>
+
                   <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-3">
                     <button type="button" disabled={busy} onClick={() => void save(false)} className="btn-lux btn-lux-outline">
                       {busy ? "Saving…" : currentBriefId ? "Save Changes Privately" : "Save Privately"}
@@ -1104,7 +1340,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <SharePanel
                       publicSlug={published.publicSlug}
                       profileSlug={published.profileSlug}
-                      title={designTitle(answers)}
+                      title={answers.productName.trim() || designTitle(answers)}
                       earnCode={designerState && !designerState.unauthenticated ? designerState.earnCode : null}
                     />
                   )}
