@@ -43,9 +43,9 @@ function Home() {
   return (
     <div>
       {/* ── Opening: the offer first, then the hero product ─── */}
-      <section className="bg-ivory pt-28 sm:pt-28">
+      <section className="bg-ivory">
         <div className="bg-ink text-ivory">
-          <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12 sm:py-16 text-center">
+          <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-28 sm:pt-28 pb-12 sm:pb-16 text-center">
             <p className="overline-label !text-gold-soft mb-4">DREAMZ OPEN ATELIER · SEASON OFFER</p>
             <h1 className="font-editorial text-4xl sm:text-6xl lg:text-7xl leading-[1.02] uppercase tracking-tight">
               Design Your Dream Product in 5 Minutes
@@ -83,7 +83,7 @@ function Home() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 pb-12">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 pt-8 pb-12">
           <Link
             to="/dreams"
             className="block border border-gold/50 bg-gold/5 px-5 py-6 sm:px-8 sm:py-7 text-center transition hover:border-gold"
