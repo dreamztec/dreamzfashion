@@ -265,7 +265,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   }, [briefId, user]);
 
   useEffect(() => {
-    if (!user || typeof window === "undefined" || briefId) return;
+    if (typeof window === "undefined" || briefId) return;
     const raw = localStorage.getItem(STUDIO_SESSION_KEY);
     if (!raw) return;
     try {
@@ -298,7 +298,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     } catch {
       localStorage.removeItem(STUDIO_SESSION_KEY);
     }
-  }, [user, briefId]);
+  }, [briefId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || briefId) return;
@@ -691,7 +691,10 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         "\"Save/download this image. Your DREAMZ Studio is still open in the previous tab. Return there to upload it, or stay here and save the image manually before returning.\"";
       await navigator.clipboard.writeText(result.renderPrompt + returnInstruction);
       const opened = window.open(tool.href, "_blank", "noopener,noreferrer");
-      if (!opened) window.location.href = tool.href;
+      if (!opened) {
+        setNotice("Your prompt is copied and your DREAMZ design is saved. Your browser blocked the new tab — allow pop-ups, then tap " + tool.name + " again.");
+        return;
+      }
       setHasCopiedPrompt(true);
       setCopiedPrompt(true);
       setNotice(tool.name + " opened with your DREAMZ prompt copied. Keep this DREAMZ tab open; your design is saved here.");
