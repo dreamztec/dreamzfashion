@@ -47,12 +47,13 @@ describe("DREAMZ visual studio plans", () => {
 });
 
 describe("visual-first design library", () => {
-  it("never uses DREAMZ catalogue products as Studio starting images", () => {
+  it("uses real photographic product references instead of diagram silhouettes", () => {
     for (const piece of PIECE_VISUALS) {
-      expect(piece.image).toMatch(/^data:image\/svg\+xml,/);
-      expect(piece.image).not.toContain("/img/products/");
-      expect(piece.image).not.toContain("boot-of-many-colours");
+      expect(piece.image).toContain("/img/products/");
+      expect(piece.image).not.toMatch(/^data:image\/svg\+xml,/);
     }
+    expect(PIECE_VISUALS.some((piece) => piece.piece === "Leather Shirt")).toBe(true);
+    expect(PIECE_VISUALS.some((piece) => piece.piece === "Leather Trouser / Pants")).toBe(true);
   });
 
   it("uses separate leather-base and finish references without catalogue imagery", () => {
