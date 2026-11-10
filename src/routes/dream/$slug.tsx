@@ -152,10 +152,24 @@ function DreamDesignPage() {
   const nativeShare = async (platformLabel?: string) => {
     trackShare();
     if (navigator.share) {
-      await navigator
-        .share({ title: data.design.title, text: shareText, url: shareUrl })
-        .catch(() => {});
-      return;
+      try {
+        if (generatedImageUrl && navigator.canShare) {
+          const response = await fetch(generatedImageUrl);
+          if (response.ok) {
+            const blob = await response.blob();
+            const extension = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : "jpg";
+            const file = new File([blob], `${params.slug}.${extension}`, { type: blob.type || "image/jpeg" });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ title: data.design.title, text: shareText + " " + shareUrl, files: [file] });
+              return;
+            }
+          }
+        }
+        await navigator.share({ title: data.design.title, text: shareText, url: shareUrl });
+        return;
+      } catch {
+        // Fall back to copying the trackable landing-page link.
+      }
     }
     await navigator.clipboard.writeText(shareUrl);
     setNotice(platformLabel ? `Link copied. Paste it into ${platformLabel}.` : "Design link copied.");
