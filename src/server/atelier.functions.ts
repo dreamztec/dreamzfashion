@@ -42,6 +42,10 @@ const BriefSchema = z.object({
   story: z.string().max(1200).optional().or(z.literal("")),
   forWhom: z.string().max(120).optional().or(z.literal("")),
   stylePreference: z.string().max(80).optional().or(z.literal("")),
+  designAudience: z.enum(["Male", "Female", "Unisex"]).optional().or(z.literal("")),
+  dreamGoal: z.string().max(180).optional().or(z.literal("")),
+  paintingChoice: z.enum(["yes", "no"]).default("no"),
+  paintingNotes: z.string().max(240).optional().or(z.literal("")),
   occasion: z.string().max(120).optional().or(z.literal("")),
   sizeOrMeasurements: z.string().max(200).optional().or(z.literal("")),
   neededBy: z.string().max(60).optional().or(z.literal("")),
@@ -62,7 +66,7 @@ const BriefSchema = z.object({
 export type AtelierBriefInput = z.infer<typeof BriefSchema>;
 
 /** Free-text fields that must be screened for non-fashion requests. */
-const FREE_TEXT_FIELDS = ["story", "inspirationNotes", "customMeaning", "occasion", "forWhom"] as const;
+const FREE_TEXT_FIELDS = ["story", "inspirationNotes", "customMeaning", "occasion", "forWhom", "dreamGoal", "paintingNotes"] as const;
 
 export const composeDreamToLeather = createServerFn({ method: "POST" })
   .inputValidator(BriefSchema)
