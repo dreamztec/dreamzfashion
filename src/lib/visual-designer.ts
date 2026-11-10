@@ -326,9 +326,28 @@ export const CONSTRUCTION_VISUALS: Record<string, VisualOption> = Object.fromEnt
   ].map((x) => [x.label.toLowerCase(), x]),
 );
 
+function realConstructionImage(label: string): string {
+  const value = label.toLowerCase();
+  if (value.includes("buckle") || value.includes("hardware")) return "/img/products/spectrum-buckle-slide.jpg";
+  if (value.includes("strap") || value.includes("slingback")) return "/img/products/prism-cross-sandal.jpg";
+  if (value.includes("lace")) return "/img/products/ascension-oxford.jpg";
+  if (value.includes("zip") || value.includes("chelsea") || value.includes("pull-on")) return "/img/products/boot-of-many-colours-studio.jpg";
+  if (value.includes("sole") || value.includes("chunky") || value.includes("commando")) return "/img/products/onyx-stride.jpg";
+  if (value.includes("stitch") || value.includes("edge") || value.includes("burnish")) return "/img/products/asiwaju-mule-brown-detail.jpg";
+  if (value.includes("handle") || value.includes("structured") || value.includes("compartment")) return "/img/products/executive-spectrum-briefcase.jpg";
+  if (value.includes("shoulder") || value.includes("crossbody") || value.includes("flap") || value.includes("turn-lock")) return "/img/products/executive-leather-handbag.jpg";
+  if (value.includes("drawstring") || value.includes("open top") || value.includes("soft")) return "/img/products/regent-croc-tote.jpg";
+  if (value.includes("round") || value.includes("almond")) return "/img/products/classic-black-penny-loafer.jpg";
+  if (value.includes("square")) return "/img/products/spectrum-buckle-slide.jpg";
+  if (value.includes("pointed")) return "/img/products/heritage-medallion-oxford.jpg";
+  return "/img/products/vision-leather-ensemble-campaign.jpg";
+}
+
 export function constructionVisual(label: string | null | undefined): VisualOption | null {
   if (!label) return null;
-  return CONSTRUCTION_VISUALS[label.toLowerCase()] || null;
+  const found = CONSTRUCTION_VISUALS[label.toLowerCase()];
+  if (!found) return null;
+  return { ...found, image: realConstructionImage(label) };
 }
 
 export const PROJECT_MODES = [
