@@ -28,6 +28,10 @@ export const Route = createFileRoute("/royale")({
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/royale` }],
   }),
+  headers: () => ({
+    "Netlify-CDN-Cache-Control": "public, durable, max-age=300, stale-while-revalidate=1800",
+  }),
+  staleTime: 60_000,
   component: RoyalePage,
 });
 
