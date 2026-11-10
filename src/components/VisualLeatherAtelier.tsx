@@ -690,11 +690,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         "\n\nAFTER GENERATING THE IMAGE: show the finished image first, then tell the customer: " +
         "\"Save/download this image. Your DREAMZ Studio is still open in the previous tab. Return there to upload it, or stay here and save the image manually before returning.\"";
       await navigator.clipboard.writeText(result.renderPrompt + returnInstruction);
-      const opened = window.open(tool.href, "_blank", "noopener,noreferrer");
+      const opened = window.open(tool.href, "_blank");
       if (!opened) {
         setNotice("Your prompt is copied and your DREAMZ design is saved. Your browser blocked the new tab — allow pop-ups, then tap " + tool.name + " again.");
         return;
       }
+      opened.opener = null;
       setHasCopiedPrompt(true);
       setCopiedPrompt(true);
       setNotice(tool.name + " opened with your DREAMZ prompt copied. Keep this DREAMZ tab open; your design is saved here.");
