@@ -353,6 +353,10 @@ export type AtelierBrief = {
   story?: string;
   forWhom?: string;
   stylePreference?: string;
+  designAudience?: string;
+  dreamGoal?: string;
+  paintingChoice?: string;
+  paintingNotes?: string;
   occasion?: string;
   sizeOrMeasurements?: string;
   neededBy?: string;
@@ -465,6 +469,9 @@ export function buildDesignSummary(b: AtelierBrief): string {
     `• Design character: ${list(b.feel) || "not specified"}`,
     b.forWhom ? `• Designed for: ${b.forWhom}` : "",
     b.stylePreference ? `• Style preference: ${b.stylePreference}` : "",
+    b.designAudience ? `• Design audience: ${b.designAudience}` : "",
+    b.dreamGoal ? `• The dream: ${b.dreamGoal}` : "",
+    b.paintingChoice === "yes" ? `• Artwork / painting: Yes${b.paintingNotes ? " — " + b.paintingNotes : ""}` : "• Artwork / painting: No",
     b.occasion ? `• Occasion: ${b.occasion}` : "",
     "",
     "MATERIAL & COLOUR",
@@ -545,6 +552,9 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     `Texture / finish selected: ${effectiveSurface}`,
     b.primaryColour ? `Primary colour selected: ${b.primaryColour}` : "Primary colour selected: none",
     b.secondaryColour ? `Accent colour selected: ${b.secondaryColour}` : "Accent colour selected: none",
+    b.designAudience ? `Design audience selected: ${b.designAudience}` : "Design audience selected: not specified",
+    b.dreamGoal ? `Dream/story selected: ${b.dreamGoal}` : "Dream/story selected: not specified",
+    `Painting / artwork selected: ${b.paintingChoice === "yes" ? "yes" : "no"}${b.paintingChoice === "yes" && b.paintingNotes ? " — " + b.paintingNotes : ""}`,
     Object.keys(b.construction || {}).length
       ? ["Construction selected:", ...constructionDetailLines(b)].join("\n")
       : "Construction selections: none beyond the chosen product type",
@@ -572,7 +582,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ],
     [
       "B. SILHOUETTE",
-      `Clear, confident ${b.piece.toLowerCase()} silhouette${b.feel.length ? `; overall character: ${list(b.feel).toLowerCase()}` : ""}. Preserve the defining geometry of a real ${b.piece.toLowerCase()}; keep all proportions physically plausible, balanced and wearable. Use the selected construction choices below to determine the visible shape. Do not add a new signature feature that was not selected.`,
+      `Clear, confident ${b.piece.toLowerCase()} silhouette${b.feel.length ? `; overall character: ${list(b.feel).toLowerCase()}` : ""}. ${b.designAudience ? "Design direction: " + b.designAudience + ". " : ""}Preserve the defining geometry of a real ${b.piece.toLowerCase()}; keep all proportions physically plausible, balanced and wearable. Use the selected construction choices below to determine the visible shape. Do not add a new signature feature that was not selected.`,
     ],
     [
       "C. LEATHER & MATERIAL",

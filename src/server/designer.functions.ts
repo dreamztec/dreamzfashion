@@ -25,6 +25,11 @@ const PayloadSchema = z.object({
   artisanBrief: z.string().max(6000).optional().or(z.literal("")),
   visualPreview: z.record(z.string(), z.unknown()).optional(),
   referenceIds: z.array(z.string().regex(/^ref_[A-Z0-9]{20}$/)).max(4).optional(),
+  generatedImageRefId: z.string().regex(/^ref_[A-Z0-9]{20}$/).optional().or(z.literal("")),
+  landingPage: z.object({
+    headline: z.string().max(140).optional().or(z.literal("")),
+    story: z.string().max(1200).optional().or(z.literal("")),
+  }).optional(),
 });
 
 const SaveDesignSchema = z.object({
@@ -61,6 +66,8 @@ function effectivePlan(profile: { plan: string; planExpiresAt: Date | null }): D
 
 function dreamSeedFromPayload(payload: z.infer<typeof PayloadSchema>): string {
   const answers = payload.answers || {};
+  const dreamGoal = answers.dreamGoal;
+  if (typeof dreamGoal === "string" && dreamGoal.trim()) return dreamGoal.trim().slice(0, 60);
   const meanings = answers.meaning;
   if (Array.isArray(meanings) && meanings.length && typeof meanings[0] === "string") return meanings[0];
   const customMeaning = answers.customMeaning;
@@ -82,6 +89,10 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
       ? answers.meaning.filter((value): value is string => typeof value === "string").slice(0, 3)
       : [],
     customMeaning: typeof answers.customMeaning === "string" ? answers.customMeaning.slice(0, 120) : "",
+    dreamGoal: typeof answers.dreamGoal === "string" ? answers.dreamGoal.slice(0, 180) : "",
+    designAudience: ["Male", "Female", "Unisex"].includes(String(answers.designAudience)) ? String(answers.designAudience) : "",
+    paintingChoice: answers.paintingChoice === "yes" ? "yes" : "no",
+    paintingNotes: typeof answers.paintingNotes === "string" ? answers.paintingNotes.slice(0, 240) : "",
     feel: Array.isArray(answers.feel)
       ? answers.feel.filter((value): value is string => typeof value === "string").slice(0, 4)
       : [],
@@ -93,9 +104,12 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
 
   const summaryLines = [
     safeAnswers.piece ? `Product: ${safeAnswers.piece}` : "",
+    safeAnswers.dreamGoal ? `Dream: ${safeAnswers.dreamGoal}` : "",
     safeAnswers.meaning.length || safeAnswers.customMeaning
       ? `Meaning: ${[...safeAnswers.meaning, safeAnswers.customMeaning].filter(Boolean).join(" — ")}`
       : "",
+    safeAnswers.designAudience ? `Design direction: ${safeAnswers.designAudience}` : "",
+    safeAnswers.paintingChoice === "yes" ? `Artwork: Yes${safeAnswers.paintingNotes ? " — " + safeAnswers.paintingNotes : ""}` : "Artwork: No",
     safeAnswers.feel.length ? `Character: ${safeAnswers.feel.join(", ")}` : "",
     safeAnswers.primaryColour
       ? `Colours: ${safeAnswers.primaryColour}${safeAnswers.secondaryColour ? ` + ${safeAnswers.secondaryColour}` : ""}`
@@ -130,6 +144,18 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
   // Public Dream pages always rebuild from the neutral Studio silhouette.
   // Old catalogue-image references are deliberately discarded.
   const previewImage = null;
+  const generatedImageRefId =
+    typeof payload.generatedImageRefId === "string" && /^ref_[A-Z0-9]{20}$/.test(payload.generatedImageRefId)
+      ? payload.generatedImageRefId
+      : "";
+  const rawLanding =
+    payload.landingPage && typeof payload.landingPage === "object"
+      ? (payload.landingPage as Record<string, unknown>)
+      : {};
+  const landingPage = {
+    headline: typeof rawLanding.headline === "string" ? rawLanding.headline.slice(0, 140) : "",
+    story: typeof rawLanding.story === "string" ? rawLanding.story.slice(0, 1200) : "",
+  };
 
   return {
     answers: safeAnswers,
@@ -143,6 +169,8 @@ function publicPayload(payload: Record<string, unknown>): Record<string, unknown
       image: previewImage,
       construction: safeConstruction,
     },
+    generatedImageUrl: generatedImageRefId ? "/api/design-references/" + generatedImageRefId : null,
+    landingPage,
   };
 }
 
