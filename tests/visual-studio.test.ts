@@ -128,13 +128,13 @@ describe("locked-data render prompt", () => {
   it("preserves explicit material and colour choices exactly", () => {
     const prompt = buildRenderPrompt({
       ...minimal,
-      material: "Suede",
+      material: "Top-grain leather",
       texture: "Pebbled",
       primaryColour: "Oxblood",
       secondaryColour: "Cream",
       construction: { soleType: "Rubber sole", buckleStyle: "Single buckle" },
     });
-    expect(prompt).toContain("Material selected: Suede");
+    expect(prompt).toContain("Material selected: Top-grain leather");
     expect(prompt).toContain("Texture / finish selected: Pebbled");
     expect(prompt).toContain("Primary colour selected: Oxblood");
     expect(prompt).toContain("Accent colour selected: Cream");
