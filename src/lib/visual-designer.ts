@@ -76,6 +76,32 @@ function kindForPiece(piece: string): string {
   return "accessory";
 }
 
+function pieceReferenceImage(piece: string): string {
+  const p = piece.toLowerCase();
+  if (p.includes("oxford")) return "/img/products/ascension-oxford.jpg";
+  if (p.includes("derby")) return "/img/products/heritage-medallion-oxford.jpg";
+  if (p.includes("loafer")) return "/img/products/classic-black-penny-loafer.jpg";
+  if (p.includes("boot") || p.includes("chelsea")) return "/img/products/boot-of-many-colours-studio.jpg";
+  if (p.includes("mule")) return "/img/products/asiwaju-mule-brown.jpg";
+  if (p.includes("slide")) return "/img/products/spectrum-buckle-slide.jpg";
+  if (p.includes("sandal")) return "/img/products/prism-cross-sandal.jpg";
+  if (p.includes("heel")) return "/img/products/crimson-pin.jpg";
+  if (p.includes("briefcase") || p.includes("laptop")) return "/img/products/executive-spectrum-briefcase.jpg";
+  if (p.includes("tote")) return "/img/products/regent-croc-tote.jpg";
+  if (p.includes("handbag") || p.includes("clutch") || p.includes("crossbody") || p.includes("pouch") || p.includes("purse")) return "/img/products/executive-leather-handbag.jpg";
+  if (p.includes("travel") || p.includes("backpack")) return "/img/products/pedra-satchel.jpg";
+  if (p.includes("belt")) return "/img/products/legacy-leather-belt.jpg";
+  if (p.includes("wallet") || p.includes("card") || p.includes("passport")) return "/img/products/purpose-wrist-pouch.jpg";
+  if (p.includes("bracelet") || p.includes("cuff")) return "/img/products/hope-slim-bracelet-set.jpg";
+  if (p.includes("watch strap")) return "/img/products/strap-twist.jpg";
+  if (p.includes("jacket")) return "/img/products/vision-leather-ensemble-campaign.jpg";
+  if (p.includes("shirt") || p.includes("t-shirt") || p.includes("tee")) return "/img/products/ambition-leather-tee.jpg";
+  if (p.includes("trouser") || p.includes("pants")) return "/img/products/discipline-wide-leg-trousers.jpg";
+  if (p.includes("vest") || p.includes("harness")) return "/img/products/courage-lace-up-vest.jpg";
+  if (p.includes("skirt")) return "/img/products/excellence-tailored-trousers.jpg";
+  return "/img/products/vision-leather-ensemble-campaign.jpg";
+}
+
 const PIECES: Array<[AtelierCategory, string, string]> = [
   ["footwear","Oxford","Structured lace-up shoe"],
   ["footwear","Derby","Open-lacing formal or smart-casual shoe"],
@@ -108,7 +134,11 @@ const PIECES: Array<[AtelierCategory, string, string]> = [
   ["accessories","Leather jewellery/accessory","Small leather accessory"],
   ["accessories","Other leather accessory","Start from a neutral accessory direction"],
   ["wearable","Jacket","Leather outerwear"],
+  ["wearable","Leather Jacket","Leather outerwear"],
   ["wearable","Trouser","Tailored or relaxed leather bottom"],
+  ["wearable","Leather Trouser / Pants","Tailored or relaxed leather bottom"],
+  ["wearable","Leather Shirt","Structured or relaxed leather shirt"],
+  ["wearable","Leather T-shirt","Minimal leather tee silhouette"],
   ["wearable","Skirt","Leather skirt silhouette"],
   ["wearable","Vest","Layered leather top"],
   ["wearable","Fashion harness","Wearable leather harness"],
@@ -121,7 +151,7 @@ export const PIECE_VISUALS: VisualPiece[] = PIECES.map(([category,piece,note]) =
   category,
   piece,
   note,
-  image: svgCard(piece, kindForPiece(piece)),
+  image: pieceReferenceImage(piece),
 }));
 
 export function categoryVisual(category: AtelierCategory): string {
@@ -132,8 +162,14 @@ export function categoryVisual(category: AtelierCategory): string {
     wearable: ["Leather Wear","jacket"],
     other: ["Other Leather Fashion","accessory"],
   };
-  const [label, kind] = labels[category];
-  return svgCard(label, kind, "#8d6d3d");
+  const categoryImage: Record<AtelierCategory, string> = {
+    footwear: "/img/products/ascension-oxford.jpg",
+    bags: "/img/products/executive-spectrum-briefcase.jpg",
+    accessories: "/img/products/legacy-leather-belt.jpg",
+    wearable: "/img/products/vision-leather-ensemble-campaign.jpg",
+    other: "/img/products/dreamz-freedom-cognac-green-blue-red-yellow.jpg",
+  };
+  return categoryImage[category];
 }
 
 export const MATERIAL_VISUALS: VisualOption[] = [
@@ -228,26 +264,26 @@ export const COLOUR_VISUALS: VisualOption[] = [
 }));
 
 export const TOE_VISUALS: VisualOption[] = [
-  { id:"round", label:"Round", note:"Comfortable, classic front.", image:svgCard("Round toe","toe-round") },
-  { id:"almond", label:"Almond", note:"Soft taper between round and pointed.", image:svgCard("Almond toe","toe-round","#8b6a42") },
-  { id:"square", label:"Square", note:"Sharper contemporary front.", image:svgCard("Square toe","toe-square") },
-  { id:"pointed", label:"Pointed", note:"Longer, sharper fashion profile.", image:svgCard("Pointed toe","toe-point") },
+  { id:"round", label:"Round", note:"Comfortable, classic front. Photo is a shape reference.", image:"/img/products/classic-black-penny-loafer.jpg" },
+  { id:"almond", label:"Almond", note:"Soft taper between round and pointed. Photo is a shape reference.", image:"/img/products/ascension-oxford.jpg" },
+  { id:"square", label:"Square", note:"Sharper contemporary front. Photo is a shape reference.", image:"/img/products/spectrum-buckle-slide.jpg" },
+  { id:"pointed", label:"Pointed", note:"Longer, sharper fashion profile. Photo is a shape reference.", image:"/img/products/heritage-medallion-oxford.jpg" },
 ];
 
 export const SOLE_VISUALS: VisualOption[] = [
-  { id:"leather", label:"Leather sole", note:"Slim, formal and refined.", image:svgCard("Leather sole","sole") },
-  { id:"rubber", label:"Rubber sole", note:"Everyday grip and easier wet-weather wear.", image:svgCard("Rubber sole","sole","#444") },
-  { id:"commando", label:"Commando sole", note:"Deeper tread for boots and rugged footwear.", image:svgCard("Commando sole","sole","#2d2d2d") },
-  { id:"chunky", label:"Chunky sole", note:"Thicker modern profile.", image:svgCard("Chunky sole","sole","#222") },
+  { id:"leather", label:"Leather sole", note:"Slim, formal and refined. Photo reference.", image:"/img/products/ascension-oxford.jpg" },
+  { id:"rubber", label:"Rubber sole", note:"Everyday grip and easier wet-weather wear. Photo reference.", image:"/img/products/voltage-noir-loafer.jpg" },
+  { id:"commando", label:"Commando sole", note:"Deeper tread for boots and rugged footwear. Photo reference.", image:"/img/products/boot-of-many-colours-studio.jpg" },
+  { id:"chunky", label:"Chunky sole", note:"Thicker modern profile. Photo reference.", image:"/img/products/onyx-stride.jpg" },
 ];
 
 export const HEEL_VISUALS: VisualOption[] = [
-  { id:"round", label:"Round heel", note:"Rounded heel profile with a softer visual line.", image:svgCard("Round heel","heel-round") },
-  { id:"block", label:"Block heel", note:"Stable, broad heel base.", image:svgCard("Block heel","heel-block") },
-  { id:"kitten", label:"Kitten heel", note:"Low slim heel, elegant and easier to wear.", image:svgCard("Kitten heel","heel-stiletto") },
-  { id:"stiletto", label:"Stiletto", note:"Slim high heel for a sharper formal silhouette.", image:svgCard("Stiletto","heel-stiletto"), minPlan:"creator" },
-  { id:"wedge", label:"Wedge", note:"Continuous heel-to-sole mass for stability.", image:svgCard("Wedge","heel-wedge") },
-  { id:"sculpted", label:"Sculpted heel", note:"Art-led heel shape, subject to engineering review.", image:svgCard("Sculpted heel","heel-round","#6d3d53"), minPlan:"creator" },
+  { id:"round", label:"Round heel", note:"Rounded heel profile. Real footwear reference; final heel is built to your selection.", image:"/img/products/crimson-pin.jpg" },
+  { id:"block", label:"Block heel", note:"Stable, broad heel base. Real footwear reference.", image:"/img/products/exotic-elegance.jpg" },
+  { id:"kitten", label:"Kitten heel", note:"Low slim heel. Real footwear reference.", image:"/img/products/crimson-cross.jpg" },
+  { id:"stiletto", label:"Stiletto", note:"Slim high heel. Real footwear reference.", image:"/img/products/crimson-pin.jpg", minPlan:"creator" },
+  { id:"wedge", label:"Wedge", note:"Continuous heel-to-sole mass. Real footwear reference.", image:"/img/products/terra-cove.jpg" },
+  { id:"sculpted", label:"Sculpted heel", note:"Art-led heel shape, subject to engineering review. Real footwear reference.", image:"/img/products/exotic-elegance.jpg", minPlan:"creator" },
 ];
 
 export const HARDWARE_VISUALS: VisualOption[] = [
