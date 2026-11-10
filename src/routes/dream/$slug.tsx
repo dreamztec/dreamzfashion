@@ -244,6 +244,12 @@ function DreamDesignPage() {
           </div>
 
           <div>
+            <img
+              src="/img/dfk-dreamz-logo.webp"
+              alt="DREAMZ"
+              className="mb-5 h-14 w-auto max-w-[190px] object-contain"
+              loading="eager"
+            />
             <div className="flex flex-wrap items-center gap-2 text-[0.58rem] uppercase tracking-btn text-stone">
               <span>Community Dream</span>
               <span>·</span>
