@@ -123,6 +123,12 @@ const AI_VISUAL_TOOLS = [
   { name: "Copilot", href: "https://copilot.microsoft.com/", format: "universal" },
 ] as const;
 
+const AI_RETURN_INSTRUCTION =
+  "\n\nAFTER GENERATING THE IMAGE: show the finished image first, then give the customer exactly these two next-step choices:\n" +
+  "1. RETURN TO DREAMZ — go back to the DREAMZ Studio tab and use Paste Copied Image or Upload Generated Design Image.\n" +
+  "2. STAY HERE — save/download the generated image first, then return to DREAMZ later and upload it manually.\n" +
+  "Do not change the selected design details while presenting these choices.";
+
 async function optimiseImageForUpload(file: File): Promise<File> {
   if (typeof window === "undefined") return file;
   if (!/^image\/(jpeg|png|webp)$/i.test(file.type) || file.size < 900_000) return file;
@@ -432,10 +438,10 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     if (!result?.renderPrompt || typeof window === "undefined") return;
     try {
       if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(result.renderPrompt);
+        await navigator.clipboard.writeText(result.renderPrompt + AI_RETURN_INSTRUCTION);
       } else {
         const textarea = document.createElement("textarea");
-        textarea.value = result.renderPrompt;
+        textarea.value = result.renderPrompt + AI_RETURN_INSTRUCTION;
         textarea.setAttribute("readonly", "");
         textarea.style.position = "fixed";
         textarea.style.opacity = "0";
@@ -682,30 +688,36 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
   const openAiVisualTool = async (tool: (typeof AI_VISUAL_TOOLS)[number]) => {
     if (!result?.renderPrompt || typeof window === "undefined") return;
+
+    // Open synchronously while the button click still counts as a trusted user gesture.
+    // Mobile browsers may block a popup if we await clipboard work first.
+    const opened = window.open("about:blank", "_blank");
+    if (opened) opened.opener = null;
+
     try {
       localStorage.setItem(
         STUDIO_SESSION_KEY,
         JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step: 5 }),
       );
-      const returnInstruction =
-        "\n\nAFTER GENERATING THE IMAGE: show the finished image first, then give the customer exactly these two next-step choices:\n" +
-        "1. RETURN TO DREAMZ — go back to the DREAMZ Studio tab and use Paste Copied Image or Upload Generated Design Image.\n" +
-        "2. STAY HERE — save/download the generated image first, then return to DREAMZ later and upload it manually.\n" +
-        "Do not change the selected design details while presenting these choices.";
       const tailoredPrompt = formatPromptFor(result.renderPrompt, tool.format);
-      await navigator.clipboard.writeText(tailoredPrompt + returnInstruction);
-      const opened = window.open(tool.href, "_blank");
+      await navigator.clipboard.writeText(tailoredPrompt + AI_RETURN_INSTRUCTION);
+
       if (!opened) {
+        setHasCopiedPrompt(true);
+        setCopiedPrompt(true);
         setNotice("Your prompt is copied and your DREAMZ design is saved. Your browser blocked the new tab — allow pop-ups, then tap " + tool.name + " again.");
+        window.setTimeout(() => setCopiedPrompt(false), 2200);
         return;
       }
-      opened.opener = null;
+
+      opened.location.replace(tool.href);
       setHasCopiedPrompt(true);
       setCopiedPrompt(true);
       setNotice(tool.name + " opened with your DREAMZ prompt copied. Keep this DREAMZ tab open; your design is saved here.");
       window.setTimeout(() => setCopiedPrompt(false), 2200);
     } catch {
-      setNotice("Your design is saved. Copy the prompt manually, open your preferred AI image tool, then return here to upload the result.");
+      if (opened && !opened.closed) opened.close();
+      setNotice("Your DREAMZ design is saved, but this browser could not copy the prompt automatically. Use Copy Full Prompt, then open your preferred AI image tool.");
     }
   };
 
@@ -768,13 +780,16 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   return (
     <div ref={studioTopRef} className="scroll-mt-24">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div>
+        <div className="flex items-center gap-3">
+          <img src="/img/dfk-dreamz-logo.webp" alt="DREAMZ" className="h-11 w-auto max-w-[145px] object-contain" />
+          <div>
           <p className="overline-label">DREAMZ Visual Studio</p>
           <p className="text-xs text-stone mt-1">
             {user
               ? plan.name + " · " + ("remaining" in (designerState || {}) ? (designerState as any).remaining : plan.designLimit) + " design slots remaining"
               : "3 saved designs free after sign-in"}
           </p>
+          </div>
         </div>
         <Link to="/studio-plans" className="nav-link text-[0.68rem] uppercase tracking-btn">
           Plans & features →
