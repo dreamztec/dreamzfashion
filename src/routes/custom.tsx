@@ -88,6 +88,7 @@ function Custom() {
   return (
     <div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-28 pb-10 text-center">
+        <img src="/img/dfk-dreamz-logo.webp" alt="DREAMZ" className="mx-auto mb-5 h-16 w-auto max-w-[210px] object-contain" />
         <p className="overline-label mb-3">DREAMZ Leather Atelier</p>
         <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Design Your Dream in Leather</h1>
         <p className="mt-4 max-w-2xl mx-auto text-stone leading-relaxed">
