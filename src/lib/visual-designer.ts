@@ -60,48 +60,6 @@ function commons(file: string): string {
   return "/.netlify/images?url=" + encodeURIComponent(remote) + "&w=560&h=420&fit=cover&q=76";
 }
 
-function kindForPiece(piece: string): string {
-  if (/chelsea|boot/i.test(piece)) return "boot";
-  if (/heel/i.test(piece)) return "heel";
-  if (/slide|sandal|mule/i.test(piece)) return "slide";
-  if (/oxford|derby|loafer/i.test(piece)) return "shoe";
-  if (/briefcase|laptop/i.test(piece)) return "briefcase";
-  if (/tote|travel|backpack/i.test(piece)) return "tote";
-  if (/handbag|clutch|crossbody|pouch|purse/i.test(piece)) return "bag";
-  if (/belt/i.test(piece)) return "belt";
-  if (/wallet|card|passport/i.test(piece)) return "wallet";
-  if (/watch strap/i.test(piece)) return "strap";
-  if (/jacket|vest/i.test(piece)) return "jacket";
-  if (/trouser|skirt/i.test(piece)) return "trouser";
-  return "accessory";
-}
-
-function pieceReferenceImage(piece: string): string {
-  const p = piece.toLowerCase();
-  if (p.includes("oxford")) return "/img/products/ascension-oxford.jpg";
-  if (p.includes("derby")) return "/img/products/heritage-medallion-oxford.jpg";
-  if (p.includes("loafer")) return "/img/products/classic-black-penny-loafer.jpg";
-  if (p.includes("boot") || p.includes("chelsea")) return "/img/products/boot-of-many-colours-studio.jpg";
-  if (p.includes("mule")) return "/img/products/asiwaju-mule-brown.jpg";
-  if (p.includes("slide")) return "/img/products/spectrum-buckle-slide.jpg";
-  if (p.includes("sandal")) return "/img/products/prism-cross-sandal.jpg";
-  if (p.includes("heel")) return "/img/products/crimson-pin.jpg";
-  if (p.includes("briefcase") || p.includes("laptop")) return "/img/products/executive-spectrum-briefcase.jpg";
-  if (p.includes("tote")) return "/img/products/regent-croc-tote.jpg";
-  if (p.includes("handbag") || p.includes("clutch") || p.includes("crossbody") || p.includes("pouch") || p.includes("purse")) return "/img/products/executive-leather-handbag.jpg";
-  if (p.includes("travel") || p.includes("backpack")) return "/img/products/pedra-satchel.jpg";
-  if (p.includes("belt")) return "/img/products/legacy-leather-belt.jpg";
-  if (p.includes("wallet") || p.includes("card") || p.includes("passport")) return "/img/products/purpose-wrist-pouch.jpg";
-  if (p.includes("bracelet") || p.includes("cuff")) return "/img/products/hope-slim-bracelet-set.jpg";
-  if (p.includes("watch strap")) return "/img/products/strap-twist.jpg";
-  if (p.includes("jacket")) return "/img/products/vision-leather-ensemble-campaign.jpg";
-  if (p.includes("shirt") || p.includes("t-shirt") || p.includes("tee")) return "/img/products/ambition-leather-tee.jpg";
-  if (p.includes("trouser") || p.includes("pants")) return "/img/products/discipline-wide-leg-trousers.jpg";
-  if (p.includes("vest") || p.includes("harness")) return "/img/products/courage-lace-up-vest.jpg";
-  if (p.includes("skirt")) return "/img/products/excellence-tailored-trousers.jpg";
-  return "/img/products/vision-leather-ensemble-campaign.jpg";
-}
-
 const PIECES: Array<[AtelierCategory, string, string]> = [
   ["footwear","Oxford","Structured lace-up shoe"],
   ["footwear","Derby","Open-lacing formal or smart-casual shoe"],
@@ -155,13 +113,6 @@ export const PIECE_VISUALS: VisualPiece[] = PIECES.map(([category,piece,note]) =
 }));
 
 export function categoryVisual(category: AtelierCategory): string {
-  const labels: Record<AtelierCategory, [string,string]> = {
-    footwear: ["Footwear","shoe"],
-    bags: ["Bags","bag"],
-    accessories: ["Accessories","accessory"],
-    wearable: ["Leather Wear","jacket"],
-    other: ["Other Leather Fashion","accessory"],
-  };
   const categoryImage: Record<AtelierCategory, string> = {
     footwear: "/img/products/ascension-oxford.jpg",
     bags: "/img/products/executive-spectrum-briefcase.jpg",
