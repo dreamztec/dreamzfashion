@@ -1160,7 +1160,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             <section>
               <h2 className="font-editorial text-3xl">Choose the parts</h2>
               <p className="text-sm text-stone mt-2">
-                Only the parts that matter for your {answers.piece || "piece"} appear here. Each visual is a neutral construction guide — never one of our sale products.
+                Only the parts that matter for your {answers.piece || "piece"} appear here. Each card uses real leather/product photography as a shape or construction reference. Your final design is still created from your own selections.
               </p>
               <div className="mt-6 space-y-7">
                 {constructionQuestionsForPiece.map((question) => (
