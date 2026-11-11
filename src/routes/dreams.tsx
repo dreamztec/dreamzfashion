@@ -36,7 +36,7 @@ function DreamLeaderboard() {
   return (
     <div>
       <header className="relative overflow-hidden bg-ink text-ivory">
-        <div className="absolute inset-x-0 top-0 h-1.5 dreamz-spectrum-line" aria-hidden="true" />
+        <div className="absolute inset-x-0 top-0 h-1.5 rainbow-rule" aria-hidden="true" />
         <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-28 pb-14 sm:pb-18">
           <div className="grid gap-9 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
             <div>
