@@ -1,0 +1,26 @@
+import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { createTestDb } from "./helpers/pglite-db";
+import { customers } from "../db/schema";
+const m = vi.hoisted(() => ({ customer: vi.fn(), admin: vi.fn(), origin: vi.fn(), limit: vi.fn(), db: null as any }));
+vi.mock("../db/index", () => ({ get db() { return m.db; } }));
+vi.mock("../src/server/auth.server", () => ({ requireCustomer: m.customer }));
+vi.mock("../src/server/admin-auth.server", () => ({ requireAdminRole: m.admin }));
+vi.mock("../src/server/rate-limit.server", () => ({ consumeRateLimit: m.limit }));
+vi.mock("@netlify/identity", () => ({ verifyRequestOrigin: m.origin }));
+vi.mock("@tanstack/react-start/server", () => ({ getRequest: () => new Request("https://dreamzfashion.dreamz-gc.com"), setResponseHeader: vi.fn() }));
+vi.mock("@tanstack/react-start", () => ({ createServerFn: () => { let schema: any; const builder: any = { inputValidator: (s: any) => { schema = s; return builder; }, handler: (fn: any) => (args?: any) => fn({ data: schema ? schema.parse(args?.data) : args?.data }) }; return builder; } }));
+import { getPassport, savePassportDream, submitPassportTicket, claimPassport, adminIssuePassportClaim, adminSavePassport, adminListPassports } from "../src/server/passports.functions";
+let testDb: Awaited<ReturnType<typeof createTestDb>>;
+beforeAll(async () => { testDb = await createTestDb(); m.db = testDb.db; await m.db.insert(customers).values([{ id: 700001, identityUserId: "passport-a", email: "passport-a@example.com", referralCode: "PASSA" }, { id: 700002, identityUserId: "passport-b", email: "passport-b@example.com", referralCode: "PASSB" }]); }, 30000);
+afterAll(async () => { await testDb?.client.close(); });
+beforeEach(() => { vi.clearAllMocks(); m.customer.mockResolvedValue({ id: 700001 }); m.admin.mockResolvedValue(undefined); m.origin.mockReturnValue(undefined); m.limit.mockResolvedValue({ ok: true }); });
+const data = { code: "DRZ-000001" };
+describe("Product passports", () => {
+ it("seeds the first record without inventing a lifespan", async () => { const p = await getPassport({ data }); expect(p.title).toBe("VANITY FLEX"); expect(p.lifespan).toContain("pending wear data"); expect(p).not.toHaveProperty("claimHash"); expect(p).not.toHaveProperty("ownerCustomerId"); });
+ it("blocks unauthenticated story reads", async () => { m.customer.mockRejectedValue(new Error("Sign in")); await expect(getPassport({ data })).rejects.toThrow("Sign in"); });
+ it("keeps dreams and support private across two customers", async () => { await savePassportDream({ data: { ...data, dream: "My private ambition" } }); await submitPassportTicket({ data: { ...data, kind: "Care question", message: "This is a private support request." } }); const own = await getPassport({ data }); expect(own.dream).toBe("My private ambition"); expect(own.tickets).toHaveLength(1); m.customer.mockResolvedValue({ id: 700002 }); const other = await getPassport({ data }); expect(other.dream).toBe(""); expect(other.tickets).toEqual([]); });
+ it("requires a separate one-time claim code and rejects reuse", async () => { const { claimCode } = await adminIssuePassportClaim({ data }); await expect(claimPassport({ data: { ...data, claimCode: "wrong-code-123456" } })).rejects.toThrow("invalid"); await claimPassport({ data: { ...data, claimCode } }); expect((await getPassport({ data })).isOwner).toBe(true); m.customer.mockResolvedValue({ id: 700002 }); await expect(claimPassport({ data: { ...data, claimCode } })).rejects.toThrow("invalid"); expect((await getPassport({ data })).isOwner).toBe(false); });
+ it("rejects cross-origin writes", async () => { m.origin.mockImplementation(() => { throw new Error("Origin rejected"); }); await expect(savePassportDream({ data: { ...data, dream: "bad" } })).rejects.toThrow("Origin rejected"); });
+ it("requires staff authorisation for the admin inbox", async () => { m.admin.mockRejectedValue(new Error("Forbidden")); await expect(adminListPassports()).rejects.toThrow("Forbidden"); });
+ it("allocates unique sequential records for different product categories", async () => { const fields = { title: "Test leather bag", collection: "Test", category: "bags", story: "A test product story with enough detail.", encouragement: "Keep moving", materials: "Leather", care: "Use a soft dry cloth.", lifespan: "Pending", productionStatus: "In production" as const, imageUrl: "" }; const a = await adminSavePassport({ data: fields }); const b = await adminSavePassport({ data: fields }); expect(a.code).toBe("DRZ-000002"); expect(b.code).toBe("DRZ-000003"); });
+});
