@@ -3,5 +3,7 @@ Allow: /
 Disallow: /admin
 Disallow: /checkout
 Disallow: /api/
+Disallow: /account/
+Disallow: /approve/
 
 Sitemap: https://dreamzfashion.dreamz-gc.com/sitemap.xml
