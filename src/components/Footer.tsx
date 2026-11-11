@@ -142,6 +142,11 @@ export function Footer({
           </div>
         </div>
 
+        <div className="mt-12 flex flex-wrap gap-5 text-sm text-ivory/80" aria-label="Dreamz network">
+          <a href="https://mydreamnetwork.dreamz-gc.com/" className="hover:text-ivory" target="_blank" rel="noopener noreferrer">Share your dream · Dreamz 2 Reality ↗</a>
+          <a href="https://mydreamnetwork.dreamz-gc.com/businesses" className="hover:text-ivory" target="_blank" rel="noopener noreferrer">Explore Dreamz businesses ↗</a>
+        </div>
+
         <div className="mt-16 pt-8 border-t border-ivory/10 space-y-3">
           <p className="text-[0.65rem] uppercase tracking-btn text-ivory/50">
             {REGISTERED_BUSINESS_LINE}
