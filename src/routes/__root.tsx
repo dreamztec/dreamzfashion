@@ -31,7 +31,7 @@ const organizationJsonLd = {
   url: SITE_URL,
   logo: {
     "@type": "ImageObject",
-    url: `${SITE_URL}/img/dfk-logo-mark.jpg`,
+    url: `${SITE_URL}/img/dfk-dreamz-logo.webp`,
   },
   // Legal-entity fact (CAC): the incorporated company's date. The DREAMZ
   // BRAND's five-year journey (since 12 June 2022) is modelled separately as
