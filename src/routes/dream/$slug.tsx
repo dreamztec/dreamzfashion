@@ -200,7 +200,7 @@ function DreamDesignPage() {
     } catch {
       // The sales handoff still works if analytics cannot be recorded.
     }
-    const message = `Hello DREAMZ, I want to order or get a quote for this community design: ${data.design.title}. Dream code: ${designCode}. Design link: ${shareUrl}${data.designer.earnCode ? ` | Dreamer code: ${data.designer.earnCode}` : ""}`;
+    const message = `Hello DREAMZ, I want the final production quote for this Dream design and I am ready to confirm production with at least a 20% deposit: ${data.design.title}. Dream code: ${designCode}. Design link: ${shareUrl}${data.designer.earnCode ? ` | Dreamer code: ${data.designer.earnCode}` : ""}`;
     window.location.href =
       "https://wa.me/" +
       CONTACT.whatsappNumber.replace(/\D/g, "") +
@@ -311,10 +311,10 @@ function DreamDesignPage() {
 
             <div className="mt-8 border-t border-ink/10 pt-6">
               <button type="button" onClick={() => void orderThisDesign()} className="btn-lux btn-lux-primary inline-block mb-5">
-                I Want This Design
+                Start Production · 20% Minimum Deposit
               </button>
               <p className="text-xs text-stone leading-relaxed">
-                This is a design concept, not a ready-made stock promise. DREAMZ confirms leather availability, measurements, construction feasibility and final price before production.
+                DREAMZ first confirms leather availability, measurements, construction feasibility and the final quote. Production is confirmed with at least a 20% deposit. Eligible deliveries may use GIGL COD/TOD for the remaining balance; otherwise payment is confirmed before dispatch.
               </p>
             </div>
           </div>
