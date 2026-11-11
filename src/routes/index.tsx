@@ -83,21 +83,35 @@ function Home() {
           </div>
         </div>
 
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 pt-8 pb-12">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 pb-12">
           <Link
             to="/dreams"
-            className="block border border-gold/50 bg-gold/5 px-5 py-6 sm:px-8 sm:py-7 text-center transition hover:border-gold"
+            className="group relative block overflow-hidden border border-ink bg-ink px-5 py-7 sm:px-9 sm:py-9 text-ivory transition hover:border-gold"
           >
-            <p className="overline-label !text-gold">DREAMZ 200 · Community Design Challenge</p>
-            <h2 className="font-editorial text-2xl sm:text-4xl mt-2">Design. Share. Get ordered.</h2>
-            <p className="mt-3 text-sm text-stone">
-              Planned ₦1,000,000 prize pool · 1st ₦500k · 2nd ₦300k · 3rd ₦200k · Target close 31 December 2026.
+            <div className="absolute inset-x-0 top-0 h-1.5 rainbow-rule" aria-hidden="true" />
+            <div className="grid gap-7 lg:grid-cols-[1.1fr_.9fr] lg:items-end text-left">
+              <div>
+                <p className="overline-label !text-gold-soft">DREAMZ 200 · Dream Design Challenge</p>
+                <h2 className="font-editorial text-3xl sm:text-5xl mt-2">Design your dream. Let the best designs win.</h2>
+                <p className="mt-4 text-sm text-ivory/70 leading-relaxed max-w-2xl">
+                  Create a leather product, publish it with a unique Dream Code, validate real demand and compete on design quality — not popularity alone.
+                </p>
+              </div>
+              <div>
+                <p className="font-editorial text-5xl sm:text-6xl text-gold-soft">₦1,000,000</p>
+                <p className="text-sm uppercase tracking-btn mt-1">Total prize pool*</p>
+                <p className="mt-3 text-sm text-ivory/70">₦500k cash + ₦500k DREAMZ products · Top 5 · Plus paid Studio passes</p>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-2 sm:grid-cols-3 text-[0.62rem] uppercase tracking-btn text-ivory/65">
+              <span>20% minimum production deposit</span>
+              <span>Dream Code tracking</span>
+              <span>Eligible GIGL COD/TOD</span>
+            </div>
+            <p className="mt-5 text-[0.6rem] text-ivory/45">
+              *Design/order offer is live. Prize challenge activates subject to required promotional approval and published rules.
             </p>
-            <p className="mt-2 text-[0.62rem] text-stone">
-              Verified orders carry the strongest ranking weight. Likes and shares help; views do not add points.
-              Prize activation is subject to the published challenge terms and required promotional approval.
-            </p>
-            <span className="nav-link inline-block mt-4 text-[0.68rem] uppercase tracking-btn">See Top 100 Dreams →</span>
+            <span className="nav-link inline-block mt-4 text-[0.68rem] uppercase tracking-btn text-gold-soft">See prizes, rules & market pulse →</span>
           </Link>
         </div>
 
