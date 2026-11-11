@@ -823,6 +823,7 @@ export const getDreamLeaderboard = createServerFn({ method: "GET" }).handler(asy
           likeCount,
           shareCount: row.shareCount,
         }),
+        prizeEligible: isDreamPrizeEligible({ verifiedOrders: orders.verifiedOrders }),
         updatedAt: row.updatedAt?.toISOString() || null,
       };
     }),
