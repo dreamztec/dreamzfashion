@@ -80,7 +80,7 @@ function DreamChallengeRules() {
           <p className="overline-label">2 · Entry & Production</p>
           <h2 className="font-editorial text-3xl mt-2">Design first. Production is a real order.</h2>
           <div className="mt-5 space-y-3 text-sm text-stone leading-relaxed">
-            <p>Entrants create an original leather-product concept in the DREAMZ Studio and publish the completed Dream page with its generated product image and unique Dream Code.</p>
+            <p>Entrants create an original leather-product concept in the DREAMZ Studio and publish the completed Dream page with its generated product image and unique Dream Code. Designs created before prize activation are not automatically entered; DREAMZ will publish the opt-in/eligibility procedure when the promotion is formally activated.</p>
             <p>For prize eligibility after activation, at least one DREAMZ-verified production order must be attached to the design. A verified order means DREAMZ has confirmed the client, final quote and a production deposit of at least {DREAM_CHALLENGE.minimumDepositPercent}%.</p>
             <p>The remaining balance may be paid on delivery through eligible GIG Logistics COD/TOD routes and order types. Where COD/TOD is not available or approved for that delivery, DREAMZ will confirm the remaining payment before dispatch.</p>
             <p>One person may publish multiple designs within their Studio plan limit, but one person may occupy only one winning position; their highest-scoring judged design is used.</p>
@@ -88,7 +88,15 @@ function DreamChallengeRules() {
         </section>
 
         <section className="mt-12">
-          <p className="overline-label">3 · Judging</p>
+          <p className="overline-label">3 · Eligibility</p>
+          <h2 className="font-editorial text-3xl mt-2">Clear entry and conflict rules.</h2>
+          <p className="text-sm text-stone mt-3 leading-relaxed">
+            Cash-prize eligibility is intended for persons aged 18 or older who can lawfully receive the prize and complete required identity/order verification. DREAMZ staff, judging-panel members and people directly involved in administering the final judging are excluded from winning. Final geographic and identity requirements will be stated in the activation notice.
+          </p>
+        </section>
+
+        <section className="mt-12">
+          <p className="overline-label">4 · Judging</p>
           <h2 className="font-editorial text-3xl mt-2">The winner is the best design, not the biggest following.</h2>
           <div className="mt-6 border border-ink/10 divide-y divide-ink/10">
             {DREAM_CHALLENGE.judging.map((item) => (
@@ -105,7 +113,7 @@ function DreamChallengeRules() {
         </section>
 
         <section className="mt-12">
-          <p className="overline-label">4 · Dream Code Tracking</p>
+          <p className="overline-label">5 · Dream Code Tracking</p>
           <h2 className="font-editorial text-3xl mt-2">Every public design has its own measurable trail.</h2>
           <p className="text-sm text-stone mt-3 leading-relaxed">
             DREAMZ tracks the public Dream Code, views, verified-account likes, recorded shares and DREAMZ-verified orders.
@@ -115,7 +123,7 @@ function DreamChallengeRules() {
         </section>
 
         <section className="mt-12">
-          <p className="overline-label">5 · Originality & Rights</p>
+          <p className="overline-label">6 · Originality & Rights</p>
           <h2 className="font-editorial text-3xl mt-2">Create something you have the right to share.</h2>
           <div className="mt-4 space-y-3 text-sm text-stone leading-relaxed">
             <p>Entries must be original and must not copy protected third-party logos, branded ornaments, copyrighted artwork or another creator's design.</p>
@@ -125,7 +133,7 @@ function DreamChallengeRules() {
         </section>
 
         <section className="mt-12">
-          <p className="overline-label">6 · Prize Products</p>
+          <p className="overline-label">7 · Prize Products</p>
           <h2 className="font-editorial text-3xl mt-2">Product value is not cash.</h2>
           <p className="text-sm text-stone mt-3 leading-relaxed">
             DREAMZ product prizes are redeemed as DREAMZ products or approved custom-production value up to the stated amount.
@@ -134,7 +142,7 @@ function DreamChallengeRules() {
         </section>
 
         <section className="mt-12">
-          <p className="overline-label">7 · Timing & Verification</p>
+          <p className="overline-label">8 · Timing & Verification</p>
           <h2 className="font-editorial text-3xl mt-2">Dates become binding when the challenge is activated.</h2>
           <p className="text-sm text-stone mt-3 leading-relaxed">
             The current proposed close date is 31 December 2026. DREAMZ may adjust the activation or closing date before launch to satisfy regulatory, operational or fairness requirements.
