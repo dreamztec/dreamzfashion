@@ -93,3 +93,10 @@
   for = "/dream-challenge-rules"
   [headers.values]
     Netlify-CDN-Cache-Control = "public, durable, max-age=3600, stale-while-revalidate=86400"
+
+# Passport responses must never be shared between authenticated visitors.
+[[headers]]
+  for = "/p/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    Netlify-CDN-Cache-Control = "no-store"

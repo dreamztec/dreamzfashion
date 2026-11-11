@@ -16,6 +16,7 @@ export const Route = createFileRoute("/account")({
 const SECTIONS = [
   { to: "/account", label: "Overview" },
   { to: "/account/orders", label: "My Orders" },
+  { to: "/account/passports", label: "Product Passports" },
   { to: "/track-order", label: "Track Order" },
   { to: "/account/rewards", label: "DREAMZ Rewards" },
   { to: "/account/vouchers", label: "My Vouchers" },

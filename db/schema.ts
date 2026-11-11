@@ -1346,3 +1346,40 @@ export type DesignOrderIntent = typeof designOrderIntents.$inferSelect;
 export type DesignApprovalFeedback = typeof designApprovalFeedback.$inferSelect;
 export type ProductSlugAlias = typeof productSlugAliases.$inferSelect;
 export type InspirationMessage = typeof inspirationMessages.$inferSelect;
+
+// Product passports: the public QR is not an ownership credential.
+export const productPassports = pgTable("product_passports", {
+  id: serial("id").primaryKey(),
+  code: text("code").notNull().unique(),
+  title: text("title").notNull(),
+  collection: text("collection").notNull().default(""),
+  category: text("category").notNull().default("footwear"),
+  story: text("story").notNull(),
+  encouragement: text("encouragement").notNull().default("Every dream is valid. Take your next step with purpose."),
+  materials: text("materials").notNull().default("Final material specification will be added after production checks."),
+  care: text("care").notNull().default("Keep dry, wipe gently with a soft cloth and store away from direct heat. Ask DREAMZ before applying a cleaning product."),
+  lifespan: text("lifespan").notNull().default("Service-life estimate pending wear data. Actual wear depends on use, care and construction; this is not a warranty."),
+  productionStatus: text("production_status").notNull().default("In production"),
+  imageUrl: text("image_url"),
+  ownerCustomerId: integer("owner_customer_id").references(() => customers.id),
+  claimHash: text("claim_hash"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+export const passportBookmarks = pgTable("passport_bookmarks", {
+  id: serial("id").primaryKey(),
+  passportId: integer("passport_id").notNull().references(() => productPassports.id),
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  dream: text("dream").notNull().default(""),
+}, (t) => [uniqueIndex("passport_bookmark_customer_unique").on(t.passportId, t.customerId)]);
+export const passportTickets = pgTable("passport_tickets", {
+  id: serial("id").primaryKey(),
+  passportId: integer("passport_id").notNull().references(() => productPassports.id),
+  customerId: integer("customer_id").notNull().references(() => customers.id),
+  kind: text("kind").notNull(),
+  message: text("message").notNull(),
+  status: text("status").notNull().default("Received"),
+  reply: text("reply").notNull().default(""),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});

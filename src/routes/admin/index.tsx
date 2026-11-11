@@ -29,6 +29,7 @@ const NAV: Array<{ label: string; to: string; roles: AdminRole[] }> = [
    { label: "Messages", to: "/admin/messages", roles: ["owner", "operations"] },
   { label: "Royale", to: "/admin/royale", roles: ["owner", "sales"] },
   { label: "Partnerships", to: "/admin/partnerships", roles: ["owner", "sales"] },
+  { label: "Product Passports", to: "/admin/passports", roles: ["owner", "operations"] },
   { label: "Waitlist", to: "/admin/waitlist", roles: ["owner", "sales"] },
   { label: "Feedback", to: "/admin/feedback", roles: ["owner", "sales"] },
   { label: "Vouchers", to: "/admin/vouchers", roles: ["owner"] },

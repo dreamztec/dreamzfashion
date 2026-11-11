@@ -18,22 +18,28 @@ import { Route as CorporateRouteImport } from './routes/corporate'
 import { Route as CreatorsRouteImport } from './routes/creators'
 import { Route as CustomRouteImport } from './routes/custom'
 import { Route as D5exRouteImport } from './routes/d5ex'
+import { Route as DreamChallengeRulesRouteImport } from './routes/dream-challenge-rules'
+import { Route as DreamsRouteImport } from './routes/dreams'
 import { Route as Dreamz5RouteImport } from './routes/dreamz-5'
 import { Route as EarnRouteImport } from './routes/earn'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as LookbookRouteImport } from './routes/lookbook'
+import { Route as PartnerWithDreamzRouteImport } from './routes/partner-with-dreamz'
 import { Route as PartnershipsRouteImport } from './routes/partnerships'
 import { Route as PoliciesRouteImport } from './routes/policies'
 import { Route as RewardsRouteImport } from './routes/rewards'
 import { Route as RoyaleRouteImport } from './routes/royale'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as StudioPlansRouteImport } from './routes/studio-plans'
 import { Route as TrackOrderRouteImport } from './routes/track-order'
 import { Route as VoucherRouteImport } from './routes/voucher'
 import { Route as AccountIndexRouteImport } from './routes/account/index'
+import { Route as AccountDesignerRouteImport } from './routes/account/designer'
 import { Route as AccountDesignsRouteImport } from './routes/account/designs'
 import { Route as AccountLoginRouteImport } from './routes/account/login'
 import { Route as AccountOrdersRouteImport } from './routes/account/orders'
 import { Route as AccountPartnerRouteImport } from './routes/account/partner'
+import { Route as AccountPassportsRouteImport } from './routes/account/passports'
 import { Route as AccountProfileRouteImport } from './routes/account/profile'
 import { Route as AccountReferralsRouteImport } from './routes/account/referrals'
 import { Route as AccountRewardsRouteImport } from './routes/account/rewards'
@@ -52,18 +58,24 @@ import { Route as AdminOrdersRouteImport } from './routes/admin/orders'
 import { Route as AdminOverviewRouteImport } from './routes/admin/overview'
 import { Route as AdminPartnersRouteImport } from './routes/admin/partners'
 import { Route as AdminPartnershipsRouteImport } from './routes/admin/partnerships'
+import { Route as AdminPassportsRouteImport } from './routes/admin/passports'
 import { Route as AdminProductsRouteImport } from './routes/admin/products'
 import { Route as AdminReferralsRouteImport } from './routes/admin/referrals'
 import { Route as AdminRoyaleRouteImport } from './routes/admin/royale'
 import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
+import { Route as AdminStudioRouteImport } from './routes/admin/studio'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AdminVouchersRouteImport } from './routes/admin/vouchers'
 import { Route as AdminWaitlistRouteImport } from './routes/admin/waitlist'
 import { Route as ApiEventRouteImport } from './routes/api/event'
+import { Route as ApproveTokenRouteImport } from './routes/approve/$token'
 import { Route as CheckoutIndexRouteImport } from './routes/checkout/index'
 import { Route as CheckoutCallbackRouteImport } from './routes/checkout/callback'
 import { Route as CreatorSlugRouteImport } from './routes/creator/$slug'
+import { Route as DreamSlugRouteImport } from './routes/dream/$slug'
+import { Route as DreamerSlugRouteImport } from './routes/dreamer/$slug'
 import { Route as OrderOrderNumberRouteImport } from './routes/order/$orderNumber'
+import { Route as PCodeRouteImport } from './routes/p/$code'
 import { Route as ProductSlugRouteImport } from './routes/product/$slug'
 import { Route as RCodeRouteImport } from './routes/r/$code'
 import { Route as RoyaleRequestRouteImport } from './routes/royale/request'
@@ -119,6 +131,16 @@ const D5exRoute = D5exRouteImport.update({
   path: '/d5ex',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DreamChallengeRulesRoute = DreamChallengeRulesRouteImport.update({
+  id: '/dream-challenge-rules',
+  path: '/dream-challenge-rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DreamsRoute = DreamsRouteImport.update({
+  id: '/dreams',
+  path: '/dreams',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const Dreamz5Route = Dreamz5RouteImport.update({
   id: '/dreamz-5',
   path: '/dreamz-5',
@@ -137,6 +159,11 @@ const FeedbackRoute = FeedbackRouteImport.update({
 const LookbookRoute = LookbookRouteImport.update({
   id: '/lookbook',
   path: '/lookbook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartnerWithDreamzRoute = PartnerWithDreamzRouteImport.update({
+  id: '/partner-with-dreamz',
+  path: '/partner-with-dreamz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnershipsRoute = PartnershipsRouteImport.update({
@@ -164,6 +191,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudioPlansRoute = StudioPlansRouteImport.update({
+  id: '/studio-plans',
+  path: '/studio-plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TrackOrderRoute = TrackOrderRouteImport.update({
   id: '/track-order',
   path: '/track-order',
@@ -177,6 +209,11 @@ const VoucherRoute = VoucherRouteImport.update({
 const AccountIndexRoute = AccountIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountDesignerRoute = AccountDesignerRouteImport.update({
+  id: '/designer',
+  path: '/designer',
   getParentRoute: () => AccountRoute,
 } as any)
 const AccountDesignsRoute = AccountDesignsRouteImport.update({
@@ -197,6 +234,11 @@ const AccountOrdersRoute = AccountOrdersRouteImport.update({
 const AccountPartnerRoute = AccountPartnerRouteImport.update({
   id: '/partner',
   path: '/partner',
+  getParentRoute: () => AccountRoute,
+} as any)
+const AccountPassportsRoute = AccountPassportsRouteImport.update({
+  id: '/passports',
+  path: '/passports',
   getParentRoute: () => AccountRoute,
 } as any)
 const AccountProfileRoute = AccountProfileRouteImport.update({
@@ -289,6 +331,11 @@ const AdminPartnershipsRoute = AdminPartnershipsRouteImport.update({
   path: '/admin/partnerships',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminPassportsRoute = AdminPassportsRouteImport.update({
+  id: '/admin/passports',
+  path: '/admin/passports',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminProductsRoute = AdminProductsRouteImport.update({
   id: '/admin/products',
   path: '/admin/products',
@@ -307,6 +354,11 @@ const AdminRoyaleRoute = AdminRoyaleRouteImport.update({
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
   id: '/admin/settings',
   path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStudioRoute = AdminStudioRouteImport.update({
+  id: '/admin/studio',
+  path: '/admin/studio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
@@ -329,6 +381,11 @@ const ApiEventRoute = ApiEventRouteImport.update({
   path: '/api/event',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApproveTokenRoute = ApproveTokenRouteImport.update({
+  id: '/approve/$token',
+  path: '/approve/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutIndexRoute = CheckoutIndexRouteImport.update({
   id: '/checkout/',
   path: '/checkout/',
@@ -344,9 +401,24 @@ const CreatorSlugRoute = CreatorSlugRouteImport.update({
   path: '/creator/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DreamSlugRoute = DreamSlugRouteImport.update({
+  id: '/dream/$slug',
+  path: '/dream/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DreamerSlugRoute = DreamerSlugRouteImport.update({
+  id: '/dreamer/$slug',
+  path: '/dreamer/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OrderOrderNumberRoute = OrderOrderNumberRouteImport.update({
   id: '/order/$orderNumber',
   path: '/order/$orderNumber',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PCodeRoute = PCodeRouteImport.update({
+  id: '/p/$code',
+  path: '/p/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProductSlugRoute = ProductSlugRouteImport.update({
@@ -407,21 +479,27 @@ export interface FileRoutesByFullPath {
   '/creators': typeof CreatorsRoute
   '/custom': typeof CustomRoute
   '/d5ex': typeof D5exRoute
+  '/dream-challenge-rules': typeof DreamChallengeRulesRoute
+  '/dreams': typeof DreamsRoute
   '/dreamz-5': typeof Dreamz5Route
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
   '/lookbook': typeof LookbookRoute
+  '/partner-with-dreamz': typeof PartnerWithDreamzRoute
   '/partnerships': typeof PartnershipsRoute
   '/policies': typeof PoliciesRoute
   '/rewards': typeof RewardsRoute
   '/royale': typeof RoyaleRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio-plans': typeof StudioPlansRoute
   '/track-order': typeof TrackOrderRoute
   '/voucher': typeof VoucherRoute
+  '/account/designer': typeof AccountDesignerRoute
   '/account/designs': typeof AccountDesignsRoute
   '/account/login': typeof AccountLoginRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/partner': typeof AccountPartnerRoute
+  '/account/passports': typeof AccountPassportsRoute
   '/account/profile': typeof AccountProfileRoute
   '/account/referrals': typeof AccountReferralsRoute
   '/account/rewards': typeof AccountRewardsRoute
@@ -439,17 +517,23 @@ export interface FileRoutesByFullPath {
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/partnerships': typeof AdminPartnershipsRoute
+  '/admin/passports': typeof AdminPassportsRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/royale': typeof AdminRoyaleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/vouchers': typeof AdminVouchersRoute
   '/admin/waitlist': typeof AdminWaitlistRoute
   '/api/event': typeof ApiEventRoute
+  '/approve/$token': typeof ApproveTokenRoute
   '/checkout/callback': typeof CheckoutCallbackRoute
   '/creator/$slug': typeof CreatorSlugRoute
+  '/dream/$slug': typeof DreamSlugRoute
+  '/dreamer/$slug': typeof DreamerSlugRoute
   '/order/$orderNumber': typeof OrderOrderNumberRoute
+  '/p/$code': typeof PCodeRoute
   '/product/$slug': typeof ProductSlugRoute
   '/r/$code': typeof RCodeRoute
   '/royale/request': typeof RoyaleRequestRoute
@@ -472,21 +556,27 @@ export interface FileRoutesByTo {
   '/creators': typeof CreatorsRoute
   '/custom': typeof CustomRoute
   '/d5ex': typeof D5exRoute
+  '/dream-challenge-rules': typeof DreamChallengeRulesRoute
+  '/dreams': typeof DreamsRoute
   '/dreamz-5': typeof Dreamz5Route
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
   '/lookbook': typeof LookbookRoute
+  '/partner-with-dreamz': typeof PartnerWithDreamzRoute
   '/partnerships': typeof PartnershipsRoute
   '/policies': typeof PoliciesRoute
   '/rewards': typeof RewardsRoute
   '/royale': typeof RoyaleRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio-plans': typeof StudioPlansRoute
   '/track-order': typeof TrackOrderRoute
   '/voucher': typeof VoucherRoute
+  '/account/designer': typeof AccountDesignerRoute
   '/account/designs': typeof AccountDesignsRoute
   '/account/login': typeof AccountLoginRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/partner': typeof AccountPartnerRoute
+  '/account/passports': typeof AccountPassportsRoute
   '/account/profile': typeof AccountProfileRoute
   '/account/referrals': typeof AccountReferralsRoute
   '/account/rewards': typeof AccountRewardsRoute
@@ -504,17 +594,23 @@ export interface FileRoutesByTo {
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/partnerships': typeof AdminPartnershipsRoute
+  '/admin/passports': typeof AdminPassportsRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/royale': typeof AdminRoyaleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/vouchers': typeof AdminVouchersRoute
   '/admin/waitlist': typeof AdminWaitlistRoute
   '/api/event': typeof ApiEventRoute
+  '/approve/$token': typeof ApproveTokenRoute
   '/checkout/callback': typeof CheckoutCallbackRoute
   '/creator/$slug': typeof CreatorSlugRoute
+  '/dream/$slug': typeof DreamSlugRoute
+  '/dreamer/$slug': typeof DreamerSlugRoute
   '/order/$orderNumber': typeof OrderOrderNumberRoute
+  '/p/$code': typeof PCodeRoute
   '/product/$slug': typeof ProductSlugRoute
   '/r/$code': typeof RCodeRoute
   '/royale/request': typeof RoyaleRequestRoute
@@ -539,21 +635,27 @@ export interface FileRoutesById {
   '/creators': typeof CreatorsRoute
   '/custom': typeof CustomRoute
   '/d5ex': typeof D5exRoute
+  '/dream-challenge-rules': typeof DreamChallengeRulesRoute
+  '/dreams': typeof DreamsRoute
   '/dreamz-5': typeof Dreamz5Route
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
   '/lookbook': typeof LookbookRoute
+  '/partner-with-dreamz': typeof PartnerWithDreamzRoute
   '/partnerships': typeof PartnershipsRoute
   '/policies': typeof PoliciesRoute
   '/rewards': typeof RewardsRoute
   '/royale': typeof RoyaleRouteWithChildren
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/studio-plans': typeof StudioPlansRoute
   '/track-order': typeof TrackOrderRoute
   '/voucher': typeof VoucherRoute
+  '/account/designer': typeof AccountDesignerRoute
   '/account/designs': typeof AccountDesignsRoute
   '/account/login': typeof AccountLoginRoute
   '/account/orders': typeof AccountOrdersRoute
   '/account/partner': typeof AccountPartnerRoute
+  '/account/passports': typeof AccountPassportsRoute
   '/account/profile': typeof AccountProfileRoute
   '/account/referrals': typeof AccountReferralsRoute
   '/account/rewards': typeof AccountRewardsRoute
@@ -571,17 +673,23 @@ export interface FileRoutesById {
   '/admin/overview': typeof AdminOverviewRoute
   '/admin/partners': typeof AdminPartnersRoute
   '/admin/partnerships': typeof AdminPartnershipsRoute
+  '/admin/passports': typeof AdminPassportsRoute
   '/admin/products': typeof AdminProductsRoute
   '/admin/referrals': typeof AdminReferralsRoute
   '/admin/royale': typeof AdminRoyaleRoute
   '/admin/settings': typeof AdminSettingsRoute
+  '/admin/studio': typeof AdminStudioRoute
   '/admin/users': typeof AdminUsersRoute
   '/admin/vouchers': typeof AdminVouchersRoute
   '/admin/waitlist': typeof AdminWaitlistRoute
   '/api/event': typeof ApiEventRoute
+  '/approve/$token': typeof ApproveTokenRoute
   '/checkout/callback': typeof CheckoutCallbackRoute
   '/creator/$slug': typeof CreatorSlugRoute
+  '/dream/$slug': typeof DreamSlugRoute
+  '/dreamer/$slug': typeof DreamerSlugRoute
   '/order/$orderNumber': typeof OrderOrderNumberRoute
+  '/p/$code': typeof PCodeRoute
   '/product/$slug': typeof ProductSlugRoute
   '/r/$code': typeof RCodeRoute
   '/royale/request': typeof RoyaleRequestRoute
@@ -607,21 +715,27 @@ export interface FileRouteTypes {
     | '/creators'
     | '/custom'
     | '/d5ex'
+    | '/dream-challenge-rules'
+    | '/dreams'
     | '/dreamz-5'
     | '/earn'
     | '/feedback'
     | '/lookbook'
+    | '/partner-with-dreamz'
     | '/partnerships'
     | '/policies'
     | '/rewards'
     | '/royale'
     | '/sitemap.xml'
+    | '/studio-plans'
     | '/track-order'
     | '/voucher'
+    | '/account/designer'
     | '/account/designs'
     | '/account/login'
     | '/account/orders'
     | '/account/partner'
+    | '/account/passports'
     | '/account/profile'
     | '/account/referrals'
     | '/account/rewards'
@@ -639,17 +753,23 @@ export interface FileRouteTypes {
     | '/admin/overview'
     | '/admin/partners'
     | '/admin/partnerships'
+    | '/admin/passports'
     | '/admin/products'
     | '/admin/referrals'
     | '/admin/royale'
     | '/admin/settings'
+    | '/admin/studio'
     | '/admin/users'
     | '/admin/vouchers'
     | '/admin/waitlist'
     | '/api/event'
+    | '/approve/$token'
     | '/checkout/callback'
     | '/creator/$slug'
+    | '/dream/$slug'
+    | '/dreamer/$slug'
     | '/order/$orderNumber'
+    | '/p/$code'
     | '/product/$slug'
     | '/r/$code'
     | '/royale/request'
@@ -672,21 +792,27 @@ export interface FileRouteTypes {
     | '/creators'
     | '/custom'
     | '/d5ex'
+    | '/dream-challenge-rules'
+    | '/dreams'
     | '/dreamz-5'
     | '/earn'
     | '/feedback'
     | '/lookbook'
+    | '/partner-with-dreamz'
     | '/partnerships'
     | '/policies'
     | '/rewards'
     | '/royale'
     | '/sitemap.xml'
+    | '/studio-plans'
     | '/track-order'
     | '/voucher'
+    | '/account/designer'
     | '/account/designs'
     | '/account/login'
     | '/account/orders'
     | '/account/partner'
+    | '/account/passports'
     | '/account/profile'
     | '/account/referrals'
     | '/account/rewards'
@@ -704,17 +830,23 @@ export interface FileRouteTypes {
     | '/admin/overview'
     | '/admin/partners'
     | '/admin/partnerships'
+    | '/admin/passports'
     | '/admin/products'
     | '/admin/referrals'
     | '/admin/royale'
     | '/admin/settings'
+    | '/admin/studio'
     | '/admin/users'
     | '/admin/vouchers'
     | '/admin/waitlist'
     | '/api/event'
+    | '/approve/$token'
     | '/checkout/callback'
     | '/creator/$slug'
+    | '/dream/$slug'
+    | '/dreamer/$slug'
     | '/order/$orderNumber'
+    | '/p/$code'
     | '/product/$slug'
     | '/r/$code'
     | '/royale/request'
@@ -738,21 +870,27 @@ export interface FileRouteTypes {
     | '/creators'
     | '/custom'
     | '/d5ex'
+    | '/dream-challenge-rules'
+    | '/dreams'
     | '/dreamz-5'
     | '/earn'
     | '/feedback'
     | '/lookbook'
+    | '/partner-with-dreamz'
     | '/partnerships'
     | '/policies'
     | '/rewards'
     | '/royale'
     | '/sitemap.xml'
+    | '/studio-plans'
     | '/track-order'
     | '/voucher'
+    | '/account/designer'
     | '/account/designs'
     | '/account/login'
     | '/account/orders'
     | '/account/partner'
+    | '/account/passports'
     | '/account/profile'
     | '/account/referrals'
     | '/account/rewards'
@@ -770,17 +908,23 @@ export interface FileRouteTypes {
     | '/admin/overview'
     | '/admin/partners'
     | '/admin/partnerships'
+    | '/admin/passports'
     | '/admin/products'
     | '/admin/referrals'
     | '/admin/royale'
     | '/admin/settings'
+    | '/admin/studio'
     | '/admin/users'
     | '/admin/vouchers'
     | '/admin/waitlist'
     | '/api/event'
+    | '/approve/$token'
     | '/checkout/callback'
     | '/creator/$slug'
+    | '/dream/$slug'
+    | '/dreamer/$slug'
     | '/order/$orderNumber'
+    | '/p/$code'
     | '/product/$slug'
     | '/r/$code'
     | '/royale/request'
@@ -805,15 +949,19 @@ export interface RootRouteChildren {
   CreatorsRoute: typeof CreatorsRoute
   CustomRoute: typeof CustomRoute
   D5exRoute: typeof D5exRoute
+  DreamChallengeRulesRoute: typeof DreamChallengeRulesRoute
+  DreamsRoute: typeof DreamsRoute
   Dreamz5Route: typeof Dreamz5Route
   EarnRoute: typeof EarnRoute
   FeedbackRoute: typeof FeedbackRoute
   LookbookRoute: typeof LookbookRoute
+  PartnerWithDreamzRoute: typeof PartnerWithDreamzRoute
   PartnershipsRoute: typeof PartnershipsRoute
   PoliciesRoute: typeof PoliciesRoute
   RewardsRoute: typeof RewardsRoute
   RoyaleRoute: typeof RoyaleRouteWithChildren
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StudioPlansRoute: typeof StudioPlansRoute
   TrackOrderRoute: typeof TrackOrderRoute
   VoucherRoute: typeof VoucherRoute
   AdminBespokeRoute: typeof AdminBespokeRoute
@@ -827,17 +975,23 @@ export interface RootRouteChildren {
   AdminOverviewRoute: typeof AdminOverviewRoute
   AdminPartnersRoute: typeof AdminPartnersRoute
   AdminPartnershipsRoute: typeof AdminPartnershipsRoute
+  AdminPassportsRoute: typeof AdminPassportsRoute
   AdminProductsRoute: typeof AdminProductsRoute
   AdminReferralsRoute: typeof AdminReferralsRoute
   AdminRoyaleRoute: typeof AdminRoyaleRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminStudioRoute: typeof AdminStudioRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminVouchersRoute: typeof AdminVouchersRoute
   AdminWaitlistRoute: typeof AdminWaitlistRoute
   ApiEventRoute: typeof ApiEventRoute
+  ApproveTokenRoute: typeof ApproveTokenRoute
   CheckoutCallbackRoute: typeof CheckoutCallbackRoute
   CreatorSlugRoute: typeof CreatorSlugRoute
+  DreamSlugRoute: typeof DreamSlugRoute
+  DreamerSlugRoute: typeof DreamerSlugRoute
   OrderOrderNumberRoute: typeof OrderOrderNumberRoute
+  PCodeRoute: typeof PCodeRoute
   ProductSlugRoute: typeof ProductSlugRoute
   RCodeRoute: typeof RCodeRoute
   ShopCategoryRoute: typeof ShopCategoryRoute
@@ -914,6 +1068,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof D5exRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dream-challenge-rules': {
+      id: '/dream-challenge-rules'
+      path: '/dream-challenge-rules'
+      fullPath: '/dream-challenge-rules'
+      preLoaderRoute: typeof DreamChallengeRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dreams': {
+      id: '/dreams'
+      path: '/dreams'
+      fullPath: '/dreams'
+      preLoaderRoute: typeof DreamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dreamz-5': {
       id: '/dreamz-5'
       path: '/dreamz-5'
@@ -940,6 +1108,13 @@ declare module '@tanstack/react-router' {
       path: '/lookbook'
       fullPath: '/lookbook'
       preLoaderRoute: typeof LookbookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partner-with-dreamz': {
+      id: '/partner-with-dreamz'
+      path: '/partner-with-dreamz'
+      fullPath: '/partner-with-dreamz'
+      preLoaderRoute: typeof PartnerWithDreamzRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partnerships': {
@@ -977,6 +1152,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/studio-plans': {
+      id: '/studio-plans'
+      path: '/studio-plans'
+      fullPath: '/studio-plans'
+      preLoaderRoute: typeof StudioPlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/track-order': {
       id: '/track-order'
       path: '/track-order'
@@ -996,6 +1178,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/account/'
       preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/designer': {
+      id: '/account/designer'
+      path: '/designer'
+      fullPath: '/account/designer'
+      preLoaderRoute: typeof AccountDesignerRouteImport
       parentRoute: typeof AccountRoute
     }
     '/account/designs': {
@@ -1024,6 +1213,13 @@ declare module '@tanstack/react-router' {
       path: '/partner'
       fullPath: '/account/partner'
       preLoaderRoute: typeof AccountPartnerRouteImport
+      parentRoute: typeof AccountRoute
+    }
+    '/account/passports': {
+      id: '/account/passports'
+      path: '/passports'
+      fullPath: '/account/passports'
+      preLoaderRoute: typeof AccountPassportsRouteImport
       parentRoute: typeof AccountRoute
     }
     '/account/profile': {
@@ -1152,6 +1348,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPartnershipsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/passports': {
+      id: '/admin/passports'
+      path: '/admin/passports'
+      fullPath: '/admin/passports'
+      preLoaderRoute: typeof AdminPassportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/products': {
       id: '/admin/products'
       path: '/admin/products'
@@ -1178,6 +1381,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/settings'
       fullPath: '/admin/settings'
       preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/studio': {
+      id: '/admin/studio'
+      path: '/admin/studio'
+      fullPath: '/admin/studio'
+      preLoaderRoute: typeof AdminStudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/users': {
@@ -1208,6 +1418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEventRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/approve/$token': {
+      id: '/approve/$token'
+      path: '/approve/$token'
+      fullPath: '/approve/$token'
+      preLoaderRoute: typeof ApproveTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/': {
       id: '/checkout/'
       path: '/checkout'
@@ -1229,11 +1446,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreatorSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dream/$slug': {
+      id: '/dream/$slug'
+      path: '/dream/$slug'
+      fullPath: '/dream/$slug'
+      preLoaderRoute: typeof DreamSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dreamer/$slug': {
+      id: '/dreamer/$slug'
+      path: '/dreamer/$slug'
+      fullPath: '/dreamer/$slug'
+      preLoaderRoute: typeof DreamerSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/order/$orderNumber': {
       id: '/order/$orderNumber'
       path: '/order/$orderNumber'
       fullPath: '/order/$orderNumber'
       preLoaderRoute: typeof OrderOrderNumberRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$code': {
+      id: '/p/$code'
+      path: '/p/$code'
+      fullPath: '/p/$code'
+      preLoaderRoute: typeof PCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/product/$slug': {
@@ -1303,10 +1541,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AccountRouteChildren {
+  AccountDesignerRoute: typeof AccountDesignerRoute
   AccountDesignsRoute: typeof AccountDesignsRoute
   AccountLoginRoute: typeof AccountLoginRoute
   AccountOrdersRoute: typeof AccountOrdersRoute
   AccountPartnerRoute: typeof AccountPartnerRoute
+  AccountPassportsRoute: typeof AccountPassportsRoute
   AccountProfileRoute: typeof AccountProfileRoute
   AccountReferralsRoute: typeof AccountReferralsRoute
   AccountRewardsRoute: typeof AccountRewardsRoute
@@ -1317,10 +1557,12 @@ interface AccountRouteChildren {
 }
 
 const AccountRouteChildren: AccountRouteChildren = {
+  AccountDesignerRoute: AccountDesignerRoute,
   AccountDesignsRoute: AccountDesignsRoute,
   AccountLoginRoute: AccountLoginRoute,
   AccountOrdersRoute: AccountOrdersRoute,
   AccountPartnerRoute: AccountPartnerRoute,
+  AccountPassportsRoute: AccountPassportsRoute,
   AccountProfileRoute: AccountProfileRoute,
   AccountReferralsRoute: AccountReferralsRoute,
   AccountRewardsRoute: AccountRewardsRoute,
@@ -1366,15 +1608,19 @@ const rootRouteChildren: RootRouteChildren = {
   CreatorsRoute: CreatorsRoute,
   CustomRoute: CustomRoute,
   D5exRoute: D5exRoute,
+  DreamChallengeRulesRoute: DreamChallengeRulesRoute,
+  DreamsRoute: DreamsRoute,
   Dreamz5Route: Dreamz5Route,
   EarnRoute: EarnRoute,
   FeedbackRoute: FeedbackRoute,
   LookbookRoute: LookbookRoute,
+  PartnerWithDreamzRoute: PartnerWithDreamzRoute,
   PartnershipsRoute: PartnershipsRoute,
   PoliciesRoute: PoliciesRoute,
   RewardsRoute: RewardsRoute,
   RoyaleRoute: RoyaleRouteWithChildren,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StudioPlansRoute: StudioPlansRoute,
   TrackOrderRoute: TrackOrderRoute,
   VoucherRoute: VoucherRoute,
   AdminBespokeRoute: AdminBespokeRoute,
@@ -1388,17 +1634,23 @@ const rootRouteChildren: RootRouteChildren = {
   AdminOverviewRoute: AdminOverviewRoute,
   AdminPartnersRoute: AdminPartnersRoute,
   AdminPartnershipsRoute: AdminPartnershipsRoute,
+  AdminPassportsRoute: AdminPassportsRoute,
   AdminProductsRoute: AdminProductsRoute,
   AdminReferralsRoute: AdminReferralsRoute,
   AdminRoyaleRoute: AdminRoyaleRoute,
   AdminSettingsRoute: AdminSettingsRoute,
+  AdminStudioRoute: AdminStudioRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminVouchersRoute: AdminVouchersRoute,
   AdminWaitlistRoute: AdminWaitlistRoute,
   ApiEventRoute: ApiEventRoute,
+  ApproveTokenRoute: ApproveTokenRoute,
   CheckoutCallbackRoute: CheckoutCallbackRoute,
   CreatorSlugRoute: CreatorSlugRoute,
+  DreamSlugRoute: DreamSlugRoute,
+  DreamerSlugRoute: DreamerSlugRoute,
   OrderOrderNumberRoute: OrderOrderNumberRoute,
+  PCodeRoute: PCodeRoute,
   ProductSlugRoute: ProductSlugRoute,
   RCodeRoute: RCodeRoute,
   ShopCategoryRoute: ShopCategoryRoute,
