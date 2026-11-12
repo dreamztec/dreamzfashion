@@ -20,6 +20,7 @@ function ProductPassport() {
   const [claimCode, setClaimCode] = useState("");
   const validCode = /^DRZ-\d{6,12}$/.test(code);
   const signedIn = !!user && !passwordAction;
+  const firstOrder = code === "DRZ-000001";
   const reload = useCallback(async () => { const p = await getPassport({ data: { code } }); setPassport(p); setDream(p.dream); }, [code]);
   useEffect(() => {
     let active = true;
@@ -37,17 +38,36 @@ function ProductPassport() {
   }
   return <main className="mx-auto max-w-6xl px-5 sm:px-8 pt-32 pb-20">
     <div className="flex flex-wrap justify-between gap-4 mb-9 text-xs uppercase tracking-widest"><Link to="/">DREAMZ Fashion ↗</Link><Link to="/account/passports">My passports</Link></div>
-    <section className="bg-ink text-white p-7 sm:p-12 relative overflow-hidden">
+    {firstOrder ? <section className="bg-ink text-white p-7 sm:p-12 relative overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-6 mb-9">
+        <p className="text-xs tracking-[.25em] uppercase text-gold">DREAMZ × VANITY FLEX</p>
+        <div className="border border-gold/60 px-5 py-3 text-center"><p className="text-[.65rem] uppercase tracking-[.2em] text-gold">DREAMZ Original</p><p className="font-editorial text-3xl mt-1">No. 000001</p><p className="text-[.6rem] uppercase tracking-widest text-white/65 mt-1">Official product record</p></div>
+      </div>
+      <p className="text-sm uppercase tracking-[.18em] text-white/70 mb-4">To our number one</p>
+      <h1 className="font-editorial text-5xl sm:text-7xl max-w-3xl leading-tight">Thank you,<br /><span className="text-gold">The Great Mentor.</span></h1>
+      <div className="mt-7 max-w-2xl space-y-5 text-white/85 leading-relaxed text-base sm:text-lg">
+        <p>You are the first person to place an order after we launched <strong className="text-white">Design Your Dream</strong>. That place in our story will always be yours.</p>
+        <p>Thank you for your mentorship, your trust, and the opportunity to bring your vision to life. VANITY FLEX carries more than our craftsmanship. It carries our gratitude.</p>
+        <p>As we build towards the Billionaire Dream, this first documented chapter begins with you.</p>
+      </div>
+      <p className="font-editorial text-2xl text-gold mt-8">With gratitude and respect,</p><p className="mt-2 text-sm tracking-wide">Mr Dreamz & the DREAMZ team</p>
+      <div className="border-t border-white/20 mt-9 pt-5 flex flex-wrap justify-between gap-4"><span className="font-mono tracking-wider">DRZ-000001</span><span className="text-sm text-white/65">First Design Your Dream order</span></div>
+    </section> : <section className="bg-ink text-white p-7 sm:p-12 relative overflow-hidden">
       <p className="text-xs tracking-[.25em] uppercase text-gold mb-6">DREAMZ Product Passport</p>
       <h1 className="font-editorial text-5xl sm:text-7xl max-w-2xl leading-tight">Every piece has a story.<br /><span className="text-gold">This is where it lives.</span></h1>
       <p className="mt-6 max-w-xl text-white/75 leading-relaxed">The inspiration. The craft. The care that keeps it with you. One permanent home for your DREAMZ piece.</p>
       <div className="border-t border-white/20 mt-9 pt-5 flex flex-wrap justify-between gap-4"><span className="font-mono tracking-wider">{validCode ? code : "Check your product number"}</span><span className="text-sm text-white/60">Made for your journey</span></div>
-    </section>
+    </section>}
+    {firstOrder && <section aria-label="DREAMZ authenticity record" className="border border-gold/40 p-6 sm:p-8 mt-6">
+      <p className="overline-label mb-2">Authenticity & origin</p><h2 className="font-editorial text-3xl">An original DREAMZ commission</h2>
+      <p className="text-stone text-sm leading-relaxed mt-3">This is the official DREAMZ record for VANITY FLEX, numbered DRZ-000001. Match this number with the label on your piece and keep this page as its permanent home.</p>
+      <p className="text-xs text-stone mt-3">A QR links to this record; ownership is confirmed separately by DREAMZ.</p>
+    </section>}
     {!validCode ? <p role="alert" className="mt-8">This passport number is not valid. Please check the QR code or contact DREAMZ.</p> : loading ? <p role="status" className="mt-8">Checking your account…</p> : !signedIn ? <section className="max-w-2xl mx-auto text-center py-12">
-      <p className="overline-label mb-3">Your story starts here</p><h2 className="font-editorial text-4xl">Open your product passport</h2>
-      <p className="text-stone mt-4 leading-relaxed">Create a DREAMZ account with your email, verify it, then sign in to discover the product story, care guide and support. Already a member? Use your existing account.</p>
-      <Link to="/account/login" search={{ returnTo: `/p/${code}` }} className="btn-lux btn-lux-primary mt-7">Create an account / Sign in</Link>
-      <p className="text-xs text-stone mt-5">Scanning lets you explore a piece. Ownership is confirmed separately with the private code supplied by DREAMZ.</p>
+      <p className="overline-label mb-3">{firstOrder ? "Made for you. Cared for with you." : "Your story starts here"}</p><h2 className="font-editorial text-4xl">{firstOrder ? "About your product" : "Open your product passport"}</h2>
+      <p className="text-stone mt-4 leading-relaxed">{firstOrder ? "Discover the story behind VANITY FLEX, its materials, care guide and ongoing support. Your product details are kept inside your DREAMZ account." : "Create a DREAMZ account with your email, verify it, then sign in to discover the product story, care guide and support. Already a member? Use your existing account."}</p>
+      <Link to="/account/login" search={{ returnTo: `/p/${code}` }} className="btn-lux btn-lux-primary mt-7">{firstOrder ? "Explore your product" : "Create an account / Sign in"}</Link>
+      <p className="text-xs text-stone mt-5">{firstOrder ? "Continue to email sign-in or create your DREAMZ account." : "Scanning lets you explore a piece. Ownership is confirmed separately with the private code supplied by DREAMZ."}</p>
       <Link to="/shop" className="inline-block underline mt-6 text-sm">Explore the DREAMZ website</Link>
     </section> : <>
       {error && <div role="alert" className="my-6 border border-oxblood p-4">{error}<button className="underline ml-3" onClick={() => void act(reload, "Passport refreshed.")} disabled={busy}>Try again</button></div>}
