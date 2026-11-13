@@ -24,7 +24,8 @@ function StudioPlans() {
   const [pending, setPending] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const request = async (plan: "creator" | "studio" | "pro") => {
+  const request = async (plan: "free" | "creator" | "studio" | "pro") => {
+    if (plan === "free") return;
     if (!user) return;
     setPending(plan);
     setNotice(null);

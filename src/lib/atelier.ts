@@ -339,7 +339,7 @@ export function constructionQuestions(category: AtelierCategory, piece: string):
     if (/heel/i.test(piece)) return HEEL_QUESTIONS;
     if (/boot|chelsea/i.test(piece)) return BOOT_QUESTIONS;
     if (/mule|slide|sandal|loafer/i.test(piece)) return FOOTWEAR_OPEN_QUESTIONS;
-    return FOOTWEAR_LACED_QUESTIONS;
+    return /oxford|derby/i.test(piece) ? FOOTWEAR_LACED_QUESTIONS.map(q => q.key === "closure" ? { ...q, options: ["Lace-up"] } : q) : FOOTWEAR_LACED_QUESTIONS;
   }
   if (category === "bags") return BAG_QUESTIONS;
   if (category === "accessories") return /belt/i.test(piece) ? BELT_QUESTIONS : ACCESSORY_QUESTIONS;
@@ -499,12 +499,6 @@ export function buildDesignSummary(b: AtelierBrief): string {
   if ((b.story || "").trim()) lines.push("", "DESIGN STORY", `• ${b.story!.trim()}`);
   if (b.inspirationNotes) lines.push("", "REFERENCE / INSPIRATION NOTES", `• ${b.inspirationNotes}`);
   return lines.filter((line) => line !== "").join("\n").replace(/\n{3,}/g, "\n\n");
-}
-
-function summariseConstruction(b: AtelierBrief): string {
-  const entries = Object.entries(b.construction ?? {}).filter(([, v]) => v && v.trim());
-  if (entries.length === 0) return "Standard DREAMZ construction; final details confirmed with the artisan.";
-  return entries.map(([k, v]) => `${k}: ${v}`).join("; ");
 }
 
 function describePersonalisation(b: AtelierBrief): string {

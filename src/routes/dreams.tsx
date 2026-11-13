@@ -19,7 +19,7 @@ export const Route = createFileRoute("/dreams")({
         property: "og:description",
         content: "₦500k cash + ₦500k DREAMZ products across the top five designs, plus paid Studio passes. Best design wins — not just the most likes.",
       },
-      { property: "og:image", content: SITE_URL + "/img/dfk-dreamz-logo.webp" },
+      { property: "og:image", content: SITE_URL + "/img/dfk-logo.jpg" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "canonical", href: SITE_URL + "/dreams" }],
@@ -41,7 +41,7 @@ function DreamLeaderboard() {
           <div className="grid gap-9 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
             <div>
               <img
-                src="/img/dfk-dreamz-logo.webp"
+                src="/img/dfk-logo.jpg"
                 alt="DREAMZ"
                 className="h-20 w-auto max-w-[230px] object-contain bg-white rounded-xl p-2"
               />

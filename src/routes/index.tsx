@@ -1,3 +1,5 @@
+import { CampaignTracker } from "@/components/CampaignTracker";
+import { getCampaignTracker } from "@/server/campaign-tracker.functions";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { getHomePageDataFn } from "@/server/catalog.functions";
 import { ProductMedia } from "@/components/brand";
@@ -7,7 +9,7 @@ import { CONTACT } from "@/lib/contact";
 import { formatNaira } from "@/lib/format";
 
 export const Route = createFileRoute("/")({
-  loader: () => getHomePageDataFn(),
+  loader: async () => { const [home, campaign] = await Promise.all([getHomePageDataFn(), getCampaignTracker()]); return { ...home, campaign }; },
   head: () => ({
     meta: [
       { title: `Design Your Dream Product in 5 Minutes — ${BRAND.name}` },
@@ -23,7 +25,7 @@ export const Route = createFileRoute("/")({
 });
 
 const HERO_BODY =
-  "Choose a product, tap real leather references, select colours and construction details, then receive a complete design specification and copy-ready AI prompt.";
+  "Choose a product, explore leather and component illustrations, select colours and construction details, then receive a complete design specification and copy-ready AI prompt.";
 const SHOP_SEARCH = { q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
 /** /shop/$category takes its own search params (no `q`). */
 const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined, sub: undefined };
@@ -31,7 +33,8 @@ const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size:
 type HomeProduct = Awaited<ReturnType<typeof getHomePageDataFn>>["hero"];
 
 function Home() {
-  const { hero, frontOriginals, total } = Route.useLoaderData() as {
+  const { hero, frontOriginals, total, campaign } = Route.useLoaderData() as {
+    campaign: Awaited<ReturnType<typeof getCampaignTracker>>;
     hero: HomeProduct;
     frontOriginals: Array<NonNullable<HomeProduct>>;
     total: number;
@@ -83,6 +86,7 @@ function Home() {
           </div>
         </div>
 
+        <CampaignTracker data={campaign} />
         <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 pb-12">
           <Link
             to="/dreams"
@@ -166,7 +170,7 @@ function Home() {
               <p className="overline-label mb-3">DREAMZ Open Atelier</p>
               <h2 className="font-editorial text-3xl sm:text-5xl">Five minutes from idea to shareable design.</h2>
               <p className="mt-4 text-sm text-stone leading-relaxed max-w-xl">
-                Start from real product, leather and component references, then choose the colours and construction details that matter to your own design. Your first three saved designs are free, and your Dreamer page is created automatically.
+                Start from blank forms, leather and component illustrations, then choose the colours and construction details that matter to your own design. Your first three saved designs are free, and your Dreamer page is created automatically.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">

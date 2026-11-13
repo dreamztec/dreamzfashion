@@ -154,8 +154,6 @@ function PartnerDashboard() {
             : "."}
           {data.terms.payoutThresholdKobo > 0 && ` Minimum payout: ${formatNaira(data.terms.payoutThresholdKobo)}.`}
           {" "}DREAMZ Payday is <strong>{data.terms.payoutDay}</strong>.
-          {data.terms.partnerIntroductionBonusKobo > 0 &&
-            ` A one-time ${formatNaira(data.terms.partnerIntroductionBonusKobo)} introduction bonus becomes pending only when an introduced partner completes their first verified customer sale.`}
           {data.terms.termsNote && ` ${data.terms.termsNote}`}
         </p>
       </div>

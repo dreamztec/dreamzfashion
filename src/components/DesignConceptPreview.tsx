@@ -1,3 +1,4 @@
+import { studioIllustration } from "@/lib/studio-illustrations";
 import {
   FINISH_VISUALS,
   MATERIAL_VISUALS,
@@ -27,12 +28,8 @@ export function DesignConceptPreview({
   const piece = visualForPiece(preview.piece);
   const primary = colourVisual(preview.primaryColour);
   const secondary = colourVisual(preview.secondaryColour);
-  const suppliedImage =
-    preview.image &&
-    preview.image
-      ? preview.image
-      : null;
-  const image = suppliedImage || piece?.image || null;
+  // Saved drafts may still contain catalogue URLs. Never render these as blank designs.
+  const image = piece ? studioIllustration(piece.piece, primary?.hex) : null;
   const construction = preview.construction || {};
   const material = MATERIAL_VISUALS.find((item) => item.label === preview.material) || null;
   const finish = FINISH_VISUALS.find((item) => item.label === preview.texture) || null;
@@ -73,7 +70,7 @@ export function DesignConceptPreview({
         {image ? (
           <img
             src={image}
-            alt={preview.piece ? preview.piece + " real visual reference" : "DREAMZ visual design workspace"}
+            alt={preview.piece ? preview.piece + " dimensional concept illustration" : "DREAMZ visual design workspace"}
             className="absolute inset-0 h-full w-full object-contain p-3"
           />
         ) : (
@@ -81,15 +78,8 @@ export function DesignConceptPreview({
             <span className="font-editorial text-2xl">Choose a piece to begin</span>
           </div>
         )}
-        {primary?.hex && (
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 opacity-25"
-            style={{ backgroundColor: primary.hex, mixBlendMode: "color" }}
-          />
-        )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pt-12 pb-4 text-white">
-          <p className="text-[0.62rem] uppercase tracking-btn opacity-80">Live reference board</p>
+          <p className="text-[0.62rem] uppercase tracking-btn opacity-80">Your design direction</p>
           <p className="font-editorial text-xl">{preview.piece || "Choose a leather piece"}</p>
         </div>
       </div>
@@ -144,7 +134,7 @@ export function DesignConceptPreview({
       </div>
       {!compact && (
         <p className="px-4 pb-4 text-[0.66rem] text-stone leading-relaxed">
-          This board uses real product, leather and component photography as visual references while your selected colours and details build the direction. References are not a promise of exact stock or construction; the atelier confirms the final hide, measurements, component compatibility and buildability before production.
+          Shaded illustrations show your colour direction and selected parts separately. This is not a rotatable 3D model or an exact finished-product preview. The atelier confirms the final materials, proportions and construction.
         </p>
       )}
     </div>

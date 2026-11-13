@@ -1,3 +1,4 @@
+import { studioIllustration } from "./studio-illustrations";
 import type { AtelierCategory } from "@/lib/atelier";
 import type { DesignerPlanId } from "@/lib/designer-plans";
 
@@ -19,72 +20,10 @@ export type VisualOption = {
   credit?: string;
 };
 
-function svgCard(label: string, kind: string, accent = "#7b5b3a"): string {
-  const drawings: Record<string, string> = {
-    shoe: '<path d="M35 150c30-4 54-19 75-49 18 12 28 29 62 35 25 4 39 16 34 31-4 11-17 17-36 17H58c-25 0-34-10-23-34Z"/><path d="M65 142h86"/><path d="M109 103v47"/>',
-    boot: '<path d="M77 40h70v84c10 8 26 13 48 20 14 5 21 14 18 25-3 12-15 18-34 18H67c-20 0-30-10-24-26 6-15 22-23 34-29V40Z"/><path d="M77 80h70"/>',
-    heel: '<path d="M41 146c30-4 55-18 76-47 17 10 32 21 54 27 19 5 31 16 28 29-3 12-14 18-33 18H65c-24 0-33-10-24-27Z"/><path d="M169 155v36h15v-37"/><path d="M58 174h116"/>',
-    slide: '<path d="M37 157c19-27 43-41 73-41 35 0 62 13 91 36l-7 27H50Z"/><path d="M74 118c8 25 15 39 23 58"/><path d="M116 116c9 23 18 38 29 59"/>',
-    bag: '<rect x="49" y="76" width="142" height="111" rx="14"/><path d="M84 77c2-31 18-47 36-47s34 16 36 47"/><path d="M61 112h118"/>',
-    tote: '<path d="M52 68h136l15 119H37L52 68Z"/><path d="M86 70c1-28 13-42 34-42s33 14 34 42"/>',
-    briefcase: '<rect x="38" y="83" width="164" height="101" rx="10"/><path d="M91 84V61h58v23"/><path d="M38 118h164"/><rect x="111" y="111" width="18" height="15" rx="3"/>',
-    belt: '<path d="M29 106h155v36H29Z"/><rect x="184" y="99" width="38" height="50" rx="6"/><path d="M194 111h18v26h-18Z"/><circle cx="65" cy="124" r="3"/><circle cx="84" cy="124" r="3"/>',
-    wallet: '<rect x="47" y="70" width="146" height="110" rx="12"/><path d="M47 103h146"/><path d="M120 70v110"/>',
-    strap: '<path d="M97 27h46l-7 166H104L97 27Z"/><circle cx="120" cy="163" r="4"/><circle cx="120" cy="145" r="4"/>',
-    jacket: '<path d="M72 53 101 34h38l29 19 31 27-23 29-20-17v102H84V92l-20 17-23-29 31-27Z"/><path d="M120 35v159"/><path d="M84 106h72"/>',
-    trouser: '<path d="M84 39h72l-7 155h-28l-1-93-1 93H91L84 39Z"/><path d="M85 70h70"/>',
-    accessory: '<circle cx="120" cy="116" r="62"/><circle cx="120" cy="116" r="38"/><path d="M120 54v24M120 154v24"/>',
-    "heel-round": '<path d="M45 136h126l26 21H58Z"/><path d="M165 153c16 3 22 14 19 35h-22c5-15 6-26 3-35Z"/>',
-    "heel-block": '<path d="M45 136h126l26 21H58Z"/><rect x="158" y="153" width="29" height="39" rx="3"/>',
-    "heel-stiletto": '<path d="M45 136h126l26 21H58Z"/><path d="M174 153h7l-3 39h-5Z"/>',
-    "heel-wedge": '<path d="M45 136h126l26 21H58Z"/><path d="M142 153h44l4 39h-63Z"/>',
-    sole: '<path d="M37 123c29-33 66-52 101-45 35 7 56 31 65 54-8 34-37 55-78 57-45 2-79-21-88-66Z"/><path d="M58 127h125"/>',
-    "toe-round": '<path d="M42 161c6-46 35-74 78-74s72 28 78 74c-30 17-126 17-156 0Z"/>',
-    "toe-square": '<path d="M45 91h150v88H45Z"/>',
-    "toe-point": '<path d="M120 63 199 176H41L120 63Z"/>',
-    buckle: '<rect x="61" y="74" width="118" height="84" rx="12"/><rect x="83" y="94" width="74" height="44" rx="8"/><path d="M120 95v43"/>',
-    closure: '<path d="M62 55h96v132H62Z"/><path d="M110 55v132"/><circle cx="120" cy="121" r="7"/>',
-  };
-  const drawing = drawings[kind] || drawings.accessory;
-  const raw = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="${label}">
-    <rect width="240" height="240" fill="#f4efe6"/>
-    <g fill="none" stroke="#1b1917" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">${drawing}</g>
-    <rect x="18" y="201" width="204" height="25" rx="12" fill="${accent}" opacity=".10"/>
-    <text x="120" y="218" text-anchor="middle" font-size="12" font-family="Arial, sans-serif" fill="#1b1917">${label.replace(/&/g, "and")}</text>
-  </svg>`;
-  return "data:image/svg+xml," + encodeURIComponent(raw);
+function svgCard(label: string, _kind: string, accent?: string): string {
+  return studioIllustration(label, accent);
 }
-
-function commons(file: string): string {
-  const remote = "https://commons.wikimedia.org/wiki/Special:FilePath/" + encodeURIComponent(file) + "?width=900";
-  return "/.netlify/images?url=" + encodeURIComponent(remote) + "&w=560&h=420&fit=cover&q=76";
-}
-
-function pieceReferenceImage(piece: string): string {
-  const p = piece.toLowerCase();
-  if (p.includes("oxford")) return "/img/products/ascension-oxford.jpg";
-  if (p.includes("derby")) return "/img/products/heritage-medallion-oxford.jpg";
-  if (p.includes("loafer")) return "/img/products/classic-black-penny-loafer.jpg";
-  if (p.includes("boot") || p.includes("chelsea")) return "/img/products/boot-of-many-colours-studio.jpg";
-  if (p.includes("mule")) return "/img/products/asiwaju-mule-brown.jpg";
-  if (p.includes("slide")) return "/img/products/spectrum-buckle-slide.jpg";
-  if (p.includes("sandal")) return "/img/products/prism-cross-sandal.jpg";
-  if (p.includes("heel")) return "/img/products/crimson-pin.jpg";
-  if (p.includes("briefcase") || p.includes("laptop")) return "/img/products/executive-spectrum-briefcase.jpg";
-  if (p.includes("tote")) return "/img/products/regent-croc-tote.jpg";
-  if (p.includes("handbag") || p.includes("clutch") || p.includes("crossbody") || p.includes("pouch") || p.includes("purse")) return "/img/products/executive-leather-handbag.jpg";
-  if (p.includes("travel") || p.includes("backpack")) return "/img/products/pedra-satchel.jpg";
-  if (p.includes("belt")) return "/img/products/legacy-leather-belt.jpg";
-  if (p.includes("wallet") || p.includes("card") || p.includes("passport")) return "/img/products/purpose-wrist-pouch.jpg";
-  if (p.includes("bracelet") || p.includes("cuff")) return "/img/products/hope-slim-bracelet-set.jpg";
-  if (p.includes("watch strap")) return "/img/products/strap-twist.jpg";
-  if (p.includes("jacket")) return "/img/products/vision-leather-ensemble-campaign.jpg";
-  if (p.includes("shirt") || p.includes("t-shirt") || p.includes("tee")) return "/img/products/ambition-leather-tee.jpg";
-  if (p.includes("trouser") || p.includes("pants")) return "/img/products/discipline-wide-leg-trousers.jpg";
-  if (p.includes("vest") || p.includes("harness")) return "/img/products/courage-lace-up-vest.jpg";
-  if (p.includes("skirt")) return "/img/products/excellence-tailored-trousers.jpg";
-  return "/img/products/vision-leather-ensemble-campaign.jpg";
-}
+function pieceReferenceImage(piece: string): string { return studioIllustration(piece); }
 
 const PIECES: Array<[AtelierCategory, string, string]> = [
   ["footwear","Oxford","Structured lace-up shoe"],
@@ -139,14 +78,7 @@ export const PIECE_VISUALS: VisualPiece[] = PIECES.map(([category,piece,note]) =
 }));
 
 export function categoryVisual(category: AtelierCategory): string {
-  const categoryImage: Record<AtelierCategory, string> = {
-    footwear: "/img/products/ascension-oxford.jpg",
-    bags: "/img/products/executive-spectrum-briefcase.jpg",
-    accessories: "/img/products/legacy-leather-belt.jpg",
-    wearable: "/img/products/vision-leather-ensemble-campaign.jpg",
-    other: "/img/products/dreamz-freedom-cognac-green-blue-red-yellow.jpg",
-  };
-  return categoryImage[category];
+  return studioIllustration({footwear: "Oxford", bags: "Tote", accessories: "Belt", wearable: "Jacket", other: "Leather sample"}[category]);
 }
 
 export const MATERIAL_VISUALS: VisualOption[] = [
@@ -154,33 +86,33 @@ export const MATERIAL_VISUALS: VisualOption[] = [
     id: "full-grain",
     label: "Full-grain leather",
     note: "Premium hide grade with the natural grain surface left intact. Marks and grain vary from hide to hide.",
-    image: commons("LeatherTexture.jpg"),
+    image: studioIllustration("Full-grain leather"),
     bestFor: "Premium shoes, boots, structured bags, belts and long-life accessories.",
-    credit: "Natural-grain visual reference. A photo cannot prove leather grade; DREAMZ confirms the actual hide before production.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
   {
     id: "top-grain",
     label: "Top-grain leather",
     note: "Grain-side leather that may be lightly corrected for a cleaner, more even appearance.",
-    image: commons("Brown Leather.jpg"),
+    image: studioIllustration("Top-grain leather"),
     bestFor: "Refined footwear, bags, wallets and wearable leather.",
-    credit: "Surface reference: Cbobdude / Wikimedia Commons, CC BY-SA 4.0. DREAMZ confirms the actual top-grain hide before production.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
   {
     id: "suede",
     label: "Suede",
     note: "Soft leather with a visible velvety nap. The nap can change shade when brushed.",
-    image: commons("A Derby of suede leather with brogues.jpg"),
+    image: studioIllustration("Suede"),
     bestFor: "Loafers, mules, selected boots, bags and soft accent panels.",
-    credit: "Suede reference: Wikimedia Commons, CC0.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
   {
     id: "nubuck",
     label: "Nubuck",
     note: "Grain-side leather lightly buffed to create a fine, velvety surface.",
-    image: commons("Nubuk-Leder, Muster.jpg"),
+    image: studioIllustration("Nubuck"),
     bestFor: "Premium casual boots, loafers, bags and tactile statement panels.",
-    credit: "Nubuck sample reference: Wikimedia Commons, public domain.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
 ];
 
@@ -189,39 +121,39 @@ export const FINISH_VISUALS: VisualOption[] = [
     id: "smooth",
     label: "Smooth",
     note: "Clean, even surface with a formal and minimal appearance.",
-    image: commons("Leather021 8K Color.png"),
+    image: studioIllustration("Smooth"),
     bestFor: "Oxford shoes, loafers, dress boots, belts and structured bags.",
   },
   {
     id: "pebbled",
     label: "Pebbled",
     note: "Visible grain texture that adds depth and helps disguise everyday scuffs.",
-    image: commons("Leather007 4K Color.png"),
+    image: studioIllustration("Pebbled"),
     bestFor: "Bags, wallets, casual footwear and high-touch accessories.",
   },
   {
     id: "pull-up",
     label: "Pull-up / waxy",
     note: "Oil- or wax-rich leather that becomes lighter where it bends or stretches, creating character.",
-    image: commons("Red leather oxford shoes by Eugene Pik (2021) 03.jpg"),
+    image: studioIllustration("Pull-up / waxy"),
     bestFor: "Rugged boots, travel bags, briefcases and heritage-style pieces.",
-    credit: "Pull-up behaviour reference: Eugene Pik / Wikimedia Commons, CC BY-SA 4.0.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
   {
     id: "patent",
     label: "Patent gloss",
     note: "High-gloss coated finish for a polished statement look.",
-    image: commons("Patent leather shoes.jpg"),
+    image: studioIllustration("Patent gloss"),
     bestFor: "Heels, formal footwear and controlled accent panels.",
-    credit: "Patent leather reference: Kristin / Wikimedia Commons, CC BY 2.0.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
   {
     id: "embossed",
     label: "Embossed",
     note: "Pattern pressed into the surface. DREAMZ confirms the actual embossing plate or hide available.",
-    image: commons("Cordoue 1.jpg"),
+    image: studioIllustration("Embossed"),
     bestFor: "Bags, belts, footwear panels and statement accessories.",
-    credit: "Embossed leather reference: Armorial / Wikimedia Commons, CC BY-SA 3.0.",
+    credit: "Illustrative surface sample; actual leather is confirmed before production.",
   },
 ];
 
@@ -237,30 +169,30 @@ export const COLOUR_VISUALS: VisualOption[] = [
   label,
   hex,
   note: "Colour direction — final dye/hide tone is confirmed by the atelier.",
-  image: svgCard(label, "accessory", hex),
+  image: studioIllustration("Leather sample", hex),
 }));
 
 export const TOE_VISUALS: VisualOption[] = [
-  { id:"round", label:"Round", note:"Comfortable, classic front. Photo is a shape reference.", image:"/img/products/classic-black-penny-loafer.jpg" },
-  { id:"almond", label:"Almond", note:"Soft taper between round and pointed. Photo is a shape reference.", image:"/img/products/ascension-oxford.jpg" },
-  { id:"square", label:"Square", note:"Sharper contemporary front. Photo is a shape reference.", image:"/img/products/spectrum-buckle-slide.jpg" },
-  { id:"pointed", label:"Pointed", note:"Longer, sharper fashion profile. Photo is a shape reference.", image:"/img/products/heritage-medallion-oxford.jpg" },
+  { id:"round", label:"Round", note:"Comfortable, classic front. Isolated shape illustration.", image:studioIllustration("Round") },
+  { id:"almond", label:"Almond", note:"Soft taper between round and pointed. Isolated shape illustration.", image:studioIllustration("Almond") },
+  { id:"square", label:"Square", note:"Sharper contemporary front. Isolated shape illustration.", image:studioIllustration("Square") },
+  { id:"pointed", label:"Pointed", note:"Longer, sharper fashion profile. Isolated shape illustration.", image:studioIllustration("Pointed") },
 ];
 
 export const SOLE_VISUALS: VisualOption[] = [
-  { id:"leather", label:"Leather sole", note:"Slim, formal and refined. Photo reference.", image:"/img/products/ascension-oxford.jpg" },
-  { id:"rubber", label:"Rubber sole", note:"Everyday grip and easier wet-weather wear. Photo reference.", image:"/img/products/voltage-noir-loafer.jpg" },
-  { id:"commando", label:"Commando sole", note:"Deeper tread for boots and rugged footwear. Photo reference.", image:"/img/products/boot-of-many-colours-studio.jpg" },
-  { id:"chunky", label:"Chunky sole", note:"Thicker modern profile. Photo reference.", image:"/img/products/onyx-stride.jpg" },
+  { id:"leather", label:"Leather sole", note:"Slim, formal and refined. Isolated component illustration.", image:studioIllustration("Leather sole") },
+  { id:"rubber", label:"Rubber sole", note:"Everyday grip and easier wet-weather wear. Isolated component illustration.", image:studioIllustration("Rubber sole") },
+  { id:"commando", label:"Commando sole", note:"Deeper tread for boots and rugged footwear. Isolated component illustration.", image:studioIllustration("Commando sole") },
+  { id:"chunky", label:"Chunky sole", note:"Thicker modern profile. Isolated component illustration.", image:studioIllustration("Chunky sole") },
 ];
 
 export const HEEL_VISUALS: VisualOption[] = [
-  { id:"round", label:"Round heel", note:"Rounded heel profile. Real footwear reference; final heel is built to your selection.", image:"/img/products/crimson-pin.jpg" },
-  { id:"block", label:"Block heel", note:"Stable, broad heel base. Real footwear reference.", image:"/img/products/exotic-elegance.jpg" },
-  { id:"kitten", label:"Kitten heel", note:"Low slim heel. Real footwear reference.", image:"/img/products/crimson-cross.jpg" },
-  { id:"stiletto", label:"Stiletto", note:"Slim high heel. Real footwear reference.", image:"/img/products/crimson-pin.jpg", minPlan:"creator" },
-  { id:"wedge", label:"Wedge", note:"Continuous heel-to-sole mass. Real footwear reference.", image:"/img/products/terra-cove.jpg" },
-  { id:"sculpted", label:"Sculpted heel", note:"Art-led heel shape, subject to engineering review. Real footwear reference.", image:"/img/products/exotic-elegance.jpg", minPlan:"creator" },
+  { id:"round", label:"Round heel", note:"Rounded heel profile. Isolated heel illustration; final proportions confirmed before production.", image:studioIllustration("Round heel") },
+  { id:"block", label:"Block heel", note:"Stable, broad heel base. Isolated heel illustration.", image:studioIllustration("Block heel") },
+  { id:"kitten", label:"Kitten heel", note:"Low slim heel. Isolated heel illustration.", image:studioIllustration("Kitten heel") },
+  { id:"stiletto", label:"Stiletto", note:"Slim high heel. Isolated heel illustration.", image:studioIllustration("Stiletto"), minPlan:"creator" },
+  { id:"wedge", label:"Wedge", note:"Continuous heel-to-sole mass. Isolated heel illustration.", image:studioIllustration("Wedge") },
+  { id:"sculpted", label:"Sculpted heel", note:"Art-led heel shape, subject to engineering review. Isolated heel illustration.", image:studioIllustration("Sculpted heel"), minPlan:"creator" },
 ];
 
 export const HARDWARE_VISUALS: VisualOption[] = [
@@ -303,28 +235,12 @@ export const CONSTRUCTION_VISUALS: Record<string, VisualOption> = Object.fromEnt
   ].map((x) => [x.label.toLowerCase(), x]),
 );
 
-function realConstructionImage(label: string): string {
-  const value = label.toLowerCase();
-  if (value.includes("buckle") || value.includes("hardware")) return "/img/products/spectrum-buckle-slide.jpg";
-  if (value.includes("strap") || value.includes("slingback")) return "/img/products/prism-cross-sandal.jpg";
-  if (value.includes("lace")) return "/img/products/ascension-oxford.jpg";
-  if (value.includes("zip") || value.includes("chelsea") || value.includes("pull-on")) return "/img/products/boot-of-many-colours-studio.jpg";
-  if (value.includes("sole") || value.includes("chunky") || value.includes("commando")) return "/img/products/onyx-stride.jpg";
-  if (value.includes("stitch") || value.includes("edge") || value.includes("burnish")) return "/img/products/asiwaju-mule-brown-detail.jpg";
-  if (value.includes("handle") || value.includes("structured") || value.includes("compartment")) return "/img/products/executive-spectrum-briefcase.jpg";
-  if (value.includes("shoulder") || value.includes("crossbody") || value.includes("flap") || value.includes("turn-lock")) return "/img/products/executive-leather-handbag.jpg";
-  if (value.includes("drawstring") || value.includes("open top") || value.includes("soft")) return "/img/products/regent-croc-tote.jpg";
-  if (value.includes("round") || value.includes("almond")) return "/img/products/classic-black-penny-loafer.jpg";
-  if (value.includes("square")) return "/img/products/spectrum-buckle-slide.jpg";
-  if (value.includes("pointed")) return "/img/products/heritage-medallion-oxford.jpg";
-  return "/img/products/vision-leather-ensemble-campaign.jpg";
-}
-
 export function constructionVisual(label: string | null | undefined): VisualOption | null {
   if (!label) return null;
-  const found = CONSTRUCTION_VISUALS[label.toLowerCase()];
-  if (!found) return null;
-  return { ...found, image: realConstructionImage(label) };
+  return CONSTRUCTION_VISUALS[label.toLowerCase()] || {
+    id: label.toLowerCase(), label, note: "Construction direction; final details confirmed by the atelier.",
+    image: studioIllustration(label),
+  };
 }
 
 export const PROJECT_MODES = [

@@ -25,7 +25,7 @@ function DreamChallengeRules() {
       <header className="bg-ink text-ivory">
         <div className="h-1.5 rainbow-rule" aria-hidden="true" />
         <div className="mx-auto max-w-4xl px-5 sm:px-8 pt-28 pb-12">
-          <img src="/img/dfk-dreamz-logo.webp" alt="DREAMZ" className="h-16 w-auto max-w-[200px] rounded-lg bg-white p-2 object-contain" />
+          <img src="/img/dfk-logo.jpg" alt="DREAMZ" className="h-16 w-auto max-w-[200px] rounded-lg bg-white p-2 object-contain" />
           <p className="overline-label !text-gold-soft mt-6">DREAMZ Dream Design Challenge</p>
           <h1 className="font-editorial text-4xl sm:text-6xl mt-2">Rules, prize terms & tracking.</h1>
           <p className="mt-5 text-sm sm:text-base text-ivory/70 leading-relaxed max-w-3xl">

@@ -14,12 +14,13 @@ import "../styles.css";
 // Self-hosted fonts (was: render-blocking Google Fonts stylesheet). Only the
 // weights the site actually uses — Cormorant Garamond 500 for editorial type,
 // Jost 400/500 for body and emphasis — bundled and emitted by Vite.
-import "@fontsource/cormorant-garamond/latin-500.css";
-import "@fontsource/jost/latin-400.css";
+import "@fontsource/cormorant-garamond/latin-600.css";
+import "@fontsource/jost/latin-600.css";
+import "@fontsource/jost/latin-700.css";
 import "@fontsource/jost/latin-500.css";
 // Preload the two fonts that paint first: the LCP headline serif and body.
-import cormorant500Woff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-500-normal.woff2?url";
-import jost400Woff2 from "@fontsource/jost/files/jost-latin-400-normal.woff2?url";
+import cormorant500Woff2 from "@fontsource/cormorant-garamond/files/cormorant-garamond-latin-600-normal.woff2?url";
+import jost400Woff2 from "@fontsource/jost/files/jost-latin-500-normal.woff2?url";
 
 const siteDescription = BRAND.description;
 
@@ -31,7 +32,7 @@ const organizationJsonLd = {
   url: SITE_URL,
   logo: {
     "@type": "ImageObject",
-    url: `${SITE_URL}/img/dfk-dreamz-logo.webp`,
+    url: `${SITE_URL}/img/dfk-logo.jpg`,
   },
   // Legal-entity fact (CAC): the incorporated company's date. The DREAMZ
   // BRAND's five-year journey (since 12 June 2022) is modelled separately as

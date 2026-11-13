@@ -9,7 +9,7 @@ import {
 } from "@/server/designer.functions";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { useAuth } from "@/lib/auth-client";
-import { BRAND, SITE_URL } from "@/lib/config";
+import { SITE_URL } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
 
 export const Route = createFileRoute("/dream/$slug")({
@@ -245,7 +245,7 @@ function DreamDesignPage() {
 
           <div>
             <img
-              src="/img/dfk-dreamz-logo.webp"
+              src="/img/dfk-logo.jpg"
               alt="DREAMZ"
               className="mb-5 h-14 w-auto max-w-[190px] object-contain"
               loading="eager"
