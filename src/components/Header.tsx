@@ -1,17 +1,13 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { BRAND } from "@/lib/config";
-import { Wordmark } from "@/components/brand";
+
 import { useCart, useCartHydrated } from "@/store/cart";
 import { useAuth } from "@/lib/auth-client";
 
 const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
   { label: "Shop", to: "/shop" },
-  { label: "Essentials", to: "/shop/essentials", shopCategory: true },
-  { label: "Originals", to: "/shop/originals", shopCategory: true },
   { label: "Royale", to: "/royale" },
-  { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
-  { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Dream Studio", to: "/custom" },
   { label: "Our Progress", to: "/billion-naira-dream" },
 ];
@@ -115,13 +111,9 @@ export function Header() {
               </nav>
             </div>
 
-            {/* Center: wordmark (text-based until approved branding is uploaded) */}
-            <Link to="/" aria-label={`${BRAND.name} — home`} className="shrink-0">
-              {transparent ? (
-                <Wordmark size="md" tone="light" />
-              ) : (
-                <Wordmark size="sm" />
-              )}
+            {/* Approved DREAMZ artwork, with its original colours intact. */}
+            <Link to="/" aria-label={`${BRAND.name} — home`} className="relative shrink-0 w-28 h-14 overflow-hidden">
+              <img src="/img/dfk-logo.jpg" alt="DREAMZ" width="1280" height="1176" className="absolute w-28 max-w-none h-auto -top-7 mix-blend-multiply" />
             </Link>
 
             {/* Right: utility */}
