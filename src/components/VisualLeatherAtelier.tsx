@@ -781,7 +781,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     <div ref={studioTopRef} className="scroll-mt-24">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <img src="/img/dfk-dreamz-logo.webp" alt="DREAMZ" className="h-11 w-auto max-w-[145px] object-contain" />
+          <img src="/img/dfk-logo.jpg" alt="DREAMZ" className="h-11 w-auto max-w-[145px] object-contain" />
           <div>
           <p className="overline-label">DREAMZ Visual Studio</p>
           <p className="text-xs text-stone mt-1">
@@ -869,7 +869,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                         >
                           <div className="aspect-square bg-ivory-deep overflow-hidden">
                             {visual ? (
-                              <img src={visual.image} alt={piece + " blank Studio silhouette"} className="h-full w-full object-cover" />
+                              <img src={visual.image} alt={piece + " blank Studio illustration"} className="h-full w-full object-cover" />
                             ) : (
                               <div className="h-full grid place-items-center px-4 text-center text-xs text-stone">Neutral silhouette</div>
                             )}
@@ -1209,7 +1209,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             <section>
               <h2 className="font-editorial text-3xl">Choose the parts</h2>
               <p className="text-sm text-stone mt-2">
-                Only the parts that matter for your {answers.piece || "piece"} appear here. Each card uses real leather/product photography as a shape or construction reference. Your final design is still created from your own selections.
+                Only the parts that matter for your {answers.piece || "piece"} appear here. Each card shows an independent, shaded component illustration. Your final design is still created from your own selections.
               </p>
               <div className="mt-6 space-y-7">
                 {constructionQuestionsForPiece.map((question) => (

@@ -13,7 +13,7 @@ const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> 
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Dream Studio", to: "/custom" },
-  { label: "₦1M Challenge", to: "/dreams" },
+  { label: "Our Progress", to: "/billion-naira-dream" },
 ];
 
 const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
@@ -24,6 +24,7 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Dream Studio", to: "/custom" },
+  { label: "Billion-Naira Dream", to: "/billion-naira-dream" },
   { label: "₦1M Dream Challenge", to: "/dreams" },
   { label: "Earn with DREAMZ", to: "/earn" },
   { label: "Partner with DREAMZ", to: "/partner-with-dreamz" },

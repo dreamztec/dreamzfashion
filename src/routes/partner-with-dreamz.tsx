@@ -142,7 +142,7 @@ function MembershipApplication() {
         data: {
           sellingMode,
           earningType: "scout",
-          partnerPlan: planId,
+          partnerPlan: ["scout", "starter", "growth", "pro"].includes(planId) ? planId as "scout" | "starter" | "growth" | "pro" : "starter",
           physicalModel: "undecided",
           introducerCode: String(fd.get("introducerCode") || ""),
           displayName: String(fd.get("displayName") || ""),

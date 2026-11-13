@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as BespokeRouteImport } from './routes/bespoke'
+import { Route as BillionNairaDreamRouteImport } from './routes/billion-naira-dream'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CorporateRouteImport } from './routes/corporate'
 import { Route as CreatorsRouteImport } from './routes/creators'
@@ -51,6 +52,7 @@ import { Route as AdminBespokeRouteImport } from './routes/admin/bespoke'
 import { Route as AdminCampaignsRouteImport } from './routes/admin/campaigns'
 import { Route as AdminCorporateRouteImport } from './routes/admin/corporate'
 import { Route as AdminDesignRequestsRouteImport } from './routes/admin/design-requests'
+import { Route as AdminDreamTrackerRouteImport } from './routes/admin/dream-tracker'
 import { Route as AdminFeedbackRouteImport } from './routes/admin/feedback'
 import { Route as AdminMediaRouteImport } from './routes/admin/media'
 import { Route as AdminMessagesRouteImport } from './routes/admin/messages'
@@ -104,6 +106,11 @@ const AccountRoute = AccountRouteImport.update({
 const BespokeRoute = BespokeRouteImport.update({
   id: '/bespoke',
   path: '/bespoke',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BillionNairaDreamRoute = BillionNairaDreamRouteImport.update({
+  id: '/billion-naira-dream',
+  path: '/billion-naira-dream',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -296,6 +303,11 @@ const AdminDesignRequestsRoute = AdminDesignRequestsRouteImport.update({
   path: '/admin/design-requests',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDreamTrackerRoute = AdminDreamTrackerRouteImport.update({
+  id: '/admin/dream-tracker',
+  path: '/admin/dream-tracker',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   id: '/admin/feedback',
   path: '/admin/feedback',
@@ -474,6 +486,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/account': typeof AccountRouteWithChildren
   '/bespoke': typeof BespokeRoute
+  '/billion-naira-dream': typeof BillionNairaDreamRoute
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
   '/creators': typeof CreatorsRoute
@@ -510,6 +523,7 @@ export interface FileRoutesByFullPath {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/corporate': typeof AdminCorporateRoute
   '/admin/design-requests': typeof AdminDesignRequestsRoute
+  '/admin/dream-tracker': typeof AdminDreamTrackerRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -551,6 +565,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/bespoke': typeof BespokeRoute
+  '/billion-naira-dream': typeof BillionNairaDreamRoute
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
   '/creators': typeof CreatorsRoute
@@ -587,6 +602,7 @@ export interface FileRoutesByTo {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/corporate': typeof AdminCorporateRoute
   '/admin/design-requests': typeof AdminDesignRequestsRoute
+  '/admin/dream-tracker': typeof AdminDreamTrackerRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -630,6 +646,7 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/account': typeof AccountRouteWithChildren
   '/bespoke': typeof BespokeRoute
+  '/billion-naira-dream': typeof BillionNairaDreamRoute
   '/contact': typeof ContactRoute
   '/corporate': typeof CorporateRouteWithChildren
   '/creators': typeof CreatorsRoute
@@ -666,6 +683,7 @@ export interface FileRoutesById {
   '/admin/campaigns': typeof AdminCampaignsRoute
   '/admin/corporate': typeof AdminCorporateRoute
   '/admin/design-requests': typeof AdminDesignRequestsRoute
+  '/admin/dream-tracker': typeof AdminDreamTrackerRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/media': typeof AdminMediaRoute
   '/admin/messages': typeof AdminMessagesRoute
@@ -710,6 +728,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account'
     | '/bespoke'
+    | '/billion-naira-dream'
     | '/contact'
     | '/corporate'
     | '/creators'
@@ -746,6 +765,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/corporate'
     | '/admin/design-requests'
+    | '/admin/dream-tracker'
     | '/admin/feedback'
     | '/admin/media'
     | '/admin/messages'
@@ -787,6 +807,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/bespoke'
+    | '/billion-naira-dream'
     | '/contact'
     | '/corporate'
     | '/creators'
@@ -823,6 +844,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/corporate'
     | '/admin/design-requests'
+    | '/admin/dream-tracker'
     | '/admin/feedback'
     | '/admin/media'
     | '/admin/messages'
@@ -865,6 +887,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/account'
     | '/bespoke'
+    | '/billion-naira-dream'
     | '/contact'
     | '/corporate'
     | '/creators'
@@ -901,6 +924,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/corporate'
     | '/admin/design-requests'
+    | '/admin/dream-tracker'
     | '/admin/feedback'
     | '/admin/media'
     | '/admin/messages'
@@ -944,6 +968,7 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   AccountRoute: typeof AccountRouteWithChildren
   BespokeRoute: typeof BespokeRoute
+  BillionNairaDreamRoute: typeof BillionNairaDreamRoute
   ContactRoute: typeof ContactRoute
   CorporateRoute: typeof CorporateRouteWithChildren
   CreatorsRoute: typeof CreatorsRoute
@@ -968,6 +993,7 @@ export interface RootRouteChildren {
   AdminCampaignsRoute: typeof AdminCampaignsRoute
   AdminCorporateRoute: typeof AdminCorporateRoute
   AdminDesignRequestsRoute: typeof AdminDesignRequestsRoute
+  AdminDreamTrackerRoute: typeof AdminDreamTrackerRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminMediaRoute: typeof AdminMediaRoute
   AdminMessagesRoute: typeof AdminMessagesRoute
@@ -1031,6 +1057,13 @@ declare module '@tanstack/react-router' {
       path: '/bespoke'
       fullPath: '/bespoke'
       preLoaderRoute: typeof BespokeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/billion-naira-dream': {
+      id: '/billion-naira-dream'
+      path: '/billion-naira-dream'
+      fullPath: '/billion-naira-dream'
+      preLoaderRoute: typeof BillionNairaDreamRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -1297,6 +1330,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/design-requests'
       fullPath: '/admin/design-requests'
       preLoaderRoute: typeof AdminDesignRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/dream-tracker': {
+      id: '/admin/dream-tracker'
+      path: '/admin/dream-tracker'
+      fullPath: '/admin/dream-tracker'
+      preLoaderRoute: typeof AdminDreamTrackerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/feedback': {
@@ -1603,6 +1643,7 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   AccountRoute: AccountRouteWithChildren,
   BespokeRoute: BespokeRoute,
+  BillionNairaDreamRoute: BillionNairaDreamRoute,
   ContactRoute: ContactRoute,
   CorporateRoute: CorporateRouteWithChildren,
   CreatorsRoute: CreatorsRoute,
@@ -1627,6 +1668,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCampaignsRoute: AdminCampaignsRoute,
   AdminCorporateRoute: AdminCorporateRoute,
   AdminDesignRequestsRoute: AdminDesignRequestsRoute,
+  AdminDreamTrackerRoute: AdminDreamTrackerRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminMediaRoute: AdminMediaRoute,
   AdminMessagesRoute: AdminMessagesRoute,

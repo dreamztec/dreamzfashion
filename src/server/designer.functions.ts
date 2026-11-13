@@ -19,11 +19,11 @@ import { getDesignerPlan, type DesignerPlanId } from "@/lib/designer-plans";
 import { dreamContestScore, isDreamPrizeEligible } from "@/lib/dream-contest";
 
 const PayloadSchema = z.object({
-  answers: z.record(z.string(), z.unknown()).default({}),
+  answers: z.record(z.string(), z.json()).default({}),
   designSummary: z.string().max(6000).optional().or(z.literal("")),
   renderPrompt: z.string().max(12000).optional().or(z.literal("")),
   artisanBrief: z.string().max(6000).optional().or(z.literal("")),
-  visualPreview: z.record(z.string(), z.unknown()).optional(),
+  visualPreview: z.record(z.string(), z.json()).optional(),
   referenceIds: z.array(z.string().regex(/^ref_[A-Z0-9]{20}$/)).max(4).optional(),
   generatedImageRefId: z.string().regex(/^ref_[A-Z0-9]{20}$/).optional().or(z.literal("")),
   landingPage: z.object({
@@ -77,7 +77,7 @@ function dreamSeedFromPayload(payload: z.infer<typeof PayloadSchema>): string {
 
 type CurrentCustomer = NonNullable<Awaited<ReturnType<typeof getCurrentCustomer>>>;
 
-function publicPayload(payload: Record<string, unknown>): Record<string, unknown> {
+function publicPayload(payload: Record<string, unknown>) {
   const answers =
     payload.answers && typeof payload.answers === "object"
       ? (payload.answers as Record<string, unknown>)
@@ -257,7 +257,7 @@ async function profileDesigns(profileId: number) {
       shareCount: row.shareCount,
       createdAt: row.createdAt?.toISOString() || null,
       updatedAt: row.updatedAt?.toISOString() || null,
-      payload: row.payload,
+      payload: PayloadSchema.parse(row.payload),
       likeCount: row.visibility === "public" ? await countLikes(row.id) : 0,
     })),
   );
@@ -348,7 +348,7 @@ export const getMyDesignerDraft = createServerFn({ method: "GET" })
         title: row.title,
         category: row.category,
         piece: row.piece,
-        payload: row.payload,
+        payload: PayloadSchema.parse(row.payload),
         visibility: row.visibility,
         publicSlug: row.publicSlug,
         projectMode: row.projectMode,

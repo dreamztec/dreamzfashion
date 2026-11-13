@@ -8,6 +8,8 @@ import {
 } from "../src/lib/designer-plans";
 import {
   COLOUR_VISUALS,
+  CONSTRUCTION_VISUALS,
+  constructionVisual,
   FINISH_VISUALS,
   MATERIAL_VISUALS,
   PIECE_VISUALS,
@@ -47,10 +49,10 @@ describe("DREAMZ visual studio plans", () => {
 });
 
 describe("visual-first design library", () => {
-  it("uses real photographic product references instead of diagram silhouettes", () => {
+  it("keeps all built-in Studio visuals independent of product photography", () => {
     for (const piece of PIECE_VISUALS) {
-      expect(piece.image).toContain("/img/products/");
-      expect(piece.image).not.toMatch(/^data:image\/svg\+xml,/);
+      expect(piece.image).not.toContain("/img/products/");
+      expect(piece.image).toMatch(/^data:image\/svg\+xml,/);
     }
     expect(PIECE_VISUALS.some((piece) => piece.piece === "Leather Shirt")).toBe(true);
     expect(PIECE_VISUALS.some((piece) => piece.piece === "Leather Trouser / Pants")).toBe(true);
@@ -66,16 +68,25 @@ describe("visual-first design library", () => {
       expect.arrayContaining(["smooth", "pebbled", "pull-up", "patent", "embossed"]),
     );
     for (const item of [...MATERIAL_VISUALS, ...FINISH_VISUALS]) {
-      expect(item.image).toContain("/.netlify/images?");
+      expect(item.image).toMatch(/^data:image\/svg\+xml,/);
       expect(item.image).not.toContain("/img/products/");
       expect(item.minPlan).toBeUndefined();
     }
-    expect(suede?.image).toContain("suede");
+    expect(decodeURIComponent(suede!.image!)).toContain("Suede");
     expect(patent?.image).toContain("Patent");
     expect(COLOUR_VISUALS.length).toBeGreaterThanOrEqual(12);
     expect(COLOUR_VISUALS.every((item) => Boolean(item.hex))).toBe(true);
   });
 
+
+  it("never substitutes a finished product for a component", () => {
+    for (const item of Object.values(CONSTRUCTION_VISUALS)) {
+      expect(constructionVisual(item.label)?.image).toMatch(/^data:image\/svg\+xml,/);
+      expect(constructionVisual(item.label)?.image).not.toContain("/img/products/");
+    }
+    expect(constructionVisual("Leather sole")?.image).not.toEqual(constructionVisual("Round")?.image);
+    expect(constructionQuestions("footwear", "Oxford").find(q => q.key === "closure")?.options).toEqual(["Lace-up"]);
+  });
 
   it("prevents impossible leather and finish combinations", () => {
     expect(compatibleFinishLabels("Suede")).toEqual([]);

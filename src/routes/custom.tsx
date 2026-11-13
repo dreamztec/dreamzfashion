@@ -1,9 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
-import { getCatalog } from "@/server/catalog.functions";
 import { getCustomDesign } from "@/server/designs.functions";
-import { ProductGrid } from "@/components/ProductCard";
 import { WhatsAppCTAButton } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
 
@@ -34,16 +32,12 @@ export const Route = createFileRoute("/custom")({
         ? Number(search.brief)
         : undefined,
   }),
-  loader: async () => {
-    const customizable = await getCatalog({ data: { customizable: true, limit: 12 } });
-    return { customizable };
-  },
   head: () => ({
     meta: [
       { title: `DREAMZ Leather Atelier — ${BRAND.name}` },
       {
         name: "description",
-        content: `Design visually with DREAMZ: choose a leather piece, material, colour and construction using real house photography, then turn your choices into an artisan-ready brief.`,
+        content: `Design visually with DREAMZ: choose a leather piece, material, colour and construction using independent component illustrations, then turn your choices into an artisan-ready brief.`,
       },
     ],
   }),
@@ -51,7 +45,6 @@ export const Route = createFileRoute("/custom")({
 });
 
 function Custom() {
-  const { customizable } = Route.useLoaderData();
   const search = Route.useSearch();
   const [atelierOpen, setAtelierOpen] = useState(false);
   const [retiredDesign, setRetiredDesign] = useState<{ productName: string | null; isBoot: boolean } | null>(null);
@@ -82,23 +75,23 @@ function Custom() {
   // campaign link without an old design reference.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (!params.get("design") && (params.get("start") === "1" || params.get("brief"))) setAtelierOpen(true);
+    if (!params.get("design") && (["1", '"1"'].includes(params.get("start") || "") || params.get("brief"))) setAtelierOpen(true);
   }, []);
 
   return (
     <div>
       <div className="mx-auto max-w-7xl px-5 sm:px-8 pt-28 pb-10 text-center">
-        <img src="/img/dfk-dreamz-logo.webp" alt="DREAMZ" className="mx-auto mb-5 h-16 w-auto max-w-[210px] object-contain" />
+        <img src="/img/dfk-logo.jpg" alt="DREAMZ" className="mx-auto mb-5 h-16 w-auto max-w-[210px] object-contain" />
         <p className="overline-label mb-3">DREAMZ Leather Atelier</p>
         <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Design Your Dream in Leather</h1>
         <p className="mt-4 max-w-2xl mx-auto text-stone leading-relaxed">
-          Pick a piece, see real DREAMZ visual references, tap your leather and colours,
+          Start with a blank form, explore individual components, choose your leather and colours,
           shape the construction and watch your concept board build as you go. Your first
           three saved designs are free.
         </p>
       </div>
 
-      <div className="mx-auto max-w-3xl px-5 sm:px-8 pb-6">
+      <div className="mx-auto max-w-[1440px] px-5 sm:px-8 pb-6">
         {retiredDesign && (
           <RetiredDesignNotice
             productName={retiredDesign.productName}
@@ -146,7 +139,7 @@ function Custom() {
           <h2 className="font-editorial text-3xl mb-8">How the atelier works</h2>
           <ol className="grid gap-6 sm:grid-cols-3 text-sm">
             {[
-              ["01", "Design visually", "Tap real visual references for the piece, leather, colour and construction."],
+              ["01", "Design visually", "Choose a blank form, then explore leather, colour and separate construction components."],
               ["02", "Save or share", "Keep it private, change it later, or publish a safe page people can share and like."],
               ["03", "DREAMZ crafts", "When you are ready to order, the atelier confirms materials, measurements, feasibility and price."],
             ].map(([n, title, body]) => (
@@ -158,21 +151,6 @@ function Custom() {
             ))}
           </ol>
         </div>
-
-        {/* Customizable pieces */}
-        <div className="text-center mb-10">
-          <p className="overline-label mb-3">Available To Personalize</p>
-          <h2 className="font-editorial text-3xl">Pieces You Can Make Yours</h2>
-          <div className="rule-gold mx-auto mt-6" />
-        </div>
-        {customizable.length === 0 ? (
-          <p className="text-center text-stone py-10">
-            Physical customisation is offered through the atelier consultation —
-            the collection itself is ready to wear.
-          </p>
-        ) : (
-          <ProductGrid products={customizable} />
-        )}
 
         <div className="text-center mt-16">
           <Link to="/royale" className="btn-lux btn-lux-outline">

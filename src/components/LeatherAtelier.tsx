@@ -14,8 +14,6 @@ import {
   type AtelierCategory,
   type PromptFormat,
 } from "@/lib/atelier";
-import { formatNaira } from "@/lib/format";
-import { ProductMedia } from "@/components/brand";
 import { WhatsAppCTAButton } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
 import { useAuth } from "@/lib/auth-client";
@@ -229,7 +227,7 @@ export function LeatherAtelier() {
           designSummary: result?.designSummary ?? "",
           renderPrompt: result?.renderPrompt ?? "",
           artisanBrief: result?.artisanBrief ?? "",
-          recommendedProductIds: (result?.catalogue ?? []).map((p) => p.id),
+          recommendedProductIds: [],
         },
       });
       if (!res.ok) {
@@ -375,39 +373,7 @@ export function LeatherAtelier() {
         <OutputBlock title="3 · Artisan Production Brief" body={result.artisanBrief} note="Items marked ARTISAN CONFIRMATION REQUIRED are verified by the atelier before production — availability, measurements and timeline are never guessed." />
 
         <div className="mt-8">
-          {result.catalogue.length > 0 && (
-            <div className="mb-6">
-              <p className="text-[0.7rem] uppercase tracking-btn mb-1">Start from a DREAMZ piece</p>
-              <p className="text-xs text-stone mb-3">
-                Pieces from the live collection that come close to your brief —
-                real products, real prices, nothing invented.
-              </p>
-              <div className="grid gap-4 sm:grid-cols-3">
-                {result.catalogue.map((p) => (
-                  <Link
-                    key={p.id}
-                    to="/product/$slug"
-                    params={{ slug: p.slug }}
-                    className="border border-ink/10 bg-white/50 flex flex-col"
-                  >
-                    <ProductMedia url={p.image ?? null} alt={p.name} aspect="aspect-[4/5]" width={480} />
-                    <span className="p-3">
-                      <span className="font-editorial text-base leading-snug block">{p.name}</span>
-                      <span className="text-xs text-stone mt-1 block">
-                        {p.price > 0 ? formatNaira(p.price) : "Request a quote"}
-                      </span>
-                    </span>
-                  </Link>
-                ))}
-              </div>
-              <p className="mt-3 text-xs text-stone">
-                Or continue with a fully new piece:{" "}
-                <button type="button" className="underline hover:text-ink" onClick={() => { setResult(null); setStep(0); setA({ ...INITIAL }); }}>
-                  Create a New Leather Brief
-                </button>
-              </p>
-            </div>
-          )}
+
 
           <div className="flex flex-col sm:flex-row flex-wrap gap-3">
             <button type="button" onClick={send} disabled={submitBusy} className="btn-lux btn-lux-primary">

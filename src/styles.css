@@ -6,27 +6,30 @@
 
   --color-ivory: #faf7f2;
   --color-ivory-deep: #f1ece3;
-  --color-ink: #17150f;
+  --color-ink: #010101;
+  --color-brand-purple: #562e51;
+  --color-brand-yellow: #f9bd0f;
+  --brand-spectrum: linear-gradient(90deg, #562e51 0% 16.666%, #4268e5 16.666% 33.333%, #010101 33.333% 50%, #a38018 50% 66.666%, #dd143e 66.666% 83.333%, #066509 83.333% 100%);
   /* House accents. Gold and oxblood lead; the remaining tones are a
      restrained rainbow signature used only as hairlines and small marks. */
-  --color-brand-blue: #5569d0;
-  --color-brand-blue-deep: #3a4aa8;
-  --color-brand-green: #1c601a;
-  --color-brand-red: #c81d41;
-  --color-oxblood: #6b2136;
-  --color-oxblood-deep: #4a1626;
-  --color-forest: #1c601a;
-  --color-gold: #b08a1e;
-  --color-gold-soft: #d3b258;
-  --color-stone: #7d766a;
+  --color-brand-blue: #4268e5;
+  --color-brand-blue-deep: #4268e5;
+  --color-brand-green: #066509;
+  --color-brand-red: #dd143e;
+  --color-oxblood: #562e51;
+  --color-oxblood-deep: #562e51;
+  --color-forest: #066509;
+  --color-gold: #a38018;
+  --color-gold-soft: #f9bd0f;
+  --color-stone: #57534e;
   --color-linen: #e9e2d4;
   /* Restrained rainbow signature — muted, print-like tones. */
-  --color-rainbow-rose: #c86a7d;
-  --color-rainbow-amber: #d9a441;
-  --color-rainbow-leaf: #7d9451;
-  --color-rainbow-teal: #4e8f86;
-  --color-rainbow-indigo: #5d6bb0;
-  --color-rainbow-plum: #8d5b7f;
+  --color-rainbow-rose: #562e51;
+  --color-rainbow-amber: #a38018;
+  --color-rainbow-leaf: #066509;
+  --color-rainbow-teal: #dd143e;
+  --color-rainbow-indigo: #4268e5;
+  --color-rainbow-plum: #010101;
 }
 
 html {
@@ -37,6 +40,7 @@ body {
   background-color: var(--color-ivory);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -47,7 +51,7 @@ body {
 
 .font-editorial {
   font-family: var(--font-serif);
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -362,3 +366,16 @@ select.input-lux {
   border-radius: 999px;
   background: linear-gradient(90deg, #3159c9 0%, #d9344f 24%, #1f7a45 48%, #d4a62a 70%, #161616 100%);
 }
+
+/* Exact sampled logo colours, repeated in balanced six-part accents. */
+.rainbow-rule, .dreamz-spectrum-border::before { background: var(--brand-spectrum); opacity: 1; }
+.btn-lux, .nav-link, .overline-label, label { font-weight: 600; }
+.btn-lux-gold { color: #010101; }
+.btn-lux-gold:hover:not(:disabled) { background: var(--color-brand-yellow); }
+header::after, footer::before { content: ""; display: block; height: 4px; background: var(--brand-spectrum); }
+.campaign-card { border-top: 5px solid var(--card-colour); }
+.campaign-progress { appearance: none; width: 100%; height: 9px; border: 0; border-radius: 999px; overflow: hidden; background: #e9e2d4; }
+.campaign-progress::-webkit-progress-bar { background: #e9e2d4; }
+.campaign-progress::-webkit-progress-value { background: var(--color-brand-green); }
+.campaign-progress::-moz-progress-bar { background: var(--color-brand-green); }
+@media(prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
