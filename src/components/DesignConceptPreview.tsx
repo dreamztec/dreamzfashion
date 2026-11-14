@@ -29,7 +29,9 @@ export function DesignConceptPreview({
   const primary = colourVisual(preview.primaryColour);
   const secondary = colourVisual(preview.secondaryColour);
   // Saved drafts may still contain catalogue URLs. Never render these as blank designs.
-  const image = piece ? studioIllustration(piece.piece) : null;
+  // Technical SVG changes instantly when the customer picks a leather colour.
+  // No reference photograph is sampled or modified.
+  const image = piece ? studioIllustration(piece.piece, primary?.hex ?? preview.primaryColour ?? undefined) : null;
   const construction = preview.construction || {};
   const material = MATERIAL_VISUALS.find((item) => item.label === preview.material) || null;
   const finish = FINISH_VISUALS.find((item) => item.label === preview.texture) || null;
@@ -70,7 +72,7 @@ export function DesignConceptPreview({
         {image ? (
           <img
             src={image}
-            alt={preview.piece ? preview.piece + " black-and-white construction sketch" : "DREAMZ visual design workspace"}
+            alt={preview.piece ? preview.piece + " clean labelled Studio drawing in " + (preview.primaryColour || "neutral") : "DREAMZ visual design workspace"}
             className="absolute inset-0 h-full w-full object-contain p-3"
           />
         ) : (
@@ -79,7 +81,7 @@ export function DesignConceptPreview({
           </div>
         )}
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-4 pt-12 pb-4 text-white">
-          <p className="text-[0.62rem] uppercase tracking-btn opacity-80">Your design direction</p>
+          <p className="text-[0.62rem] uppercase tracking-btn opacity-80">Technical colour sketch · Not a finished design</p>
           <p className="font-editorial text-xl">{preview.piece || "Choose a leather piece"}</p>
         </div>
       </div>
@@ -134,7 +136,7 @@ export function DesignConceptPreview({
       </div>
       {!compact && (
         <p className="px-4 pb-4 text-[0.66rem] text-stone leading-relaxed">
-          Black-and-white sketches show product shapes and selected parts separately. Your colour choices are recorded in the brief. This is not a rotatable 3D model or an exact finished-product preview. The atelier confirms the final materials, proportions and construction.
+          The diagram updates to your selected primary colour. It is only a labelled construction guide, not the final generated product image or an exact manufacturing drawing. Generate the finished image from your design prompt; the DREAMZ maker confirms proportions, fit, materials and construction before production.
         </p>
       )}
     </div>
