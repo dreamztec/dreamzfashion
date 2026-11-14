@@ -16,16 +16,17 @@ import { CONTACT } from "@/lib/contact";
 
 export const Route = createFileRoute("/checkout/")({
   loader: async () => {
+    const whatsappOnly = String(process.env.ONLINE_PAYMENTS_ENABLED ?? "").toLowerCase() !== "true";
+    // When taking orders on WhatsApp, no payment gateway or database-priced
+    // checkout preview is required. Fallback to the published company line.
     const [settings, options] = await Promise.all([
-      getSiteSettings(),
-      getCheckoutOptions(),
+      getSiteSettings().catch(() => ({ whatsappNumber: CONTACT.whatsappNumber })),
+      whatsappOnly
+        ? Promise.resolve({ bnplAvailable: false, deposits: { enabled: false, defaultPercent: 50, termsText: "", balanceDueDays: 0 } })
+        : getCheckoutOptions(),
     ]);
-    // BNPL is only surfaced when a provider is actually configured and the
-    // admin flag is on — an honest configuration state, never a fake option.
     return {
-      // Keep WhatsApp checkout available even during a database/pricing outage.
-      // Online payments remain explicitly opt-in while gateways are incomplete.
-      whatsappOnly: String(process.env.ONLINE_PAYMENTS_ENABLED ?? "").toLowerCase() !== "true",
+      whatsappOnly,
       bnplAvailable: options.bnplAvailable,
       depositTerms: {
         enabled: (options.deposits as { enabled?: boolean }).enabled ?? false,
