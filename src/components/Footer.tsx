@@ -29,7 +29,7 @@ const COLUMNS: Array<{
     title: "The House",
     links: [
       { label: "About DREAMZ", to: "/about" },
-      { label: "Fashion Progress", to: "/our-progress" },
+      { label: "Our Mission", to: "/our-progress" },
       { label: "Earn with DREAMZ — free", to: "/earn" },
       { label: "Creator Programme", to: "/creators" },
       { label: "Partner with DREAMZ — optional membership", to: "/partner-with-dreamz" },
