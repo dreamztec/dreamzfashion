@@ -166,7 +166,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNotice("Check your email to verify your DREAMZ account.");
         return null;
       }
-      setUser(toAuthUser(await getUser()));
+      // Even with automatic email confirmation, Identity might return a user
+      // record before establishing a browser session. Do not pretend login worked.
+      const signedInUser = await getUser();
+      if (!signedInUser) {
+        setUser(null);
+        setNotice("Your DREAMZ account is ready. Sign in to continue.");
+        return null;
+      }
+      setUser(toAuthUser(signedInUser));
       await syncProfile();
       return null;
     } catch (err) {
