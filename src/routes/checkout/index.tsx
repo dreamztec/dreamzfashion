@@ -176,13 +176,21 @@ function Checkout() {
   );
   const whatsappOrderMessage = [
     `Hello ${BRAND.shortName}, I want to order these pieces:`,
-    ...items.map(
-      (item) =>
+    ...items.map((item) =>
+      [
         `• ${item.name}${item.variantLabel ? ` — ${item.variantLabel}` : ""} × ${item.quantity}`,
+        item.purchaseOption === "complete_package" ? "  Package: Complete Package" : "",
+        item.designId ? `  Saved DREAMZ design: ${item.designId}` : "",
+        ...Object.entries(item.customization ?? {}).map(([key, value]) => `  ${key}: ${value}`),
+        item.message?.text ? `  Personal message: ${item.message.text}` : "",
+        item.quoteRequired ? "  Price: Please quote" : "",
+      ].filter(Boolean).join("\\n"),
     ),
-    `Cart subtotal: ${formatNaira(cartSubtotal)}`,
-    partnerCode ? `Partner code: ${partnerCode}` : "",
-    "Please confirm availability, delivery and the next step for my order.",
+    items.some((item) => item.quoteRequired)
+      ? "Listed item prices are indicative; some pieces require a custom quote."
+      : `Indicative item subtotal: ${formatNaira(cartSubtotal)} (delivery not included)`,
+    partnerCode ? `Partner / referral code: ${partnerCode}` : "",
+    "Please confirm final prices, sizing, availability, delivery fees and how to pay. Do not start production until I approve the quote.",
   ]
     .filter(Boolean)
     .join("\n");
@@ -289,7 +297,7 @@ function Checkout() {
             </div>
           ))}
           <div className="flex justify-between gap-4 pt-4 font-medium">
-            <span>Cart subtotal</span>
+            <span>Indicative item subtotal</span>
             <span>{formatNaira(cartSubtotal)}</span>
           </div>
         </div>
@@ -297,11 +305,11 @@ function Checkout() {
           <WhatsAppCTAButton
             message={whatsappOrderMessage}
             whatsappNumber={whatsappNumber}
-            label="Contact DREAMZ on WhatsApp"
+            label="Buy on WhatsApp"
           />
         </div>
         <p className="mt-4 text-xs text-stone">
-          Never send your card PIN, OTP, banking password or full card details in chat.
+          Your cart stays saved until you agree on the final quote with DREAMZ. Delivery, availability and payment details are confirmed in chat. Never share your PIN, OTP or banking password.
         </p>
       </div>
     );
