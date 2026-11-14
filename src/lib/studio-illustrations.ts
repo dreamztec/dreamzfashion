@@ -42,8 +42,9 @@ export function studioIllustration(label: string, colour?: string): string {
   const leatherFill = leatherColour(colour);
   const outline = (d: string) => `<path d="${d}" fill="${leatherFill}" stroke="#171717" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>`;
   const line = (d: string, dash = false) => `<path d="${d}" fill="none" stroke="#161616" stroke-width="${dash ? '.75' : '1.15'}" ${dash ? 'stroke-dasharray="2.2 2.2"' : ''} stroke-linecap="round" stroke-linejoin="round"/>`;
+  const neutralOutline = (d: string) => `<path d="${d}" fill="#f9f9f7" stroke="#171717" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>`;
   const circle = (x: number,y: number,r=2) => `<circle cx="${x}" cy="${y}" r="${r}" fill="white" stroke="#161616" stroke-width="1.1"/>`;
-  const shoeSole = outline('M38 170 Q81 174 119 169 Q172 182 259 173 Q278 171 279 180 Q275 190 234 190 L147 190 Q121 190 102 183 L84 183 L83 191 L38 191Z') + line('M41 177 Q82 181 118 176 Q172 188 261 179 M41 187 H80');
+  const shoeSole = neutralOutline('M38 170 Q81 174 119 169 Q172 182 259 173 Q278 171 279 180 Q275 190 234 190 L147 190 Q121 190 102 183 L84 183 L83 191 L38 191Z') + line('M41 177 Q82 181 118 176 Q172 188 261 179 M41 187 H80');
   let shape: string;
   if (/^oxford$|^derby$|other leather footwear/.test(n)) {
     shape = shoeSole + outline('M38 169 L43 112 Q59 122 80 117 L115 91 Q125 86 132 97 L153 128 Q168 143 205 149 L253 155 Q278 158 279 173 Q242 184 173 180 Q137 178 118 170 Q79 176 38 169Z');
@@ -78,7 +79,7 @@ export function studioIllustration(label: string, colour?: string): string {
     if(!mule)shape+=line('M46 127 Q66 142 96 125 M45 142 L43 164')+outline('M102 121 L113 115 150 137 139 146Z')+line('M119 127 132 136');
     else shape+=line('M106 118 Q127 124 131 148 M47 168 Q75 166 94 169');
   } else if (/slide|sandal/.test(n)) {
-    shape=outline('M39 172 Q73 163 110 167 Q171 171 243 162 Q267 158 278 169 L278 181 Q267 192 219 191 L77 188 Q46 185 39 181Z')+line('M43 177 Q103 186 163 184 L252 178 Q269 176 275 172');
+    shape=neutralOutline('M39 172 Q73 163 110 167 Q171 171 243 162 Q267 158 278 169 L278 181 Q267 192 219 191 L77 188 Q46 185 39 181Z')+line('M43 177 Q103 186 163 184 L252 178 Q269 176 275 172');
     shape+=outline('M132 170 Q134 124 166 120 Q197 122 214 165 L202 172 Q185 140 165 138 Q148 140 146 173Z')+line('M141 165 Q145 131 166 128 Q190 132 205 163',true);
     if(/sandal/.test(n))shape+=outline('M53 171 L60 125 Q80 115 105 126 L122 169 110 172 99 137 69 136 64 173Z')+outline('M57 127 104 125 107 135 58 137Z')+line('M75 127 75 136');
   } else if (/^heel$|pump|slingback|open toe/.test(n)) {
