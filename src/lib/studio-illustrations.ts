@@ -1,12 +1,12 @@
 /** Original code-authored Studio geometry. Never use catalogue/customer photos here. */
 const escapeXml = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
 
-export function studioIllustration(label: string, colour = '#a29381'): string {
+export function studioIllustration(label: string, _colour = '#a29381'): string {
   const name = label.toLowerCase();
-  const colourSafe = /^#[0-9a-f]{3,8}$/i.test(colour) ? colour : '#a29381';
+  const colourSafe = '#ffffff';
   let shape = '';
-  const path = (d: string, fill = 'url(#leather)') => `<path d="${d}" fill="${fill}" stroke="#382f28" stroke-opacity=".35" stroke-width="1.1" stroke-linejoin="round"/>`;
-  const line = (d: string) => `<path d="${d}" fill="none" stroke="#f6efe3" stroke-opacity=".65" stroke-width="1.5" stroke-linecap="round"/>`;
+  const path = (d: string, _fill = '#fff') => `<path d="${d}" fill="#fff" stroke="#111" stroke-width="1.7" stroke-linejoin="round"/>`;
+  const line = (d: string) => `<path d="${d}" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>`;
   if (/grain|suede|nubuck|smooth|pebbl|waxy|patent|emboss|leather sample/.test(name)) {
     shape = path('M64 71 210 48 266 168 113 201Z', '#5a4a3d') + path('M64 64 210 41 266 161 113 194Z') + `<path d="M64 64 210 41 266 161 113 194Z" fill="url(#${/pebbl|emboss/.test(name) ? 'pebbles' : 'grain'})" opacity=".35"/>` + line('M75 70 204 50 253 156');
   } else if (/sole|commando|chunky/.test(name)) {
@@ -17,7 +17,7 @@ export function studioIllustration(label: string, colour = '#a29381'): string {
   } else if (/^(round|almond|square|pointed)$/.test(name)) {
     const top = name === 'pointed' ? 'M64 180Q105 77 162 41Q228 82 263 152' : name === 'square' ? 'M64 180 82 73 220 49 263 152' : name === 'almond' ? 'M64 180Q84 70 157 49Q233 42 263 152' : 'M64 180Q54 65 155 48Q250 34 263 152';
     shape = path(top + 'Q165 211 64 180Z','#44392f') + path(top + 'Q169 190 64 180Z') + line('M85 161Q109 93 160 69');
-  } else if (/heel|stiletto|wedge/.test(name)) {
+  } else if (/stiletto|wedge|kitten|block heel|sculpt.*heel|round heel/.test(name)) {
     shape = path('M99 58 172 44 205 64 125 80Z', 'url(#dark)');
     const d = /stiletto|kitten/.test(name) ? 'M125 80 193 66 168 185 157 189 157 100Z' : /wedge/.test(name) ? 'M125 80 193 66 219 181 81 202Z' : /round|sculpt/.test(name) ? 'M125 80 193 66Q160 124 192 185L130 197Q156 139 125 80Z' : 'M125 80 193 66 185 187 129 198Z';
     shape += path(d) + line('M136 88 140 176');
@@ -31,17 +31,36 @@ export function studioIllustration(label: string, colour = '#a29381'): string {
     shape += Array.from({length:19},(_,i)=>path(`M${140+i*1.8} ${48+i*8}h14v4h-14Z`,'url(#metal)')).join('') + path('M150 54 170 51 177 81 158 85Z','url(#metal)');
   } else if (/stitch|tonal|contrast|edge|burnish/.test(name)) {
     shape = path('M54 87 228 52 273 163 98 199Z') + `<path d="M70 94 220 65 256 157 107 185Z" fill="none" stroke="${/contrast/.test(name)?'#f8f3e6':'#665446'}" stroke-width="2.5" stroke-dasharray="5 5"/>`;
-  } else if (/oxford|derby|loafer|mule|footwear|boot|chelsea|slide|sandal|pump|slingback|open toe/.test(name)) {
-    const boot = /boot|chelsea/.test(name);
-    const open = /slide|sandal/.test(name);
-    shape = path('M38 157Q47 145 80 139L241 130Q277 144 279 161L275 178Q172 218 46 182Z','url(#dark)');
-    shape += path(boot ? 'M47 152Q49 134 127 117L141 36 209 30 231 127 268 148Q208 190 57 168Z' : open ? 'M48 155Q85 107 151 114L240 137 267 151Q185 188 48 166Z' : 'M47 152Q55 126 124 115L161 73Q199 92 229 91L241 134 268 148Q204 191 57 168Z');
-    if (open) shape += path('M116 116Q127 87 184 104L222 148 157 164Q151 137 116 116Z');
-    else {
-      shape += path(boot ? 'M151 39 198 34 190 47 153 51Z' : 'M166 83Q195 103 223 99L212 114Q180 111 155 101Z','#403831');
-      shape += line('M58 153Q77 131 114 132M64 169Q190 193 257 153');
-      if (/oxford|derby/.test(name)) shape += [0,1,2,3].map(i=>line(`M${132+i*7} ${118-i*8}l28 8`)).join('');
+  } else if (/oxford|derby|loafer|mule|footwear|boot|chelsea|slide|sandal|pump|slingback|open toe|^heel$/.test(name)) {
+    // Side/three-quarter construction study: sole, vamp, quarters and opening are separate contours.
+    const sole = path('M27 173Q30 165 58 160L147 151 276 152 286 164 284 181 245 190 206 187 191 181Q114 198 43 189L27 181Z');
+    if (/^heel$|pump|slingback/.test(name)) {
+      shape = path('M29 177Q47 162 81 155Q119 147 144 117L215 73 270 78 276 103Q238 117 219 156L210 190 202 190 207 144Q155 177 105 184L40 187Z') + line('M42 179Q128 178 174 137L219 91Q242 108 270 84M217 154 219 190M34 185Q140 189 206 148');
+    } else if (/slide|sandal/.test(name)) {
+      shape = sole + path('M31 169Q50 137 103 126Q150 115 201 135L273 154 282 166Q205 195 43 181Z') + path('M86 135Q119 91 166 111L191 147Q152 160 119 163Q112 141 86 135Z') + line('M96 132Q126 106 160 119M127 156 180 143');
+      if (/sandal/.test(name)) shape += path('M208 139 216 97 247 93 262 152 251 155 238 108 228 111 223 143Z') + line('M219 106 241 103');
+    } else if (/boot|chelsea/.test(name)) {
+      shape = sole + path('M29 171Q35 148 105 139L151 119 155 45Q189 34 242 43L254 140 277 158 280 168Q218 191 193 172Q116 192 36 181Z') + line('M159 52Q201 42 237 50M154 62 153 118Q174 143 198 166M244 60 250 144M36 173Q105 181 185 165');
+      shape += /chelsea/.test(name) ? path('M178 65 226 62 231 127 198 141 177 118Z') + line('M185 72 185 116M193 70 194 126M202 68 203 130M212 67 214 129M222 66 224 124') : path('M147 63 177 58 191 131 161 141Z') + [0,1,2,3,4].map(i=>line(`M${152+i*2} ${72+i*13}l29 8m-29-2 26-7`)).join('');
+    } else {
+      const mule = /mule/.test(name);
+      shape = sole + path(mule ? 'M29 171Q36 145 99 134Q122 124 146 97L198 110 203 153 274 158 281 167Q211 190 189 172Q113 194 36 181Z' : 'M29 171Q36 145 99 134Q128 121 153 91L187 88Q208 114 261 101L275 155 281 168Q218 189 191 173Q112 194 36 181Z');
+      shape += line('M36 174Q101 185 188 166M204 174 270 164M82 139Q108 147 109 179');
+      if (/oxford|derby|footwear/.test(name)) {
+        shape += path('M142 108 158 81Q170 77 180 86L200 130 173 143Z') + line('M184 99Q218 120 257 106L261 115Q229 128 201 113');
+        shape += path(/derby/.test(name) ? 'M117 127 147 100 179 138 161 151Z' : 'M123 130 147 109 175 141 158 153Z');
+        shape += path('M181 98 199 110 224 160 193 170 174 142 196 131Z');
+        shape += [0,1,2,3].map(i=>line(`M${150+i*6} ${108+i*9}l${34-i*3} -7m-${31-i*3} 3l${31-i*3} 7`)).join('');
+        shape += line('M200 145 211 165M128 132 157 154');
+      } else {
+        shape += path('M77 145Q114 119 145 110L186 124 196 153Q123 175 90 164Z') + line('M84 145Q117 126 145 118L180 131 188 149Q128 166 97 160');
+        if (/loafer/.test(name)) shape += path('M122 124 145 115 178 132 160 141Z') + line('M144 125 157 130');
+        if (!mule) shape += line('M184 101Q211 121 258 108M243 118 251 159');
+      }
     }
+  } else if (/briefcase|laptop bag/.test(name)) {
+    shape = path('M54 79 247 67 275 86 275 191 84 206 54 188Z') + path('M54 79 247 67 247 184 54 196Z') + path('M247 67 275 86 275 191 247 184Z') + path('M54 79 247 67 245 113 55 126Z') + line('M63 88 237 77 235 105 64 117M63 134 63 186 237 175 237 123M255 86 265 92 265 181');
+    shape += path('M113 75 113 51Q113 38 128 38L174 35Q189 35 189 49L189 70 180 71 180 50Q180 45 174 45L128 48Q123 48 123 54L123 74Z') + path('M139 113 160 111 160 129 139 131Z') + line('M144 121 154 120');
   } else if (/trouser|pants|skirt/.test(name)) {
     shape = path(/skirt/.test(name)?'M110 40 207 34 236 194 76 204Z':'M106 40 211 31 224 196 176 204 154 114 143 207 96 208Z') + line('M118 53 200 46M155 58 154 113');
   } else if (/jacket|shirt|vest|harness|wearable/.test(name)) {
@@ -57,5 +76,5 @@ export function studioIllustration(label: string, colour = '#a29381'): string {
   } else {
     shape = path('M87 77 207 52 250 163 126 191Z') + line('M99 86 199 65 235 157 130 177Z');
   }
-  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="${escapeXml(label)} dimensional illustration"><defs><linearGradient id="leather" x1="0" y1="0" x2=".9" y2="1"><stop stop-color="#eee7db"/><stop offset=".32" stop-color="${colourSafe}"/><stop offset="1" stop-color="#463d36"/></linearGradient><linearGradient id="dark" x2=".3" y2="1"><stop stop-color="#716c63"/><stop offset="1" stop-color="#272725"/></linearGradient><linearGradient id="metal" x2=".3" y2="1"><stop stop-color="#f4e7c9"/><stop offset=".35" stop-color="#b89c65"/><stop offset=".6" stop-color="#f1dfb5"/><stop offset="1" stop-color="#735d37"/></linearGradient><radialGradient id="bg"><stop stop-color="#fffefa"/><stop offset="1" stop-color="#e8e3d9"/></radialGradient><filter id="shadow"><feGaussianBlur stdDeviation="7"/></filter><pattern id="grain" width="6" height="7" patternUnits="userSpaceOnUse"><path d="m1 2 1 1m2 2 1-1" stroke="#42372c" stroke-width=".5"/></pattern><pattern id="pebbles" width="12" height="9" patternUnits="userSpaceOnUse"><path d="M1 3Q4-2 9 2L10 6Q4 10 1 3Z" fill="none" stroke="#342d26" stroke-width=".7"/></pattern></defs><rect width="320" height="240" fill="url(#bg)"/><ellipse cx="163" cy="199" rx="104" ry="12" fill="#2c2722" opacity=".16" filter="url(#shadow)"/>${shape}</svg>`);
+  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="${escapeXml(label)} black-and-white construction sketch"><defs><pattern id="grain" width="6" height="7" patternUnits="userSpaceOnUse"><path d="m1 2 1 1m2 2 1-1" stroke="#111" stroke-width=".5"/></pattern><pattern id="pebbles" width="12" height="9" patternUnits="userSpaceOnUse"><path d="M1 3Q4-2 9 2L10 6Q4 10 1 3Z" fill="none" stroke="#111" stroke-width=".7"/></pattern></defs><rect width="320" height="240" fill="#fff"/>${shape.replace(/url\(#(?:metal|dark|leather)\)/g, '#111').replace(/#[0-9a-f]{6}/gi, c => c === '#ffffff' ? '#fff' : '#111')}</svg>`);
 }

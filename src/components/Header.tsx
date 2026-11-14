@@ -21,7 +21,7 @@ const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> =
   { label: "Accessories", to: "/shop/accessories", shopCategory: true },
   { label: "Dream Studio", to: "/custom" },
   { label: "Fashion Progress", to: "/our-progress" },
-  { label: "₦1M Dream Challenge", to: "/dreams" },
+  { label: "Community Designs", to: "/dreams" },
   { label: "Earn with DREAMZ", to: "/earn" },
   { label: "Partner with DREAMZ", to: "/partner-with-dreamz" },
   { label: "Sell DREAMZ", to: "/partnerships" },

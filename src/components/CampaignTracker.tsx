@@ -54,9 +54,10 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
       {full ? <button type="button" onClick={()=>void share()} className="btn-lux btn-lux-outline">Share the journey</button> : <Link to="/our-progress" className="btn-lux btn-lux-outline">See the progress & deposits →</Link>}
     </div>
     <div className="mt-8 border-t border-ink/15 pt-6 text-sm">
-      <p className="font-semibold">Looking for Dreams to Reality?</p>
-      <p className="text-stone mt-2">Our dream-support initiative is separate from DREAMZ Fashion’s sales and customer deposits.</p>
-      <a href="https://mydreamnetwork.dreamz-gc.com/" className="inline-block mt-3 underline underline-offset-4 font-semibold">Visit Dreams to Reality ↗</a>
+      <p className="font-semibold">Your purchase helps build the Dream Fund.</p>
+      <p className="text-stone mt-2">DREAMZ commits 5% of every sale to the Dreams to Reality Dream Fund, with a goal of ₦1 billion to help people pursue their dreams. This contribution comes from DREAMZ’s sales proceeds; it is not an extra charge to you.</p>
+      <p className="text-stone mt-2">Sales and deposits above remain business receipts. A 5% commitment is not a completed transfer: fund receipts and support paid out will be reported separately. No transfer total has been confirmed yet.</p>
+      <a href="https://mydreamnetwork.dreamz-gc.com/dream-fund" className="inline-block mt-3 underline underline-offset-4 font-semibold">Explore the Dream Fund ↗</a>
     </div>
     {shareStatus && <p role="status" className="text-sm mt-3">{shareStatus}</p>}
   </section>;
