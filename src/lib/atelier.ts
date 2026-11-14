@@ -569,11 +569,12 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     "Translate only the selections above and the explicit brief below into professional leathercraft language.",
     "Do not invent a colour, material, texture, strap, buckle, heel, sole, trim, closure, ornament, logo, monogram or extra product feature that the client did not select.",
     "If a field is unspecified, keep that area visually neutral and construction-standard rather than choosing a new named option.",
-    "Reference images, when supplied, are inspiration for proportion or direction only; do not copy third-party branding, logos or protected ornaments.",
+    "Reference images are entirely optional. If none are provided, generate an original complete product image directly from the selected product type, materials, colours, construction and dream/story. Do not ask for a photo or delay generation.",
+    "If a reference image is supplied, use it only as optional proportion or direction inspiration. Never copy third-party branding, logos or protected ornaments.",
     "The output must remain physically manufacturable by a real leather artisan.",
     "GEOMETRY CHECK: construct a coherent last and sole; align the heel seat, arch, toe box and ground contact. Give an Oxford closed lacing with a visible tongue under the facings; give a Derby open quarters. Do not mix shoe constructions. Bags need aligned panels, functional openings and handles attached at plausible load-bearing points.",
     "Before rendering, check the selected dimensions and component compatibility. If selections contradict or cannot be made safely, explain the conflict and ask for a correction rather than silently changing a selection.",
-    "Generate one complete product with clear silhouette, uninterrupted edge contours and believable scale. No detached floating parts, warped symmetry, fused straps, extra heels, duplicate hardware or invented lettering. Match the selected materials and colours; the neutral Studio sketches are construction references, not colour instructions.",
+    "Generate one complete product with clear silhouette, uninterrupted edge contours and believable scale. No detached floating parts, warped symmetry, fused straps, extra heels, duplicate hardware or invented lettering. Match the selected materials and colours; the Studio diagrams only illustrate product anatomy and a colour direction. Do not reproduce their annotation labels, line-art appearance or diagram framing as the final product.",
   ].join("\n");
 
   const sections: Array<[string, string]> = [
@@ -631,7 +632,7 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     ["M. NEGATIVE CONSTRAINTS", NEGATIVE_CONSTRAINTS],
     [
       "N. FINAL IMAGE DELIVERABLE",
-      "Generate one finished photorealistic product image, not a sketch, mood board, collage or technical drawing. Show the complete product fully inside frame, large enough to inspect construction. Preserve every selected material, finish, colour and component exactly. If a selected detail is physically visible from the chosen angle, make it legible. Do not show captions, labels, arrows, specification text, packaging or unrelated props."
+      "Generate one finished photorealistic product image immediately from these written specifications, even if no inspiration or reference image was attached. Never require a source photograph. This is not a sketch, mood board, collage or technical drawing. Show the complete product fully inside frame, large enough to inspect construction. Preserve every selected material, finish, colour and component exactly. If a selected detail is physically visible from the chosen angle, make it legible. Do not show captions, labels, arrows, specification text, packaging or unrelated props."
     ],
   ];
   return [sourceOfTruth, ...sections.map(([title, body]) => `${title}\n${body}`)].join("\n\n");

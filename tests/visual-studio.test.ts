@@ -18,6 +18,7 @@ import {
   PROJECT_MODES,
 } from "../src/lib/visual-designer";
 import { buildDesignSummary, buildRenderPrompt, constructionQuestions, type AtelierBrief } from "../src/lib/atelier";
+import { studioIllustration } from "../src/lib/studio-illustrations";
 import { dreamContestScore, isDreamPrizeEligible } from "../src/lib/dream-contest";
 
 describe("DREAMZ visual studio plans", () => {
@@ -225,5 +226,44 @@ describe("Dream design challenge scoring", () => {
     ).toBeGreaterThan(
       dreamContestScore({ verifiedOrders: 0, likeCount: 100, shareCount: 0 }),
     );
+  });
+});
+
+
+describe("DREAMZ clean labelled sketches and live colour directions", () => {
+  const svg = (name: string, colour?: string) =>
+    decodeURIComponent(studioIllustration(name, colour).split(",")[1]);
+
+  it("renders a technical Oxford with the correct closed-lacing label", () => {
+    const oxford = svg("Oxford", "#5b1b22");
+    expect(oxford).toContain("CLOSED LACING");
+    expect(oxford).toContain("VAMP");
+    expect(oxford).toContain("NOT A FINISHED PRODUCT");
+    expect(oxford).toContain('fill="#5b1b22"');
+    expect(oxford).not.toMatch(/<image\s|<foreignObject|xlink:href=/);
+  });
+  it("distinguishes a Derby's open quarters from Oxford facings", () => {
+    const oxford = svg("Oxford");
+    const derby = svg("Derby");
+    expect(derby).toContain("OPEN LACING");
+    expect(derby).toContain("QUARTERS");
+    expect(oxford).not.toEqual(derby);
+  });
+  it("draws different labelled clothing types, including leather trousers", () => {
+    for (const item of ["Leather Jacket", "Leather Shirt", "Leather T-shirt", "Vest", "Skirt", "Leather Trouser / Pants"]) {
+      const drawing = svg(item, "#70462e");
+      expect(drawing).toContain("STUDIO COLOUR GUIDE");
+      expect(drawing).toContain("fill=\"#70462e\"");
+    }
+    expect(svg("Leather Shirt")).not.toEqual(svg("Leather T-shirt"));
+    expect(svg("Leather Jacket")).not.toEqual(svg("Vest"));
+  });
+  it("recolours a selected piece while keeping the outline geometry and headings", () => {
+    expect(svg("Tote", "#5b1b22")).toContain('fill="#5b1b22"');
+    expect(svg("Tote", "#eee1c8")).toContain('fill="#eee1c8"');
+    expect(svg("Tote", "#5b1b22")).not.toEqual(svg("Tote", "#eee1c8"));
+    // Unknown client colours do not become unsafe SVG values or fabricated hues.
+    expect(svg("Oxford", 'red\" onload=\"alert(1)')).toContain('fill="#ffffff"');
+    expect(svg("Oxford", 'red\" onload=\"alert(1)')).not.toContain("onload=");
   });
 });

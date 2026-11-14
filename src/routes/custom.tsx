@@ -85,9 +85,9 @@ function Custom() {
         <p className="overline-label mb-3">DREAMZ Leather Atelier</p>
         <h1 className="font-editorial text-4xl sm:text-6xl uppercase">Design Your Dream in Leather</h1>
         <p className="mt-4 max-w-2xl mx-auto text-stone leading-relaxed">
-          Start with a blank form, explore individual components, choose your leather and colours,
-          shape the construction and watch your concept board build as you go. Your first
-          three saved designs are free.
+          Start with clean, labelled technical diagrams, choose your leather and colours,
+          and watch your sketch update instantly. Generate your finished design image
+          from your specifications, even without a reference photo. Your first three saved designs are free.
         </p>
       </div>
 
@@ -103,14 +103,15 @@ function Custom() {
           <div className="border border-gold/40 bg-gold/5 px-6 sm:px-10 py-8 text-center">
             <p className="overline-label !text-gold mb-3">Visual DREAMZ Studio</p>
             <p className="text-sm leading-relaxed text-stone">
-              Design with pictures instead of technical guesswork. Choose a product,
-              material, colour, sole, hardware and relevant construction details. Upload
-              private reference images, save your work, change it later and publish only
-              when you want people to see and share it.
+              Design with clear, accurately labelled product diagrams. Choose a product,
+              material, colours and the relevant construction parts. Reference photos are
+              entirely optional. Save your selections, generate your original image using
+              an AI tool, and publish it only when you are ready to share.
             </p>
             <p className="mt-3 text-xs text-stone">
-              The live board is a visual guide — final materials, measurements and buildability
-              are confirmed by the DREAMZ atelier before production.
+              The coloured line drawing is a Studio guide, not the final product image.
+              Final materials, measurements, quote, deposit and production timing are
+              confirmed by DREAMZ on WhatsApp before work begins.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button type="button" onClick={() => setAtelierOpen(true)} className="btn-lux btn-lux-primary">
@@ -139,9 +140,9 @@ function Custom() {
           <h2 className="font-editorial text-3xl mb-8">How the atelier works</h2>
           <ol className="grid gap-6 sm:grid-cols-3 text-sm">
             {[
-              ["01", "Design visually", "Choose a blank form, then explore leather, colour and separate construction components."],
-              ["02", "Save or share", "Keep it private, change it later, or publish a safe page people can share and like."],
-              ["03", "DREAMZ crafts", "When you are ready to order, the atelier confirms materials, measurements, feasibility and price."],
+              ["01", "Design visually", "Choose a clearly labelled leather product, material, colour and construction — no reference image needed."],
+              ["02", "Generate and share", "Copy the image prompt, generate your finished design with an AI tool, then upload it to your own Dream page."],
+              ["03", "Order on WhatsApp", "Request a production quote, agree your size and lead time, then pay a confirmed deposit to begin."],
             ].map(([n, title, body]) => (
               <li key={n} className="border border-ink/10 px-6 py-8">
                 <p className="font-editorial text-2xl text-gold mb-3">{n}</p>
