@@ -240,7 +240,7 @@ describe("DREAMZ clean labelled sketches and live colour directions", () => {
     expect(oxford).toContain("VAMP");
     expect(oxford).toContain("NOT A FINISHED PRODUCT");
     expect(oxford).toContain('fill="#5b1b22"');
-    expect(oxford).not.toMatch(/<image\s|https?:\/\//);
+    expect(oxford).not.toMatch(/<image\s|<foreignObject|xlink:href=/);
   });
   it("distinguishes a Derby's open quarters from Oxford facings", () => {
     const oxford = svg("Oxford");
