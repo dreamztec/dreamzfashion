@@ -14,9 +14,7 @@ describe("public campaign receipts", () => {
  it("counts received deposits only and counts the two customers once each", () => {
   const totals=campaignTotals(INITIAL_CAMPAIGN);
   expect(totals.receivedKobo).toBe(51_499_200);
-  expect(totals.remainingKobo).toBe(99_948_500_800);
   expect(totals.dreamersRemaining).toBe(999_998);
-  expect(totals.moneyPercent).toBeCloseTo(0.0514992,7);
   expect(INITIAL_CAMPAIGN.entries.map(e=>e.depositPercent)).toEqual([50,50]);
  });
  it("rejects negative amounts, impossible percentages and duplicate projects",()=>{

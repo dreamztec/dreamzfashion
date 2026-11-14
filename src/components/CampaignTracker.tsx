@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useState, type CSSProperties } from "react";
-import { campaignTotals, CAMPAIGN_TARGET_KOBO, DREAMER_TARGET, type CampaignData } from "@/lib/campaign-tracker";
+import { campaignTotals, DREAMER_TARGET, type CampaignData } from "@/lib/campaign-tracker";
 import { formatNaira } from "@/lib/format";
 
 export function CampaignTracker({ data, full = false }: { data: CampaignData; full?: boolean }) {
@@ -8,9 +8,9 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
   const [shareStatus, setShareStatus] = useState("");
   const updated = new Intl.DateTimeFormat("en-GB", { timeZone: "Africa/Lagos", day: "numeric", month: "long", year: "numeric" }).format(new Date(data.updatedAt));
   async function share() {
-    const url = window.location.origin + "/billion-naira-dream";
+    const url = window.location.origin + "/our-progress";
     try {
-      if (navigator.share) await navigator.share({ title: "DREAMZ · Billion-Naira Dream", text: "One million people. One million dream outfits. Follow our journey.", url });
+      if (navigator.share) await navigator.share({ title: "DREAMZ Fashion · Our Progress", text: "One million people. One million dream outfits. Follow our journey.", url });
       else { await navigator.clipboard.writeText(url); setShareStatus("Campaign link copied."); }
     } catch (e) { if (!(e instanceof DOMException && e.name === "AbortError")) setShareStatus("Share this page using your browser’s share button."); }
   }
@@ -19,15 +19,14 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
     <div className="flex flex-wrap items-end justify-between gap-5">
       <div className="max-w-3xl">
         <p className="overline-label !text-brand-purple">DESIGN YOUR DREAM · OUR JOURNEY</p>
-        <h2 id="campaign-title" className="font-editorial text-4xl sm:text-6xl mt-3">The Billion-Naira Dream</h2>
-        <p className="mt-4 text-base sm:text-lg">We’re working toward helping <strong>1,000,000 people design their dream outfit</strong>—and building DREAMZ Fashion toward ₦1 billion through the products we make together.</p>
+        <h2 id="campaign-title" className="font-editorial text-4xl sm:text-6xl mt-3">Dream outfits. Real progress.</h2>
+        <p className="mt-4 text-base sm:text-lg">We’re working toward helping <strong>1,000,000 people design their dream outfit</strong>. Follow the customer payments confirmed for our Design Your Dream journey.</p>
       </div>
       <p className="text-xs text-stone">Confirmed by DREAMZ<br/>Updated {updated}</p>
     </div>
-    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
       {[
-        ["Cash received", formatNaira(totals.receivedKobo), "Deposits received toward the goal", "var(--color-brand-green)"],
-        ["Still to receive", formatNaira(totals.remainingKobo), "Remaining to reach ₦1,000,000,000", "var(--color-brand-red)"],
+        ["Customer payments received", formatNaira(totals.receivedKobo), "Confirmed deposits and payments for orders", "var(--color-brand-green)"],
         ["Dreamers so far", data.dreamers.toLocaleString("en-NG"), "People who have designed their outfit", "var(--color-brand-blue)"],
         ["More dreamers to reach", totals.dreamersRemaining.toLocaleString("en-NG"), "Our goal: at least 1,000,000 people", "var(--color-brand-purple)"],
       ].map(([label, value, note, colour]) => <div key={label} className="campaign-card bg-white border-x border-b border-ink/10 p-5 sm:p-6" style={{ "--card-colour": colour } as CSSProperties}>
@@ -36,11 +35,10 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
         <p className="text-xs text-stone mt-3">{note}</p>
       </div>)}
     </div>
-    <div className="grid md:grid-cols-2 gap-7 mt-7">
-      <div><div className="flex justify-between text-xs mb-3"><span>₦1 billion goal</span><strong>{totals.moneyPercent.toFixed(4)}%</strong></div><progress className="campaign-progress" aria-label="Cash received toward one billion naira" value={Math.min(totals.receivedKobo, CAMPAIGN_TARGET_KOBO)} max={CAMPAIGN_TARGET_KOBO}/></div>
+    <div className="mt-7">
       <div><div className="flex justify-between text-xs mb-3"><span>1 million dreamers</span><strong>{totals.dreamerPercent.toFixed(4)}%</strong></div><progress className="campaign-progress" aria-label="Dreamers toward one million people" value={Math.min(data.dreamers,DREAMER_TARGET)} max={DREAMER_TARGET}/></div>
     </div>
-    <p className="text-sm text-stone mt-5">Only money received counts here. Unpaid balances and full order values are not included. Dreamers are counted as people, not the number of items ordered.</p>
+    <p className="text-sm text-stone mt-5">This is DREAMZ Fashion’s customer-payment record, not a donation fund or a profit total. Only confirmed payments are counted; unpaid balances are excluded. These are the records confirmed so far, not a complete history of business revenue. Dreamers are counted as people, not items ordered.</p>
     {full && <div className="mt-10">
       <h3 className="font-editorial text-3xl mb-5">The first dreams taking shape</h3>
       <div className="grid md:grid-cols-2 gap-5">{data.entries.map((entry,i)=><article key={entry.id} className="border border-ink/15 bg-white p-6">
@@ -53,7 +51,12 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
     </div>}
     <div className="flex flex-wrap gap-3 mt-8">
       <Link to="/custom" search={{start:"1",design:undefined,t:undefined,brief:undefined}} className="btn-lux btn-lux-primary">Design your dream outfit</Link>
-      {full ? <button type="button" onClick={()=>void share()} className="btn-lux btn-lux-outline">Share the journey</button> : <Link to="/billion-naira-dream" className="btn-lux btn-lux-outline">See the progress & deposits →</Link>}
+      {full ? <button type="button" onClick={()=>void share()} className="btn-lux btn-lux-outline">Share the journey</button> : <Link to="/our-progress" className="btn-lux btn-lux-outline">See the progress & deposits →</Link>}
+    </div>
+    <div className="mt-8 border-t border-ink/15 pt-6 text-sm">
+      <p className="font-semibold">Looking for Dreams to Reality?</p>
+      <p className="text-stone mt-2">Our dream-support initiative is separate from DREAMZ Fashion’s sales and customer deposits.</p>
+      <a href="https://mydreamnetwork.dreamz-gc.com/" className="inline-block mt-3 underline underline-offset-4 font-semibold">Visit Dreams to Reality ↗</a>
     </div>
     {shareStatus && <p role="status" className="text-sm mt-3">{shareStatus}</p>}
   </section>;
