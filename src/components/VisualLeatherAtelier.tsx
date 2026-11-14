@@ -281,10 +281,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         result?: AtelierResult | null;
         referenceIds?: string[];
         generatedImageRefId?: string;
+        currentBriefId?: number;
         step?: number;
       };
       if (pending.answers) setAnswers({ ...INITIAL, ...pending.answers });
       if (pending.result) setResult(pending.result);
+      if (Number.isInteger(pending.currentBriefId) && (pending.currentBriefId ?? 0) > 0) setCurrentBriefId(pending.currentBriefId);
       if (pending.generatedImageRefId) {
         setGeneratedImageRefId(pending.generatedImageRefId);
         setGeneratedImagePreview("/api/design-references/" + pending.generatedImageRefId);
@@ -312,12 +314,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     try {
       localStorage.setItem(
         STUDIO_SESSION_KEY,
-        JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
+        JSON.stringify({ answers, result, referenceIds, generatedImageRefId, currentBriefId, step }),
       );
     } catch {
       // Browser storage is a convenience only.
     }
-  }, [answers, result, referenceIds, generatedImageRefId, step, briefId]);
+  }, [answers, result, referenceIds, generatedImageRefId, currentBriefId, step, briefId]);
 
   // An image rendered from an old prompt must never accompany edited materials,
   // colours or construction on a public product page.
@@ -571,9 +573,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     if (typeof window === "undefined") return;
     localStorage.setItem(
       STUDIO_SESSION_KEY,
-      JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
+      JSON.stringify({ answers, result, referenceIds, generatedImageRefId, currentBriefId, step }),
     );
-    sessionStorage.setItem("dfk-auth-return-to", currentBriefId ? "/custom?brief=" + currentBriefId : "/custom?start=1");
+    sessionStorage.setItem("dfk-auth-return-to", "/custom?start=1");
   };
 
 
@@ -1525,7 +1527,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   {!user && (
                     <Link
                       to="/account/login"
-                      search={{ reset: undefined, returnTo: currentBriefId ? "/custom?brief=" + currentBriefId : "/custom?start=1" }}
+                      search={{ reset: undefined, returnTo: "/custom?start=1" }}
                       onClick={stashForSignIn}
                       className="nav-link inline-block mt-4 text-xs"
                     >
