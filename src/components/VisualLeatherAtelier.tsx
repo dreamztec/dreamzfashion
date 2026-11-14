@@ -859,7 +859,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     className={"overflow-hidden border text-left " + (answers.category === category.key ? "border-ink bg-ivory-deep" : "border-ink/10")}
                   >
                     <div className="aspect-[4/3] bg-ivory-deep overflow-hidden">
-                      <img src={category.representative} alt="" className="h-full w-full object-cover" />
+                      <img src={category.representative} alt={category.label + " labelled technical category sketch"} className="h-full w-full object-contain p-2" />
                     </div>
                     <span className="block p-3 font-editorial text-lg">{category.label}</span>
                   </button>
@@ -882,7 +882,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                         >
                           <div className="aspect-square bg-ivory-deep overflow-hidden">
                             {visual ? (
-                              <img src={visual.image} alt={piece + " blank Studio illustration"} className="h-full w-full object-cover" />
+                              <img src={visual.image} alt={piece + " clearly labelled construction drawing"} className="h-full w-full object-contain p-2" />
                             ) : (
                               <div className="h-full grid place-items-center px-4 text-center text-xs text-stone">Neutral silhouette</div>
                             )}
@@ -1076,7 +1076,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       )}
                       <div className="aspect-square bg-ivory-deep overflow-hidden">
                         {optionImageUrl(material.image) ? (
-                          <img src={material.image} alt={material.label + " reference"} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
+                          <img src={material.image} alt={material.label + " technical leather sample drawing"} loading="lazy" decoding="async" className="h-full w-full object-contain p-2" />
                         ) : (
                           <div className="h-full p-5 flex items-end"><span className="font-editorial text-xl">{material.label}</span></div>
                         )}
@@ -1097,7 +1097,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                 <div className="mt-5 grid gap-4 border border-ink/15 bg-ivory-deep/60 p-4 sm:grid-cols-[160px_1fr] sm:items-center">
                   <div className="aspect-square overflow-hidden bg-white">
                     {selectedMaterial.image ? (
-                      <img src={selectedMaterial.image} alt={selectedMaterial.label + " enlarged sample"} className="h-full w-full object-cover" />
+                      <img src={selectedMaterial.image} alt={selectedMaterial.label + " enlarged technical sample"} className="h-full w-full object-contain p-2" />
                     ) : null}
                   </div>
                   <div>
@@ -1148,7 +1148,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                           <span className="absolute right-2 top-2 z-10 bg-ink px-2 py-1 text-[0.52rem] uppercase tracking-btn text-ivory">Selected ✓</span>
                         )}
                         <div className="aspect-square bg-ivory-deep overflow-hidden">
-                          {finish.image && <img src={finish.image} alt={finish.label + " leather finish reference"} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />}
+                          {finish.image && <img src={finish.image} alt={finish.label + " technical finish diagram"} loading="lazy" decoding="async" className="h-full w-full object-contain p-2" />}
                         </div>
                         <span className="block p-3">
                           <span className="font-editorial text-base">{finish.label}</span>
@@ -1172,7 +1172,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     className={"border p-2 text-left " + (answers.primaryColour === colour.label ? "border-ink" : "border-ink/10")}
                   >
                     <div className="aspect-square relative overflow-hidden">
-                      {colour.image && <img src={colour.image} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+                      {colour.image && <img src={colour.image} alt={colour.label + " coloured leather sample guide"} className="absolute inset-0 h-full w-full object-contain" />}
                       <span className="absolute right-1.5 bottom-1.5 h-6 w-6 rounded-full border-2 border-white shadow" style={{ backgroundColor: colour.hex }} />
                     </div>
                     <span className="block text-[0.65rem] mt-2">{colour.label}</span>
@@ -1222,7 +1222,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             <section>
               <h2 className="font-editorial text-3xl">Choose the parts</h2>
               <p className="text-sm text-stone mt-2">
-                Only the parts that matter for your {answers.piece || "piece"} appear here. Each card shows an independent black-and-white component sketch. Your final design is still created from your own selections.
+                Only the parts that matter for your {answers.piece || "piece"} appear here. Each card shows a clean, labelled technical line drawing. Your primary leather colour updates the main preview instantly; this is not the finished AI image.
               </p>
               <div className="mt-6 space-y-7">
                 {constructionQuestionsForPiece.map((question) => (
@@ -1247,7 +1247,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                             >
                               <div className="aspect-[4/3] overflow-hidden bg-ivory-deep">
                                 {visual?.image ? (
-                                  <img src={visual.image} alt={option + " construction example"} className="h-full w-full object-cover" />
+                                  <img src={visual.image} alt={option + " labelled construction diagram"} className="h-full w-full object-contain p-2" />
                                 ) : (
                                   <div className="h-full flex items-center justify-center p-4 text-center text-xs text-stone">{option}</div>
                                 )}
@@ -1321,7 +1321,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
               <div className="mt-8 border border-ink/10 p-5">
                 <h3 className="font-editorial text-xl">Reference images</h3>
                 <p className="text-xs text-stone mt-1">
-                  Upload up to {REFERENCE_LIMITS.maxFiles} private references. They are not shown on your public Dreamer page.
+                  Optional: add up to {REFERENCE_LIMITS.maxFiles} private inspiration photos, or skip this step completely. Your specifications are enough to create the AI image prompt. References are never shown publicly.
                 </p>
                 <label className="btn-lux btn-lux-outline inline-block mt-4 cursor-pointer">
                   {uploadBusy ? "Uploading…" : "Add Reference Image"}
@@ -1364,6 +1364,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           {step === 5 && (
             <section>
               <h2 className="font-editorial text-3xl">Your dream design</h2>
+              <p className="text-xs text-stone mt-2">No inspiration photo is required. Your selected product type, material, colour, construction and dream are sufficient to generate an original image prompt.</p>
               {!result ? (
                 <div className="mt-6 border border-ink/10 p-6">
                   <p className="text-sm text-stone">The studio will now turn only your selected information into a professional DREAMZ render specification and artisan brief.</p>
