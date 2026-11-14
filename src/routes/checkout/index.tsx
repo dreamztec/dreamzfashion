@@ -184,7 +184,7 @@ function Checkout() {
         ...Object.entries(item.customization ?? {}).map(([key, value]) => `  ${key}: ${value}`),
         item.message?.text ? `  Personal message: ${item.message.text}` : "",
         item.quoteRequired ? "  Price: Please quote" : "",
-      ].filter(Boolean).join("\\n"),
+      ].filter(Boolean).join("\n"),
     ),
     items.some((item) => item.quoteRequired)
       ? "Listed item prices are indicative; some pieces require a custom quote."
