@@ -1,5 +1,4 @@
-import { CampaignTracker } from "@/components/CampaignTracker";
-import { getCampaignTracker } from "@/server/campaign-tracker.functions";
+import { FashionImpactNote } from "@/components/FashionImpactNote";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { getHomePageDataFn } from "@/server/catalog.functions";
 import { ProductMedia } from "@/components/brand";
@@ -9,7 +8,7 @@ import { CONTACT } from "@/lib/contact";
 import { formatNaira } from "@/lib/format";
 
 export const Route = createFileRoute("/")({
-  loader: async () => { const [home, campaign] = await Promise.all([getHomePageDataFn(), getCampaignTracker()]); return { ...home, campaign }; },
+  loader: () => getHomePageDataFn(),
   head: () => ({
     meta: [
       { title: `Design Your Dream Product in 5 Minutes — ${BRAND.name}` },
@@ -33,8 +32,7 @@ const CATEGORY_SEARCH = { tier: undefined, min: undefined, max: undefined, size:
 type HomeProduct = Awaited<ReturnType<typeof getHomePageDataFn>>["hero"];
 
 function Home() {
-  const { hero, frontOriginals, total, campaign } = Route.useLoaderData() as {
-    campaign: Awaited<ReturnType<typeof getCampaignTracker>>;
+  const { hero, frontOriginals, total } = Route.useLoaderData() as {
     hero: HomeProduct;
     frontOriginals: Array<NonNullable<HomeProduct>>;
     total: number;
@@ -54,7 +52,7 @@ function Home() {
               Design Your Dream Product in 5 Minutes
             </h1>
             <p className="mt-5 font-editorial text-2xl sm:text-3xl text-gold-soft">
-              We produce and deliver it in 7 days.
+              We bring your design to life.
             </p>
             <p className="mt-5 max-w-2xl mx-auto text-sm sm:text-base text-ivory/75 leading-relaxed">
               {HERO_BODY}
@@ -78,15 +76,15 @@ function Home() {
             <div className="mt-7 grid gap-2 sm:grid-cols-3 max-w-3xl mx-auto text-[0.66rem] uppercase tracking-btn text-ivory/70">
               <span>3 saved designs free</span>
               <span>Visual leather & component samples</span>
-              <span>Production + delivery in 7 days</span>
+              <span>Production timing agreed before payment</span>
             </div>
             <p className="mt-5 text-[0.66rem] text-ivory/55">
-              The 7-day timeline starts after the final design, measurements and order are confirmed.
+              The final price, deposit, production time and delivery date are confirmed on WhatsApp before work begins.
             </p>
           </div>
         </div>
 
-        <CampaignTracker data={campaign} />
+        <FashionImpactNote />
         <section className="mx-auto max-w-6xl px-5 sm:px-8 py-10">
           <p className="overline-label">THE COMMUNITY ATELIER</p>
           <h2 className="font-editorial text-4xl mt-3">Your story. Your design. Your dream pair.</h2>
