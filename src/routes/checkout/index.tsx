@@ -23,6 +23,9 @@ export const Route = createFileRoute("/checkout/")({
     // BNPL is only surfaced when a provider is actually configured and the
     // admin flag is on — an honest configuration state, never a fake option.
     return {
+      // Keep WhatsApp checkout available even during a database/pricing outage.
+      // Online payments remain explicitly opt-in while gateways are incomplete.
+      whatsappOnly: String(process.env.ONLINE_PAYMENTS_ENABLED ?? "").toLowerCase() !== "true",
       bnplAvailable: options.bnplAvailable,
       depositTerms: {
         enabled: (options.deposits as { enabled?: boolean }).enabled ?? false,
@@ -62,7 +65,8 @@ function newRequestId(): string {
 }
 
 function Checkout() {
-  const { whatsappNumber, bnplAvailable, depositTerms } = Route.useLoaderData() as {
+  const { whatsappNumber, bnplAvailable, depositTerms, whatsappOnly } = Route.useLoaderData() as {
+    whatsappOnly: boolean;
     whatsappNumber: string;
     bnplAvailable: boolean;
     depositTerms: { enabled: boolean; percent: number; termsText: string; balanceDueDays: number };
@@ -102,7 +106,7 @@ function Checkout() {
 
   const lineKey = JSON.stringify(items.map((i) => [i.id, i.quantity]));
   useEffect(() => {
-    if (!hydrated || items.length === 0) return;
+    if (!hydrated || items.length === 0 || whatsappOnly) return;
     let cancelled = false;
     setPreviewBusy(true);
     const t = setTimeout(() => {
@@ -135,7 +139,7 @@ function Checkout() {
       clearTimeout(t);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, lineKey, deliveryState, voucherCode, partnerCode, contact.email, contact.phone]);
+  }, [hydrated, lineKey, deliveryState, voucherCode, partnerCode, contact.email, contact.phone, whatsappOnly]);
 
   // Deposit eligibility is a server question (re-verified at order creation).
   useEffect(() => {
@@ -167,7 +171,7 @@ function Checkout() {
   }
 
   const pricing: Pricing | null = preview && preview.ok ? preview.pricing : null;
-  const paymentOnline = Boolean(preview?.paymentAvailable) && !pricing?.hasQuoteLines;
+  const paymentOnline = !whatsappOnly && Boolean(preview?.paymentAvailable) && !pricing?.hasQuoteLines;
   const canDeposit = paymentOnline && depositEligible.eligible;
 
   const cartSubtotal = items.reduce(
@@ -272,7 +276,7 @@ function Checkout() {
         ? deliveryReasonLabel(pricing.delivery.reason)
         : formatNaira(pricing.delivery.feeKobo);
 
-  if (preview === null || previewBusy) {
+  if (!whatsappOnly && (preview === null || previewBusy)) {
     return (
       <div className="mx-auto max-w-xl px-5 pt-40 pb-32 text-center text-stone">
         Preparing your order…
@@ -293,12 +297,12 @@ function Checkout() {
           {items.map((item) => (
             <div key={item.id} className="flex justify-between gap-4 py-2 text-sm border-b border-ink/5 last:border-0">
               <span>{item.name} × {item.quantity}</span>
-              <span>{formatNaira((item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity)}</span>
+              <span>{item.quoteRequired ? "Quote required" : formatNaira((item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity)}</span>
             </div>
           ))}
           <div className="flex justify-between gap-4 pt-4 font-medium">
-            <span>Indicative item subtotal</span>
-            <span>{formatNaira(cartSubtotal)}</span>
+            <span>{items.some((item) => item.quoteRequired) ? "Final quote" : "Indicative item subtotal"}</span>
+            <span>{items.some((item) => item.quoteRequired) ? "Confirmed on WhatsApp" : formatNaira(cartSubtotal)}</span>
           </div>
         </div>
         <div className="mt-7">
