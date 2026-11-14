@@ -6,9 +6,9 @@ export const NIGERIAN_STATES = [
   "Osun", "Oyo", "Plateau", "Rivers", "Sokoto", "Taraba", "Yobe", "Zamfara",
 ] as const;
 
-export function formatNaira(kobo: number): string {
+export function formatNaira(kobo: number, fractionDigits = 0): string {
   const naira = kobo / 100;
-  return `₦${naira.toLocaleString("en-NG", { maximumFractionDigits: 0 })}`;
+  return `₦${naira.toLocaleString("en-NG", { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits })}`;
 }
 
 /**

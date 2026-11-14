@@ -1,80 +1,86 @@
-/** Original code-authored Studio geometry. Never use catalogue/customer photos here. */
-const escapeXml = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
-
-export function studioIllustration(label: string, _colour = '#a29381'): string {
-  const name = label.toLowerCase();
-  const colourSafe = '#ffffff';
-  let shape = '';
-  const path = (d: string, _fill = '#fff') => `<path d="${d}" fill="#fff" stroke="#111" stroke-width="1.7" stroke-linejoin="round"/>`;
-  const line = (d: string) => `<path d="${d}" fill="none" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>`;
-  if (/grain|suede|nubuck|smooth|pebbl|waxy|patent|emboss|leather sample/.test(name)) {
-    shape = path('M64 71 210 48 266 168 113 201Z', '#5a4a3d') + path('M64 64 210 41 266 161 113 194Z') + `<path d="M64 64 210 41 266 161 113 194Z" fill="url(#${/pebbl|emboss/.test(name) ? 'pebbles' : 'grain'})" opacity=".35"/>` + line('M75 70 204 50 253 156');
-  } else if (/sole|commando|chunky/.test(name)) {
-    const depth = /chunky|commando/.test(name) ? 18 : /rubber/.test(name) ? 10 : 5;
-    const d = 'M58 155C37 127 71 72 115 61c24-5 42 8 64 29 20 20 61 14 77 33 20 26-10 48-41 47-42-2-65 34-104 21-23-7-43-21-53-36Z';
-    shape = `<g transform="translate(0 ${depth})">${path(d, '#39342f')}</g>` + path(d, /leather/.test(name) ? 'url(#leather)' : 'url(#dark)') + line('M66 151C48 126 79 82 115 71c25-5 43 18 63 30 23 15 63 10 71 29');
-    if (/commando/.test(name)) shape += Array.from({length:7},(_,i)=>path(`M${82+i*23} 174v15l10-2v-15Z`,'#242421')).join('');
-  } else if (/^(round|almond|square|pointed)$/.test(name)) {
-    const top = name === 'pointed' ? 'M64 180Q105 77 162 41Q228 82 263 152' : name === 'square' ? 'M64 180 82 73 220 49 263 152' : name === 'almond' ? 'M64 180Q84 70 157 49Q233 42 263 152' : 'M64 180Q54 65 155 48Q250 34 263 152';
-    shape = path(top + 'Q165 211 64 180Z','#44392f') + path(top + 'Q169 190 64 180Z') + line('M85 161Q109 93 160 69');
-  } else if (/stiletto|wedge|kitten|block heel|sculpt.*heel|round heel/.test(name)) {
-    shape = path('M99 58 172 44 205 64 125 80Z', 'url(#dark)');
-    const d = /stiletto|kitten/.test(name) ? 'M125 80 193 66 168 185 157 189 157 100Z' : /wedge/.test(name) ? 'M125 80 193 66 219 181 81 202Z' : /round|sculpt/.test(name) ? 'M125 80 193 66Q160 124 192 185L130 197Q156 139 125 80Z' : 'M125 80 193 66 185 187 129 198Z';
-    shape += path(d) + line('M136 88 140 176');
-  } else if (/buckle|turn-lock|hardware/.test(name)) {
-    shape = `<g transform="translate(162 120) rotate(-18)"><rect x="-79" y="-43" width="158" height="86" rx="17" fill="none" stroke="#5d4b2f" stroke-width="17"/><rect x="-79" y="-48" width="158" height="86" rx="17" fill="none" stroke="url(#metal)" stroke-width="14"/>${/hook/.test(name) ? '<path d="M-40-30 35 8 63-11" stroke="url(#metal)" stroke-width="10" fill="none"/>' : '<path d="M0-45V27" stroke="url(#metal)" stroke-width="9" stroke-linecap="round"/>'}</g>`;
-  } else if (/lace-up/.test(name)) {
-    shape = path('M88 63 141 52 160 185 107 195Z') + path('M170 48 220 40 239 172 189 183Z');
-    shape += [0,1,2,3,4].map(i=>line(`M${130+i*4} ${72+i*24}L${180+i*4} ${92+i*24}M${180+i*4} ${66+i*24}L${133+i*4} ${99+i*24}`)).join('');
-  } else if (/zip/.test(name)) {
-    shape = path('M116 42 176 32 213 196 151 207Z');
-    shape += Array.from({length:19},(_,i)=>path(`M${140+i*1.8} ${48+i*8}h14v4h-14Z`,'url(#metal)')).join('') + path('M150 54 170 51 177 81 158 85Z','url(#metal)');
-  } else if (/stitch|tonal|contrast|edge|burnish/.test(name)) {
-    shape = path('M54 87 228 52 273 163 98 199Z') + `<path d="M70 94 220 65 256 157 107 185Z" fill="none" stroke="${/contrast/.test(name)?'#f8f3e6':'#665446'}" stroke-width="2.5" stroke-dasharray="5 5"/>`;
-  } else if (/oxford|derby|loafer|mule|footwear|boot|chelsea|slide|sandal|pump|slingback|open toe|^heel$/.test(name)) {
-    // Side/three-quarter construction study: sole, vamp, quarters and opening are separate contours.
-    const sole = path('M27 173Q30 165 58 160L147 151 276 152 286 164 284 181 245 190 206 187 191 181Q114 198 43 189L27 181Z');
-    if (/^heel$|pump|slingback/.test(name)) {
-      shape = path('M29 177Q47 162 81 155Q119 147 144 117L215 73 270 78 276 103Q238 117 219 156L210 190 202 190 207 144Q155 177 105 184L40 187Z') + line('M42 179Q128 178 174 137L219 91Q242 108 270 84M217 154 219 190M34 185Q140 189 206 148');
-    } else if (/slide|sandal/.test(name)) {
-      shape = sole + path('M31 169Q50 137 103 126Q150 115 201 135L273 154 282 166Q205 195 43 181Z') + path('M86 135Q119 91 166 111L191 147Q152 160 119 163Q112 141 86 135Z') + line('M96 132Q126 106 160 119M127 156 180 143');
-      if (/sandal/.test(name)) shape += path('M208 139 216 97 247 93 262 152 251 155 238 108 228 111 223 143Z') + line('M219 106 241 103');
-    } else if (/boot|chelsea/.test(name)) {
-      shape = sole + path('M29 171Q35 148 105 139L151 119 155 45Q189 34 242 43L254 140 277 158 280 168Q218 191 193 172Q116 192 36 181Z') + line('M159 52Q201 42 237 50M154 62 153 118Q174 143 198 166M244 60 250 144M36 173Q105 181 185 165');
-      shape += /chelsea/.test(name) ? path('M178 65 226 62 231 127 198 141 177 118Z') + line('M185 72 185 116M193 70 194 126M202 68 203 130M212 67 214 129M222 66 224 124') : path('M147 63 177 58 191 131 161 141Z') + [0,1,2,3,4].map(i=>line(`M${152+i*2} ${72+i*13}l29 8m-29-2 26-7`)).join('');
+/** Original monochrome construction studies. No catalogue photos or third-party branding. */
+const esc = (s: string) => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]!));
+export function studioIllustration(label: string, _colour?: string): string {
+  const n = label.toLowerCase();
+  const outline = (d: string) => `<path d="${d}" fill="white" stroke="#161616" stroke-width="1.8" stroke-linejoin="round"/>`;
+  const line = (d: string, dash = false) => `<path d="${d}" fill="none" stroke="#161616" stroke-width="${dash ? '.75' : '1.15'}" ${dash ? 'stroke-dasharray="2.2 2.2"' : ''} stroke-linecap="round" stroke-linejoin="round"/>`;
+  const circle = (x: number,y: number,r=2) => `<circle cx="${x}" cy="${y}" r="${r}" fill="white" stroke="#161616" stroke-width="1.1"/>`;
+  const shoeSole = outline('M38 170 Q81 174 119 169 Q172 182 259 173 Q278 171 279 180 Q275 190 234 190 L147 190 Q121 190 102 183 L84 183 L83 191 L38 191Z') + line('M41 177 Q82 181 118 176 Q172 188 261 179 M41 187 H80');
+  let shape: string;
+  if (/^oxford$|^derby$|other leather footwear/.test(n)) {
+    shape = shoeSole + outline('M38 169 L43 112 Q59 122 80 117 L115 91 Q125 86 132 97 L153 128 Q168 143 205 149 L253 155 Q278 158 279 173 Q242 184 173 180 Q137 178 118 170 Q79 176 38 169Z');
+    // Collar and tongue are open contours; the Oxford facings join the vamp, Derby quarters sit above it.
+    shape += line('M45 117 Q63 133 89 116 L115 98 M94 113 L117 91 Q126 88 131 98 L149 128 M45 137 L44 164 M197 149 Q188 164 192 179');
+    shape += /derby/.test(n) ? outline('M44 138 L92 119 116 105 149 137 124 149 93 133 44 155Z') : line('M44 138 Q67 146 90 127 L115 106 147 137 Q132 142 118 170');
+    shape += line('M199 152 Q191 165 196 176 M47 165 Q80 171 116 165',true);
+    for(let i=0;i<5;i++){let x=117+i*6,y=104+i*6;shape+=circle(x,y,1.7)+circle(x-13,y+8,1.7)+line(`M${x-13} ${y+8} L${x+4} ${y+6}`);}
+  } else if (/boot|chelsea/.test(n)) {
+    shape=shoeSole+outline('M38 170 L43 57 Q70 49 112 56 L117 114 Q130 140 194 149 L253 155 Q278 159 279 173 Q218 187 171 179 L118 170 Q79 175 38 170Z')+line('M49 62 Q76 57 106 62 M48 68 L45 165 M181 148 Q168 162 172 178');
+    if(/chelsea/.test(n)){
+      shape+=outline('M67 71 L99 68 103 116 Q89 137 69 130Z');
+      for(let i=0;i<7;i++)shape+=line(`M${71+i*4} 75 L${72+i*4} 122`);
+      shape+=outline('M47 57 L46 43 53 42 56 55Z');
     } else {
-      const mule = /mule/.test(name);
-      shape = sole + path(mule ? 'M29 171Q36 145 99 134Q122 124 146 97L198 110 203 153 274 158 281 167Q211 190 189 172Q113 194 36 181Z' : 'M29 171Q36 145 99 134Q128 121 153 91L187 88Q208 114 261 101L275 155 281 168Q218 189 191 173Q112 194 36 181Z');
-      shape += line('M36 174Q101 185 188 166M204 174 270 164M82 139Q108 147 109 179');
-      if (/oxford|derby|footwear/.test(name)) {
-        shape += path('M142 108 158 81Q170 77 180 86L200 130 173 143Z') + line('M184 99Q218 120 257 106L261 115Q229 128 201 113');
-        shape += path(/derby/.test(name) ? 'M117 127 147 100 179 138 161 151Z' : 'M123 130 147 109 175 141 158 153Z');
-        shape += path('M181 98 199 110 224 160 193 170 174 142 196 131Z');
-        shape += [0,1,2,3].map(i=>line(`M${150+i*6} ${108+i*9}l${34-i*3} -7m-${31-i*3} 3l${31-i*3} 7`)).join('');
-        shape += line('M200 145 211 165M128 132 157 154');
-      } else {
-        shape += path('M77 145Q114 119 145 110L186 124 196 153Q123 175 90 164Z') + line('M84 145Q117 126 145 118L180 131 188 149Q128 166 97 160');
-        if (/loafer/.test(name)) shape += path('M122 124 145 115 178 132 160 141Z') + line('M144 125 157 130');
-        if (!mule) shape += line('M184 101Q211 121 258 108M243 118 251 159');
-      }
+      shape+=line('M91 64 L102 115 Q116 140 142 145 L123 156 Q98 138 87 116Z');
+      for(let i=0;i<6;i++)shape+=circle(99+i*2,73+i*9,2)+line(`M${101+i*2} ${74+i*9}l12 -2`);
+      shape+=line('M111 60 L119 110 131 130 M96 66 L106 114 136 143',true);
     }
-  } else if (/briefcase|laptop bag/.test(name)) {
-    shape = path('M54 79 247 67 275 86 275 191 84 206 54 188Z') + path('M54 79 247 67 247 184 54 196Z') + path('M247 67 275 86 275 191 247 184Z') + path('M54 79 247 67 245 113 55 126Z') + line('M63 88 237 77 235 105 64 117M63 134 63 186 237 175 237 123M255 86 265 92 265 181');
-    shape += path('M113 75 113 51Q113 38 128 38L174 35Q189 35 189 49L189 70 180 71 180 50Q180 45 174 45L128 48Q123 48 123 54L123 74Z') + path('M139 113 160 111 160 129 139 131Z') + line('M144 121 154 120');
-  } else if (/trouser|pants|skirt/.test(name)) {
-    shape = path(/skirt/.test(name)?'M110 40 207 34 236 194 76 204Z':'M106 40 211 31 224 196 176 204 154 114 143 207 96 208Z') + line('M118 53 200 46M155 58 154 113');
-  } else if (/jacket|shirt|vest|harness|wearable/.test(name)) {
-    shape = path('M117 46 147 34 174 34 207 44 250 107 218 126 202 91 212 204 106 204 112 91 96 126 63 108Z') + path('M147 34 157 75 174 34 181 65 158 88 136 62Z','url(#dark)') + line('M158 89V195M119 158h22M177 158h24');
-  } else if (/belt|watch strap|bracelet|cuff|strap/.test(name)) {
-    shape = path('M54 113Q110 68 237 92L259 120Q151 96 80 144Z') + path('M80 144 259 120 258 137Q162 115 82 161Z','#685643');
-    if (/belt/.test(name)) shape += `<rect x="58" y="111" width="50" height="40" rx="7" fill="none" stroke="url(#metal)" stroke-width="7" transform="rotate(-18 82 130)"/>`;
-  } else if (/wallet|card|passport|key holder/.test(name)) {
-    shape = path('M73 76 202 49 249 162 117 194Z','#594a3b') + path('M70 69 200 42 247 155 115 187Z') + line('M84 77 193 53 232 150 119 174Z') + line('M139 57 179 169');
-  } else if (/bag|tote|briefcase|clutch|purse|pouch|handle|structured|soft|drawstring|flap/.test(name)) {
-    shape = path('M75 94 216 66 254 172 110 201Z','#594a3b') + path('M75 85 211 60 223 175 82 198Z') + path('M211 60 243 83 254 172 223 175Z','#76644f') + line('M86 96 199 76 210 164 94 184Z');
-    if (!/clutch|pouch/.test(name)) shape += `<path d="M111 84Q105 17 155 30Q181 35 178 71" fill="none" stroke="#514536" stroke-width="9"/><path d="M115 83Q111 25 155 35Q176 39 175 72" fill="none" stroke="${colourSafe}" stroke-width="5"/>`;
+  } else if (/loafer|mule/.test(n)) {
+    const mule=/mule/.test(n);
+    shape=shoeSole+outline(mule?'M38 170 Q56 162 94 168 L110 113 Q125 106 143 121 Q163 143 204 149 L253 155 Q278 159 279 173 Q205 190 118 170 Q79 176 38 170Z':'M38 170 L42 121 Q68 131 94 119 L117 107 Q135 112 148 128 Q165 144 204 149 L253 155 Q278 159 279 173 Q205 190 118 170 Q79 176 38 170Z');
+    shape+=line('M119 119 Q142 139 204 155 Q240 158 261 168 Q244 175 196 174 Q148 169 125 148 M121 123 Q148 145 203 159 Q239 163 253 168',true);
+    if(!mule)shape+=line('M46 127 Q66 142 96 125 M45 142 L43 164')+outline('M102 121 L113 115 150 137 139 146Z')+line('M119 127 132 136');
+    else shape+=line('M106 118 Q127 124 131 148 M47 168 Q75 166 94 169');
+  } else if (/slide|sandal/.test(n)) {
+    shape=outline('M39 172 Q73 163 110 167 Q171 171 243 162 Q267 158 278 169 L278 181 Q267 192 219 191 L77 188 Q46 185 39 181Z')+line('M43 177 Q103 186 163 184 L252 178 Q269 176 275 172');
+    shape+=outline('M132 170 Q134 124 166 120 Q197 122 214 165 L202 172 Q185 140 165 138 Q148 140 146 173Z')+line('M141 165 Q145 131 166 128 Q190 132 205 163',true);
+    if(/sandal/.test(n))shape+=outline('M53 171 L60 125 Q80 115 105 126 L122 169 110 172 99 137 69 136 64 173Z')+outline('M57 127 104 125 107 135 58 137Z')+line('M75 127 75 136');
+  } else if (/^heel$|pump|slingback|open toe/.test(n)) {
+    shape=outline('M43 74 Q64 95 87 111 Q140 149 197 159 Q238 143 268 161 Q282 169 278 178 L216 184 Q157 183 107 143 L76 119 65 190 57 190 58 117 Q40 103 43 74Z')+line('M48 84 Q64 117 106 140 Q162 182 216 179 L273 174 M61 119 L62 186 M88 114 Q112 97 133 130 L152 153');
+  } else if (/heel|stiletto|wedge/.test(n)) {
+    shape=outline('M95 57 L186 57 194 70 95 74Z');
+    shape+=outline(/wedge/.test(n)?'M95 74 L194 70 Q220 147 259 184 L95 184Z':/stiletto|kitten/.test(n)?'M95 74 184 71 Q136 109 127 183 L116 183 Q119 115 95 74Z':'M95 74 184 71 174 183 104 183Z')+line('M106 179 H171');
+  } else if (/briefcase|laptop bag/.test(n)) {
+    shape=outline('M43 87 259 87 276 101 276 188 259 201 43 201Z')+outline('M43 87 H259 V201 H43Z')+outline('M43 87 H259 V126 Q153 146 43 126Z')+outline('M122 87 V65 Q122 52 135 52 H170 Q183 52 183 65 V87 H174 V66 Q174 61 169 61 H136 Q131 61 131 66 V87Z')+outline('M139 129 H163 V147 H139Z')+line('M144 138 H158 M52 97 H250 V119 M52 146 V192 H250 V146 M266 105 V186',true);
+  } else if (/backpack/.test(n)) {
+    shape=outline('M86 197 V93 Q86 57 159 57 Q232 57 232 93 V197Z')+outline('M143 58 V43 H175 V58 H168 V50 H150 V58Z')+line('M97 188 V95 Q97 67 159 67 Q221 67 221 95 V188')+outline('M104 135 Q159 121 214 135 V182 H104Z')+line('M112 143 H207 M204 144 V155 M111 94 H207');
+  } else if (/tote|handbag|travel bag|crossbody|bag|clutch|purse|pouch|handle|structured|drawstring|flap/.test(n)) {
+    const small=/clutch|purse|pouch/.test(n);
+    shape=outline(small?'M63 108 H254 L265 190 H53Z':'M68 88 H249 L264 199 H53Z')+line(small?'M63 118 H254 M64 180 H253':'M77 99 H240 L252 188 H65Z',true);
+    if(!small)shape+=outline('M109 92 V64 Q109 36 157 36 Q205 36 205 64 V92 H196 V65 Q196 45 157 45 Q118 45 118 65 V92Z');
+    if(/crossbody/.test(n))shape+=line('M70 110 Q45 21 160 24 Q272 26 245 110');
+    if(small)shape+=line('M63 119 158 159 254 119')+circle(158,158,3);
+  } else if (/sole|commando|chunky/.test(n)) {
+    shape=outline('M122 201 Q101 190 108 151 L116 111 Q106 81 111 57 Q122 29 160 29 Q198 29 209 57 Q214 81 204 111 L212 151 Q219 190 198 201Z')+line('M128 190 Q114 181 121 150 L129 110 Q118 77 124 60 Q133 42 160 42 Q187 42 196 60 Q202 77 191 110 L199 150 Q206 181 192 190Z');
+    if(/commando|rubber|chunky/.test(n))for(let i=0;i<6;i++)shape+=line(`M132 ${62+i*19} H187 M153 ${54+i*19} V${69+i*19}`);
+  } else if (/^(round|almond|square|pointed)$/.test(n)) {
+    shape=outline(n==='pointed'?'M101 202 V118 Q102 75 160 28 Q218 75 219 118 V202Z':n==='square'?'M101 202 V75 Q101 51 119 51 H201 Q219 51 219 75 V202Z':n==='almond'?'M101 202 V121 Q101 66 160 36 Q219 66 219 121 V202Z':'M101 202 V111 Q101 42 160 42 Q219 42 219 111 V202Z')+line('M112 191 H208',true);
+  } else if (/grain|suede|nubuck|smooth|waxy|patent|emboss|leather sample|pebbl/.test(n)) {
+    shape=outline('M75 61 H245 V191 H75Z')+line('M84 70 H236 V182 H84Z',true);
+    if(/pebbl|emboss|grain/.test(n))for(let y=85;y<172;y+=15)for(let x=98;x<225;x+=18)shape+=line(`M${x} ${y}q6 -6 11 0q-2 8 -11 0Z`);
+    if(/suede|nubuck/.test(n))for(let y=85;y<172;y+=11)for(let x=98;x<225;x+=11)shape+=line(`M${x} ${y}l2 -3`);
+  } else if (/buckle|turn-lock|hardware/.test(n)) {
+    shape=outline('M89 70 Q79 70 79 80 V163 Q79 173 89 173 H231 Q241 173 241 163 V80 Q241 70 231 70Z')+outline('M92 83 H228 V160 H92Z')+line('M160 76 V160 M160 116 H221')+circle(160,116,3);
+  } else if (/lace-up/.test(n)) {
+    shape=outline('M111 48 H209 V196 H111Z')+outline('M83 51 H127 V197 H83Z')+outline('M193 51 H237 V197 H193Z');
+    for(let i=0;i<6;i++)shape+=circle(116,68+i*22,3)+circle(204,68+i*22,3)+line(`M116 ${68+i*22}L204 ${88+i*22} M204 ${68+i*22}L116 ${88+i*22}`);
+  } else if (/zip/.test(n)) {
+    shape=outline('M128 40 H192 V202 H128Z');for(let i=0;i<19;i++)shape+=line(`M151 ${47+i*8}h18v4h-18Z`);shape+=outline('M149 53 H171 V80 H149Z')+line('M156 59 V73');
+  } else if (/stitch|tonal|contrast|edge|burnish/.test(n)) {
+    shape=outline('M58 73 H263 V183 H58Z')+line('M69 84 H252 V172 H69Z',true)+line('M69 94 H252',true);
+  } else if (/belt|watch strap|bracelet|cuff|strap/.test(n)) {
+    shape=outline('M39 104 H275 L287 122 275 140 H39Z')+outline('M37 99 H85 V145 H37Z')+outline('M44 107 H78 V137 H44Z')+line('M59 102 V141 M59 122 H93');for(let x=202;x<270;x+=14)shape+=circle(x,122,2);
+  } else if (/wallet|card|passport|key holder/.test(n)) {
+    shape=outline('M70 61 H249 V191 H70Z')+line('M79 70 H240 V182 H79Z',true)+line('M159 62 V190 M86 94 H145 M86 115 H145 M174 89 H233 V157 H174Z');
+  } else if (/trouser|pants|skirt/.test(n)) {
+    shape=outline(/skirt/.test(n)?'M112 38 H208 L236 202 H84Z':'M111 38 H209 L225 202 H174 L160 108 146 202 H95Z')+line('M112 49 H208 M160 51 V94 M122 54 Q125 78 108 86 M198 54 Q195 78 212 86');
+  } else if (/jacket|shirt|vest|harness|wearable/.test(n)) {
+    shape=outline('M123 43 144 35 H176 L197 43 249 111 222 131 201 98 210 204 H110 L119 98 98 131 71 111Z')+line('M144 35 160 67 176 35 M160 67 V204 M125 151 H147 V174 H125Z M173 151 H195 V174 H173Z M114 195 H206');
+  } else if (/hat/.test(n)) {
+    shape=outline('M95 139 112 67 Q159 48 207 67 L225 139Z')+outline('M95 133 Q31 145 51 170 Q160 201 269 170 Q289 145 225 133 L225 145 Q160 162 95 145Z');
   } else {
-    shape = path('M87 77 207 52 250 163 126 191Z') + line('M99 86 199 65 235 157 130 177Z');
+    // Unspecified options must not imply a made-up buildable component.
+    shape=line('M72 68 H108 M72 68 V104 M248 68 H212 M248 68 V104 M72 180 H108 M72 180 V144 M248 180 H212 M248 180 V144')+`<text x="160" y="118" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#161616">Atelier detail</text><text x="160" y="139" text-anchor="middle" font-family="sans-serif" font-size="10" fill="#161616">Confirmed with your maker</text>`;
   }
-  return 'data:image/svg+xml,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="${escapeXml(label)} black-and-white construction sketch"><defs><pattern id="grain" width="6" height="7" patternUnits="userSpaceOnUse"><path d="m1 2 1 1m2 2 1-1" stroke="#111" stroke-width=".5"/></pattern><pattern id="pebbles" width="12" height="9" patternUnits="userSpaceOnUse"><path d="M1 3Q4-2 9 2L10 6Q4 10 1 3Z" fill="none" stroke="#111" stroke-width=".7"/></pattern></defs><rect width="320" height="240" fill="#fff"/>${shape.replace(/url\(#(?:metal|dark|leather)\)/g, '#111').replace(/#[0-9a-f]{6}/gi, c => c === '#ffffff' ? '#fff' : '#111')}</svg>`);
+  return 'data:image/svg+xml,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 240" role="img" aria-label="${esc(label)} black-and-white construction sketch"><rect width="320" height="240" fill="white"/>${shape}</svg>`);
 }

@@ -120,6 +120,7 @@ const AI_VISUAL_TOOLS = [
   { name: "ChatGPT", href: "https://chatgpt.com/", format: "chatgpt" },
   { name: "Gemini", href: "https://gemini.google.com/", format: "gemini" },
   { name: "Grok", href: "https://grok.com/", format: "grok" },
+  { name: "Adobe Firefly", href: "https://firefly.adobe.com/", format: "universal" },
   { name: "Copilot", href: "https://copilot.microsoft.com/", format: "universal" },
 ] as const;
 
@@ -728,8 +729,8 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       setNotice(tool.name + " opened with your DREAMZ prompt copied. Keep this DREAMZ tab open; your design is saved here.");
       window.setTimeout(() => setCopiedPrompt(false), 2200);
     } catch {
-      if (opened && !opened.closed) opened.close();
-      setNotice("Your DREAMZ design is saved, but this browser could not copy the prompt automatically. Use Copy Full Prompt, then open your preferred AI image tool.");
+      if (opened && !opened.closed) opened.location.replace(tool.href);
+      setNotice("Automatic copying was blocked. Select and copy the full prompt above, then paste it into " + tool.name + ". Your Studio progress remains in this tab.");
     }
   };
 
@@ -1404,7 +1405,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <p className="mt-2 text-sm text-stone">
                       Choose an AI tool below. DREAMZ copies your exact locked prompt and opens the tool in a new tab, while this Studio keeps your completed design safely saved. Generate and save the image, then return here and upload it.
                     </p>
-                    <div className="dreamz-spectrum-border mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <div className="dreamz-spectrum-border mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {AI_VISUAL_TOOLS.map((tool) => (
                         <button
                           key={tool.name}
@@ -1412,12 +1413,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                           onClick={() => void openAiVisualTool(tool)}
                           className="btn-lux btn-lux-outline !py-3"
                         >
-                          Open {tool.name}
+                          Create with {tool.name}
                         </button>
                       ))}
                     </div>
                     <p className="mt-3 text-[0.64rem] text-stone">
-                      Each button copies a prompt tuned for that AI tool. DREAMZ stays open in the original tab so your design is not lost.
+                      Each button copies your prompt and opens the provider website; your device may offer its installed app. Paste the prompt there and choose image generation. Sign-in, credits or fees may apply. DREAMZ does not generate the image inside this Studio.
                     </p>
                     {!hasCopiedPrompt && !generatedImageRefId ? (
                       <p className="mt-4 border border-ink/10 bg-ivory px-4 py-3 text-xs text-stone">Copy the Full AI Prompt above first.</p>
@@ -1552,6 +1553,13 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       </div>
                     </div>
                   )}
+
+                  <section className="mt-6 border border-ink/15 bg-white p-5">
+                    <h3 className="font-editorial text-2xl">Your outfit is part of a bigger dream.</h3>
+                    <p className="mt-3 text-sm text-stone">Take your ambition to Dreams to Reality: make a plan, choose your next step, and track your progress. Your product stays here; your personal dream stays in your control.</p>
+                    <a href="https://mydreamnetwork.dreamz-gc.com/" target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-primary mt-4">Continue my dream in Dreams to Reality ↗</a>
+                    <p className="mt-3 text-xs text-stone">Open the platform and paste your dream there. Accounts and saved progress are separate; we do not automatically send your story or customer details.</p>
+                  </section>
 
                   {published && (
                     <SharePanel

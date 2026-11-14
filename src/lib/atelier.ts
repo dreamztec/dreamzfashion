@@ -571,6 +571,9 @@ export function buildRenderPrompt(b: AtelierBrief): string {
     "If a field is unspecified, keep that area visually neutral and construction-standard rather than choosing a new named option.",
     "Reference images, when supplied, are inspiration for proportion or direction only; do not copy third-party branding, logos or protected ornaments.",
     "The output must remain physically manufacturable by a real leather artisan.",
+    "GEOMETRY CHECK: construct a coherent last and sole; align the heel seat, arch, toe box and ground contact. Give an Oxford closed lacing with a visible tongue under the facings; give a Derby open quarters. Do not mix shoe constructions. Bags need aligned panels, functional openings and handles attached at plausible load-bearing points.",
+    "Before rendering, check the selected dimensions and component compatibility. If selections contradict or cannot be made safely, explain the conflict and ask for a correction rather than silently changing a selection.",
+    "Generate one complete product with clear silhouette, uninterrupted edge contours and believable scale. No detached floating parts, warped symmetry, fused straps, extra heels, duplicate hardware or invented lettering. Match the selected materials and colours; the neutral Studio sketches are construction references, not colour instructions.",
   ].join("\n");
 
   const sections: Array<[string, string]> = [
