@@ -39,7 +39,7 @@ function DreamLeaderboard() {
         <p className="overline-label !text-gold-soft">DREAMZ COMMUNITY</p>
         <h1 className="font-editorial text-5xl mt-4">Dream it. Design it. Share it.</h1>
         <p className="max-w-2xl mx-auto mt-5">Explore original concepts and the people behind them. Our former prize challenge is no longer being promoted. Publishing a design or placing an order does not enter you into a cash giveaway.</p>
-        <a href="https://mydreamnetwork.dreamz-gc.com/dream-fund" className="inline-block underline mt-5">Discover the separate Dream Fund: 5% of DREAMZ sales ↗</a>
+        <a href="https://mydreamnetwork.dreamz-gc.com/dream-fund" className="inline-block underline mt-5">Discover the separate Dream Fund: 1% of DREAMZ sales ↗</a>
       </header>
 
       <section className="mx-auto max-w-7xl px-5 sm:px-8 py-12 sm:py-16">

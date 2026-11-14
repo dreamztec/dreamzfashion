@@ -8,7 +8,12 @@ const key = "billion_naira_campaign";
 export const getCampaignTracker = createServerFn({ method: "GET" }).handler(async () => {
   const [row] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
   if (!row) return INITIAL_CAMPAIGN;
-  return { ...CampaignSchema.parse(row.value), updatedAt: row.updatedAt?.toISOString() || INITIAL_CAMPAIGN.updatedAt };
+  const saved = CampaignSchema.parse(row.value);
+  // Upgrade only the unchanged two-receipt launch snapshot; preserve later owner edits.
+  if ((!row.updatedAt || row.updatedAt.getTime() < Date.parse(INITIAL_CAMPAIGN.updatedAt)) && saved.entries.length === 2 && saved.entries.every(e => INITIAL_CAMPAIGN.entries.some(i => i.id === e.id && i.receivedKobo === e.receivedKobo))) {
+    return { ...INITIAL_CAMPAIGN, dreamers: saved.dreamers };
+  }
+  return { ...saved, updatedAt: row.updatedAt?.toISOString() || INITIAL_CAMPAIGN.updatedAt };
 });
 export const saveCampaignTracker = createServerFn({ method: "POST" })
   .validator(CampaignSchema)

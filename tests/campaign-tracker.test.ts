@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { createTestDb } from "./helpers/pglite-db";
-import { CampaignSchema, INITIAL_CAMPAIGN, campaignTotals } from "../src/lib/campaign-tracker";
+import { CampaignSchema, INITIAL_CAMPAIGN, STATEMENT_REVIEW, campaignTotals } from "../src/lib/campaign-tracker";
 const m = vi.hoisted(() => ({ admin: vi.fn(), db: null as any }));
 vi.mock("../db/index", () => ({ get db() { return m.db; } }));
 vi.mock("../src/server/admin-auth.server", () => ({ requireAdminRole: m.admin }));
@@ -13,9 +13,9 @@ beforeEach(() => { vi.clearAllMocks(); m.admin.mockResolvedValue(undefined); });
 describe("public campaign receipts", () => {
  it("counts received deposits only and counts the two customers once each", () => {
   const totals=campaignTotals(INITIAL_CAMPAIGN);
-  expect(totals.receivedKobo).toBe(51_499_200);
+  expect(totals.receivedKobo).toBe(67_699_200);
   expect(totals.dreamersRemaining).toBe(999_998);
-  expect(INITIAL_CAMPAIGN.entries.map(e=>e.depositPercent)).toEqual([50,50]);
+  expect(INITIAL_CAMPAIGN.entries.map(e=>e.depositPercent)).toEqual([50,50,null,null,null]);
  });
  it("rejects negative amounts, impossible percentages and duplicate projects",()=>{
   const [a]=INITIAL_CAMPAIGN.entries;
@@ -36,7 +36,17 @@ describe("public campaign receipts", () => {
   const next={dreamers:3,entries:[...INITIAL_CAMPAIGN.entries,{id:"test-project",project:"Test project",receivedKobo:10000,depositPercent:50,receivedOn:"2026-11-13",bankReference:"PRIVATE"}]};
   await saveCampaignTracker({data:next});const saved=await getCampaignTracker();
   expect(m.admin).toHaveBeenCalledWith(["owner"]);expect(saved.dreamers).toBe(3);
-  expect(campaignTotals(saved).receivedKobo).toBe(51_509_200);
+  expect(campaignTotals(saved).receivedKobo).toBe(67_709_200);
   expect(JSON.stringify(saved)).not.toContain("PRIVATE");
+ });
+});
+
+describe("statement reconciliation", () => {
+ it("reconciles every credit while excluding internal and uncertain inflows from customer receipts", () => {
+  const r=STATEMENT_REVIEW;
+  expect(r.ownTransfersKobo+r.internalTransfersKobo+r.unclassifiedKobo+r.confirmedReceiptsKobo).toBe(r.grossCreditsKobo);
+  expect(campaignTotals(INITIAL_CAMPAIGN).receivedKobo).toBe(r.confirmedReceiptsKobo);
+  expect(INITIAL_CAMPAIGN.entries.filter(e=>e.id==='vanity-flex')).toHaveLength(1);
+  expect(Math.round(r.confirmedReceiptsKobo/100)).toBe(676992);
  });
 });
