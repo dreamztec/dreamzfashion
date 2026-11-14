@@ -25,7 +25,9 @@ function LoginPage() {
   const { user, loading, login, signup, recover, error, clearError, notice, passwordAction, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { returnTo } = Route.useSearch();
-  const safeReturnTo = returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/account";
+  const pendingReturnTo = typeof window !== "undefined" ? sessionStorage.getItem("dfk-auth-return-to") : null;
+  const desiredReturnTo = returnTo || pendingReturnTo;
+  const safeReturnTo = desiredReturnTo && desiredReturnTo.startsWith("/") && !desiredReturnTo.startsWith("//") ? desiredReturnTo : "/account";
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -45,7 +47,10 @@ function LoginPage() {
 
   // Signed-in users return to the work they were doing, otherwise dashboard.
   useEffect(() => {
-    if (!loading && user && !passwordAction) void navigate({ to: safeReturnTo, replace: true });
+    if (!loading && user && !passwordAction) {
+      sessionStorage.removeItem("dfk-auth-return-to");
+      void navigate({ to: safeReturnTo, replace: true });
+    }
   }, [user, loading, navigate, passwordAction, safeReturnTo]);
 
   async function onSubmit(e: FormEvent) {
@@ -67,19 +72,26 @@ function LoginPage() {
       if (err) {
         setLocalError(err);
       } else {
-        try {
-          void fetch("/api/event", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: mode === "login" ? "login" : "account_created" }),
-            keepalive: true,
-          }).catch(() => undefined);
-        } catch {
-          /* analytics never blocks auth */
+        // A submitted registration is not yet a verified customer account.
+        // Only record successful logins; confirmation completes signup later.
+        if (mode === "login") {
+          try {
+            void fetch("/api/event", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ name: "login" }),
+              keepalive: true,
+            }).catch(() => undefined);
+          } catch {
+            /* analytics never blocks auth */
+          }
         }
         setPassword("");
         setConfirmPassword("");
-        if (mode === "login") void navigate({ to: safeReturnTo });
+        if (mode === "login") {
+          sessionStorage.removeItem("dfk-auth-return-to");
+          void navigate({ to: safeReturnTo });
+        }
       }
     } finally {
       setBusy(false);

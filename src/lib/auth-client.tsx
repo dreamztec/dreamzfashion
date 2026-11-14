@@ -108,10 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           void navigate({ to: "/account/login", replace: true });
         } else if (callback) {
           emailChangeToken.current = null;
-          setNotice(callback.type === "confirmation" ? "Your DREAMZ email is verified. Welcome to your account." : callback.type === "email_change" ? "Your email address is updated." : "Welcome to your DREAMZ account.");
-          const target = authReturnTarget();
-          if (target === "/account") void navigate({ to: "/account", replace: true });
-          else window.location.replace(target);
+          if (callback.type === "confirmation" && !current) {
+            // Confirmation verifies the email but does not necessarily create a
+            // logged-in session. Do not send a signed-out customer to a private page.
+            setNotice("Your DREAMZ email is verified. Sign in to open your account.");
+            const pending = sessionStorage.getItem("dfk-auth-return-to");
+            const returnTo = pending?.startsWith("/") && !pending.startsWith("//") ? pending : undefined;
+            void navigate({ to: "/account/login", search: { reset: undefined, returnTo }, replace: true });
+          } else {
+            setNotice(callback.type === "confirmation" ? "Your DREAMZ email is verified. Welcome to your account." : callback.type === "email_change" ? "Your email address is updated." : "Welcome to your DREAMZ account.");
+            const target = authReturnTarget();
+            if (target === "/account") void navigate({ to: "/account", replace: true });
+            else window.location.replace(target);
+          }
         }
       } catch {
         if (!cancelled) {
@@ -157,7 +166,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNotice("Check your email to verify your DREAMZ account.");
         return null;
       }
-      setUser(toAuthUser(await getUser()));
+      // Even with automatic email confirmation, Identity might return a user
+      // record before establishing a browser session. Do not pretend login worked.
+      const signedInUser = await getUser();
+      if (!signedInUser) {
+        setUser(null);
+        setNotice("Your DREAMZ account is ready. Sign in to continue.");
+        return null;
+      }
+      setUser(toAuthUser(signedInUser));
       await syncProfile();
       return null;
     } catch (err) {

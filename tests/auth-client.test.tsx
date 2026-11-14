@@ -234,4 +234,45 @@ describe("Customer authentication UI and SDK integration", () => {
     act(() => { for (const listener of mocks.listeners) listener("login", { ...confirmedUser, id: "different-identity-user" }); });
     await waitFor(() => expect(mocks.outletMounted).toHaveBeenCalledTimes(2));
   });
+  it("keeps confirmed-but-signed-out customers on the sign-in route", async () => {
+    mocks.handleAuthCallback.mockResolvedValue({ type: "confirmation", user: null });
+    mocks.getUser.mockResolvedValue(null);
+    render(<AuthProvider><SessionProbe /></AuthProvider>);
+    await waitFor(() =>
+      expect(mocks.navigate).toHaveBeenCalledWith({
+        to: "/account/login",
+        search: { reset: undefined, returnTo: undefined },
+        replace: true,
+      }),
+    );
+    expect(screen.getByTestId("session").textContent).toBe("signed-out");
+  });
+
+  it("returns a Studio customer to their saved design after signing in", async () => {
+    sessionStorage.setItem("dfk-auth-return-to", "/custom?start=1");
+    mocks.login.mockResolvedValue(confirmedUser);
+    await openLogin();
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "customer@example.com" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "test-input-only" } });
+    fireEvent.click(screen.getByText("Sign In"));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith({ to: "/custom?start=1" }));
+    expect(sessionStorage.getItem("dfk-auth-return-to")).toBeNull();
+  });
+
+  it("asks an auto-confirmed customer to sign in if Identity did not create a session", async () => {
+    mocks.signup.mockResolvedValue(confirmedUser);
+    mocks.getUser.mockResolvedValue(null);
+    await openLogin();
+    fireEvent.click(screen.getByText("Create an account"));
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "DREAMZ Test" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "customer@example.com" } });
+    fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "08031234567" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "test-input-only" } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "test-input-only" } });
+    fireEvent.click(screen.getByText("Create My DREAMZ Account"));
+    await screen.findByText("Your DREAMZ account is ready. Sign in to continue.");
+    expect(screen.getByTestId("session").textContent).toBe("signed-out");
+    expect(mocks.profile).not.toHaveBeenCalled();
+  });
+
 });

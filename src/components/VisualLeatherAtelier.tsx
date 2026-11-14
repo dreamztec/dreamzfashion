@@ -281,10 +281,12 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         result?: AtelierResult | null;
         referenceIds?: string[];
         generatedImageRefId?: string;
+        currentBriefId?: number;
         step?: number;
       };
       if (pending.answers) setAnswers({ ...INITIAL, ...pending.answers });
       if (pending.result) setResult(pending.result);
+      if (Number.isInteger(pending.currentBriefId) && (pending.currentBriefId ?? 0) > 0) setCurrentBriefId(pending.currentBriefId);
       if (pending.generatedImageRefId) {
         setGeneratedImageRefId(pending.generatedImageRefId);
         setGeneratedImagePreview("/api/design-references/" + pending.generatedImageRefId);
@@ -312,20 +314,33 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     try {
       localStorage.setItem(
         STUDIO_SESSION_KEY,
-        JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
+        JSON.stringify({ answers, result, referenceIds, generatedImageRefId, currentBriefId, step }),
       );
     } catch {
       // Browser storage is a convenience only.
     }
-  }, [answers, result, referenceIds, generatedImageRefId, step, briefId]);
+  }, [answers, result, referenceIds, generatedImageRefId, currentBriefId, step, briefId]);
+
+  // An image rendered from an old prompt must never accompany edited materials,
+  // colours or construction on a public product page.
+  const designVersion = useRef(0);
+  const invalidateRender = () => {
+    designVersion.current += 1;
+    setResult(null);
+    setGeneratedImageRefId("");
+    setGeneratedImagePreview("");
+    setHasCopiedPrompt(false);
+    setCopiedPrompt(false);
+    setPublished(null);
+  };
 
   const set = <K extends keyof Answers>(key: K, value: Answers[K]) => {
     setAnswers((current) => ({ ...current, [key]: value }));
     // Product naming and landing-page copy happen after the render prompt is composed.
     // Editing them must never throw the customer back out of the completed Review step.
     const presentationOnly = key === "productName" || key === "landingHeadline" || key === "landingStory";
-    if (!presentationOnly) setResult(null);
-    setPublished(null);
+    if (!presentationOnly) invalidateRender();
+    else setPublished(null);
   };
 
   const toggleList = (key: "meaning" | "feel", value: string, max = 5) => {
@@ -340,8 +355,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
             : [...current[key], value],
       };
     });
-    setResult(null);
-    setPublished(null);
+    invalidateRender();
   };
 
   const chooseCategory = (category: AtelierCategory) => {
@@ -351,8 +365,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       piece: "",
       construction: {},
     }));
-    setResult(null);
-    setPublished(null);
+    invalidateRender();
   };
 
   const chooseProjectMode = (mode: Answers["projectMode"], minPlan: string) => {
@@ -370,8 +383,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       material: material.label,
       texture: current.texture && allowed.has(current.texture) ? current.texture : "",
     }));
-    setResult(null);
-    setPublished(null);
+    invalidateRender();
   };
 
   const chooseFinish = (finish: (typeof FINISH_VISUALS)[number]) => {
@@ -391,8 +403,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       ...current,
       construction: { ...current.construction, [key]: value },
     }));
-    setResult(null);
-    setPublished(null);
+    invalidateRender();
   };
 
   const automaticLandingHeadline = () =>
@@ -447,7 +458,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
         textarea.style.opacity = "0";
         document.body.appendChild(textarea);
         textarea.select();
-        document.execCommand("copy");
+        if (!document.execCommand("copy")) throw new Error("Copy was blocked");
         document.body.removeChild(textarea);
       }
       setCopiedPrompt(true);
@@ -479,6 +490,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     }
     setBusy(true);
     setNotice(null);
+    const requestVersion = designVersion.current;
     try {
       const response = await composeDreamToLeather({
         data: {
@@ -516,6 +528,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           budgetNaira: answers.budgetNaira,
         },
       });
+      if (requestVersion !== designVersion.current) return;
       if (!response.ok) {
         setNotice(response.message);
         return;
@@ -560,9 +573,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     if (typeof window === "undefined") return;
     localStorage.setItem(
       STUDIO_SESSION_KEY,
-      JSON.stringify({ answers, result, referenceIds, generatedImageRefId, step }),
+      JSON.stringify({ answers, result, referenceIds, generatedImageRefId, currentBriefId, step }),
     );
-    sessionStorage.setItem("dfk-auth-return-to", currentBriefId ? "/custom?brief=" + currentBriefId : "/custom?start=1");
+    sessionStorage.setItem("dfk-auth-return-to", "/custom?start=1");
   };
 
 
@@ -634,15 +647,15 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       setNotice("You can attach up to " + REFERENCE_LIMITS.maxFiles + " private reference images.");
       return;
     }
-    const problem = precheckFile(file);
-    if (problem) {
-      setNotice(problem);
-      return;
-    }
     setUploadBusy(true);
     setNotice(null);
     try {
       const uploadFile = await optimiseImageForUpload(file);
+      const problem = precheckFile(uploadFile);
+      if (problem) {
+        setNotice(problem);
+        return;
+      }
       const form = new FormData();
       form.append("file", uploadFile);
       const response = await fetch("/api/design-references", { method: "POST", body: form });
@@ -651,8 +664,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       const url = URL.createObjectURL(file);
       setReferenceIds((items) => [...items, json.refId!]);
       setReferencePreviews((items) => [...items, { id: json.refId!, name: file.name, url }]);
-      setResult(null);
-      setPublished(null);
+      invalidateRender();
     } catch (error) {
       setNotice(error instanceof Error ? error.message : "The reference image could not be uploaded.");
     } finally {
@@ -661,15 +673,15 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   };
 
   const handleGeneratedImageUpload = async (file: File) => {
-    const problem = precheckFile(file);
-    if (problem) {
-      setNotice(problem);
-      return;
-    }
     setUploadBusy(true);
     setNotice(null);
     try {
       const uploadFile = await optimiseImageForUpload(file);
+      const problem = precheckFile(uploadFile);
+      if (problem) {
+        setNotice(problem);
+        return;
+      }
       const form = new FormData();
       form.append("file", uploadFile);
       const response = await fetch("/api/design-references", { method: "POST", body: form });
@@ -1334,8 +1346,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                           onClick={() => {
                             setReferenceIds((items) => items.filter((id) => id !== image.id));
                             setReferencePreviews((items) => items.filter((item) => item.id !== image.id));
-                            setResult(null);
-                            setPublished(null);
+                            invalidateRender();
                           }}
                           className="text-[0.62rem] underline mt-2"
                         >
@@ -1516,7 +1527,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                   {!user && (
                     <Link
                       to="/account/login"
-                      search={{ reset: undefined, returnTo: "/custom" }}
+                      search={{ reset: undefined, returnTo: "/custom?start=1" }}
                       onClick={stashForSignIn}
                       className="nav-link inline-block mt-4 text-xs"
                     >

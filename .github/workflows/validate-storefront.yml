@@ -15,5 +15,31 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --no-audit --no-fund
-      - run: npx vitest run tests/visual-studio.test.ts tests/leather-house.test.ts tests/storefront-rules.test.ts
+      # GitHub Actions has no access to the managed Netlify Database.
+      # The two DB-importing suites (catalog-pricing, commerce-tiers-deposits)
+      # require the Netlify environment and remain part of deployment checks.
+      - name: Run all database-independent unit tests
+        run: >
+          npx vitest run
+          tests/auth-client.test.tsx
+          tests/leather-house.test.ts
+          tests/visual-studio.test.ts
+          tests/product-images.test.ts
+          tests/storefront-rules.test.ts
+          tests/meaning-catalog.test.ts
+          tests/originals-catalog.test.ts
+          tests/checkout-attribution-ledger.test.ts
+          tests/originals-front-edit.test.ts
+          tests/collections-partnerships.test.ts
+          tests/new-drop-drafts.test.ts
+          tests/format.test.ts
+          tests/auth-server.test.ts
+          tests/paystack-webhook.test.ts
+          tests/task-engine.test.ts
+          tests/identity-session.test.ts
+          tests/auth-errors.test.ts
+          tests/media-route.test.ts
+          tests/passports.test.ts
+          tests/campaign-tracker.test.ts
+      - run: npm run typecheck
       - run: npm run build
