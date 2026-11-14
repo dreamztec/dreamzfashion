@@ -15,5 +15,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --no-audit --no-fund
-      - run: npx vitest run tests/visual-studio.test.ts tests/leather-house.test.ts tests/storefront-rules.test.ts
+      - run: npm test
+      - run: npm run typecheck
       - run: npm run build
