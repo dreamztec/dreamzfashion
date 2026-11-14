@@ -2,18 +2,20 @@ import { createServerFn } from "@tanstack/react-start";
 import { eq } from "drizzle-orm";
 import { db } from "../../db/index";
 import { settings } from "../../db/schema";
-import { CampaignSchema, INITIAL_CAMPAIGN } from "@/lib/campaign-tracker";
+import { CampaignSchema, INITIAL_CAMPAIGN, mergeStatementReceiptSnapshot } from "@/lib/campaign-tracker";
 import { requireAdminRole } from "./admin-auth.server";
 const key = "billion_naira_campaign";
 export const getCampaignTracker = createServerFn({ method: "GET" }).handler(async () => {
   const [row] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
   if (!row) return INITIAL_CAMPAIGN;
   const saved = CampaignSchema.parse(row.value);
-  // Upgrade only the unchanged two-receipt launch snapshot; preserve later owner edits.
-  if ((!row.updatedAt || row.updatedAt.getTime() < Date.parse(INITIAL_CAMPAIGN.updatedAt)) && saved.entries.length === 2 && saved.entries.every(e => INITIAL_CAMPAIGN.entries.some(i => i.id === e.id && i.receivedKobo === e.receivedKobo))) {
-    return { ...INITIAL_CAMPAIGN, dreamers: saved.dreamers };
-  }
-  return { ...saved, updatedAt: row.updatedAt?.toISOString() || INITIAL_CAMPAIGN.updatedAt };
+  // Public data can be an old two- or five-receipt database snapshot. Add
+  // the newly reviewed individual credits once, preserving later owner edits.
+  // The owner may explicitly correct/remove entries after this revision.
+  return mergeStatementReceiptSnapshot({
+    ...saved,
+    updatedAt: row.updatedAt?.toISOString() || "1970-01-01T00:00:00.000Z",
+  });
 });
 export const saveCampaignTracker = createServerFn({ method: "POST" })
   .validator(CampaignSchema)
