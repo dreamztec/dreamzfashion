@@ -40,8 +40,16 @@ function partLabels(n: string): string {
 export function studioIllustration(label: string, colour?: string): string {
   const n = label.toLowerCase();
   const leatherFill = leatherColour(colour);
+  // Seams must stay legible on black/navy/oxblood, not disappear into the fill.
+  const rgb = leatherFill.length === 7
+    ? [1,3,5].map(i => parseInt(leatherFill.slice(i, i+2),16))
+    : leatherFill.length === 4
+      ? [1,2,3].map(i => parseInt(leatherFill[i]+leatherFill[i],16))
+      : [255,255,255];
+  const luminance = 0.2126*rgb[0]+0.7152*rgb[1]+0.0722*rgb[2];
+  const seamInk = luminance < 108 ? "#fff7ed" : "#161616";
   const outline = (d: string) => `<path d="${d}" fill="${leatherFill}" stroke="#171717" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>`;
-  const line = (d: string, dash = false) => `<path d="${d}" fill="none" stroke="#161616" stroke-width="${dash ? '.75' : '1.15'}" ${dash ? 'stroke-dasharray="2.2 2.2"' : ''} stroke-linecap="round" stroke-linejoin="round"/>`;
+  const line = (d: string, dash = false) => `<path d="${d}" fill="none" stroke="${seamInk}" stroke-width="${dash ? '.85' : '1.25'}" ${dash ? 'stroke-dasharray="2.2 2.2"' : ''} stroke-linecap="round" stroke-linejoin="round"/>`;
   const neutralOutline = (d: string) => `<path d="${d}" fill="#f9f9f7" stroke="#171717" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"/>`;
   const circle = (x: number,y: number,r=2) => `<circle cx="${x}" cy="${y}" r="${r}" fill="white" stroke="#161616" stroke-width="1.1"/>`;
   const shoeSole = neutralOutline('M38 170 Q81 174 119 169 Q172 182 259 173 Q278 171 279 180 Q275 190 234 190 L147 190 Q121 190 102 183 L84 183 L83 191 L38 191Z') + line('M41 177 Q82 181 118 176 Q172 188 261 179 M41 187 H80');
