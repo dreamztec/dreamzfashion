@@ -259,4 +259,20 @@ describe("Customer authentication UI and SDK integration", () => {
     expect(sessionStorage.getItem("dfk-auth-return-to")).toBeNull();
   });
 
+  it("asks an auto-confirmed customer to sign in if Identity did not create a session", async () => {
+    mocks.signup.mockResolvedValue(confirmedUser);
+    mocks.getUser.mockResolvedValue(null);
+    await openLogin();
+    fireEvent.click(screen.getByText("Create an account"));
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "DREAMZ Test" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "customer@example.com" } });
+    fireEvent.change(screen.getByLabelText("Phone number"), { target: { value: "08031234567" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "test-input-only" } });
+    fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: "test-input-only" } });
+    fireEvent.click(screen.getByText("Create My DREAMZ Account"));
+    await screen.findByText("Your DREAMZ account is ready. Sign in to continue.");
+    expect(screen.getByTestId("session").textContent).toBe("signed-out");
+    expect(mocks.profile).not.toHaveBeenCalled();
+  });
+
 });
