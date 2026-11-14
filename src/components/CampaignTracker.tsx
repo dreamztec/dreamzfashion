@@ -20,15 +20,16 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
       <div className="max-w-3xl">
         <p className="overline-label !text-brand-purple">DESIGN YOUR DREAM · OUR JOURNEY</p>
         <h2 id="campaign-title" className="font-editorial text-4xl sm:text-6xl mt-3">Dream outfits. Real progress.</h2>
-        <p className="mt-4 text-base sm:text-lg">We’re working toward helping <strong>1,000,000 people design their dream outfit</strong>. Follow our verified customer receipts, including earlier payments identified in the business statements.</p>
+        <p className="mt-4 text-base sm:text-lg">We’re working toward helping <strong>1,000,000 people achieve their dreams</strong>. Every identifiable customer payment helps move the DREAMZ billion-naira journey forward. We count people only once, even when they pay in instalments.</p>
       </div>
       <p className="text-xs text-stone">Confirmed by DREAMZ<br/>Updated {updated}</p>
     </div>
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
       {[
-        ["Customer payments received", formatNaira(totals.receivedKobo), "Confirmed deposits and payments for orders", "var(--color-brand-green)"],
-        ["Dreamers so far", data.dreamers.toLocaleString("en-NG"), "People who have designed their outfit", "var(--color-brand-blue)"],
-        ["More dreamers to reach", totals.dreamersRemaining.toLocaleString("en-NG"), "Our goal: at least 1,000,000 people", "var(--color-brand-purple)"],
+        ["Identified customer receipts", formatNaira(totals.receivedKobo), "Money received, including the two 50% deposits", "var(--color-brand-green)"],
+        ["People behind the receipts", data.dreamers.toLocaleString("en-NG"), "Distinct named payers; repeat payments count once", "var(--color-brand-blue)"],
+        ["Incoming payments recorded", totals.receiptCount.toLocaleString("en-NG"), "One entry per identifiable receipt; not new people", "var(--color-gold)"],
+        ["People still to reach", totals.dreamersRemaining.toLocaleString("en-NG"), "Our goal: 1,000,000 people", "var(--color-brand-purple)"],
       ].map(([label, value, note, colour]) => <div key={label} className="campaign-card bg-white border-x border-b border-ink/10 p-5 sm:p-6" style={{ "--card-colour": colour } as CSSProperties}>
         <p className="text-xs uppercase tracking-wider font-semibold">{label}</p>
         <p className="font-sans font-bold text-2xl sm:text-3xl mt-4 break-words tabular-nums">{value}</p>
@@ -36,25 +37,26 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
       </div>)}
     </div>
     <div className="mt-7">
-      <div><div className="flex justify-between text-xs mb-3"><span>1 million dreamers</span><strong>{totals.dreamerPercent.toFixed(4)}%</strong></div><progress className="campaign-progress" aria-label="Dreamers toward one million people" value={Math.min(data.dreamers,DREAMER_TARGET)} max={DREAMER_TARGET}/></div>
+      <div><div className="flex justify-between text-xs mb-3"><span>People backing the DREAMZ journey · 1 million goal</span><strong>{totals.dreamerPercent.toFixed(4)}%</strong></div><progress className="campaign-progress" aria-label="Identified individuals toward one million people" value={Math.min(data.dreamers,DREAMER_TARGET)} max={DREAMER_TARGET}/></div>
+      <div className="mt-5"><div className="flex justify-between text-xs mb-3"><span>Identified customer receipts · ₦1 billion vision</span><strong>{totals.billionReceiptsPercent.toFixed(4)}%</strong></div><progress className="campaign-progress" aria-label="Customer-attributed cash receipts toward one billion naira" value={Math.min(totals.billionReceiptsPercent,100)} max={100}/></div>
     </div>
-    <p className="text-sm text-stone mt-5">This is DREAMZ Fashion’s customer-payment record, not a donation fund or a profit total. Only confirmed payments are counted; unpaid balances are excluded. These are the records confirmed so far, not a complete history of business revenue. Dreamers are counted as people, not items ordered.</p>
+    <p className="text-sm text-stone mt-5">These figures are based on bank credits attributed to individual customers by DREAMZ, not total bank inflows, accounting revenue, profit or completed deliveries. Unpaid balances are excluded. The people counter counts distinct identified payers, not payments, products or independently verified Studio designs.</p>
     {full && <section className="mt-8 border border-ink/15 bg-white p-6" aria-label="Statement reconciliation">
       <h3 className="font-editorial text-3xl">What the statements confirm</h3>
-      <p className="mt-3 text-sm">Reviewed period: {STATEMENT_REVIEW.period}. Moniepoint ends 14 November; GTBank ends 13 November. The original two deposits are included once. Earlier receipts do not mean three new Design Your Dream participants.</p>
+      <p className="mt-3 text-sm">Reviewed period: {STATEMENT_REVIEW.period}. Moniepoint ends 14 November; GTBank ends 13 November. Two 50% deposits are included once. {STATEMENT_REVIEW.identifiedPaymentEvents} individual payment events are attributed to {STATEMENT_REVIEW.identifiedIndividualPayers} distinct named payers; one payer appears twice. No bank account numbers or payer names are displayed.</p>
       <dl className="grid sm:grid-cols-2 gap-4 mt-5 text-sm">
         {[["Total credits across both accounts",STATEMENT_REVIEW.grossCreditsKobo],["Own-account transfers excluded",STATEMENT_REVIEW.ownTransfersKobo],["Transfers between business accounts excluded",STATEMENT_REVIEW.internalTransfersKobo],["Other inflows awaiting sales verification",STATEMENT_REVIEW.unclassifiedKobo]].map(([label,amount])=><div key={label}><dt className="text-stone">{label}</dt><dd className="font-semibold mt-1">{formatNaira(Number(amount),2)}</dd></div>)}
       </dl>
-      <p className="mt-5 text-sm">Only payments identified as shoe/slipper orders or already confirmed deposits are included in the customer-payment total. Other named senders and withdrawal/settlement descriptions still need matching to orders. These are cash receipts, not a claim of profit or fully earned revenue.</p>
-      <p className="mt-4 font-semibold">1% of the verified statement receipts: {formatNaira(Math.round(STATEMENT_REVIEW.confirmedReceiptsKobo/100),2)}.</p>
-      <p className="mt-2 text-sm text-stone">This is a calculated contribution allocation, not evidence of a completed Dream Fund transfer.</p>
+      <p className="mt-5 text-sm">The tracker adds named individual inflows treated by the business owner as customer receipts. Credits from companies, transactions labelled as cash withdrawals, small unexplained/test transfers and logistics settlements remain outside the customer total pending order evidence. A bank credit alone does not establish that an outfit was designed, produced or delivered.</p>
+      <p className="mt-4 font-semibold">Indicative 1% Dream Fund allocation on these identified receipts: {formatNaira(Math.round(totals.receivedKobo/100),2)}.</p>
+      <p className="mt-2 text-sm text-stone">This is a planning calculation only. The actual sales-eligible contribution and any completed fund transfer require separate reconciliation.</p>
     </section>}
     {full && <div className="mt-10">
       <h3 className="font-editorial text-3xl mb-5">Customer receipts reviewed</h3>
       <div className="grid md:grid-cols-2 gap-5">{data.entries.map((entry,i)=><article key={entry.id} className="border border-ink/15 bg-white p-6">
         <p className="text-xs uppercase tracking-wider text-brand-purple">RECEIPT {String(i+1).padStart(3,"0")}</p><h4 className="font-editorial text-3xl mt-2">{entry.project}</h4>
         <p className="font-bold text-2xl mt-5">{formatNaira(entry.receivedKobo)}</p>
-        <p className="text-sm mt-2"><strong>{entry.depositPercent === null ? "Customer payment received · order percentage not recorded" : `${entry.depositPercent}% ${entry.depositPercent===100?"payment":"deposit"} received`}</strong></p>
+        <p className="text-sm mt-2"><strong>{entry.depositPercent === null ? "Bank receipt recorded · order percentage not recorded" : `${entry.depositPercent}% ${entry.depositPercent===100?"payment":"deposit"} received`}</strong></p>
         <p className="text-sm text-stone mt-2">Received {new Intl.DateTimeFormat("en-GB",{day:"numeric",month:"long",year:"numeric",timeZone:"Africa/Lagos"}).format(new Date(entry.receivedOn+"T12:00:00Z"))}</p>
         {entry.depositPercent !== null && entry.depositPercent < 100 && <p className="text-xs text-stone mt-4">The remaining balance is excluded from the cash total.</p>}
       </article>)}</div>
@@ -64,9 +66,9 @@ export function CampaignTracker({ data, full = false }: { data: CampaignData; fu
       {full ? <button type="button" onClick={()=>void share()} className="btn-lux btn-lux-outline">Share the journey</button> : <Link to="/our-progress" className="btn-lux btn-lux-outline">See the progress & deposits →</Link>}
     </div>
     <div className="mt-8 border-t border-ink/15 pt-6 text-sm">
-      <p className="font-semibold">Your purchase helps build the Dream Fund.</p>
+      <p className="font-semibold">Your purchase can help build the Dream Fund.</p>
       <p className="text-stone mt-2">DREAMZ commits 1% of every sale to the Dreams to Reality Dream Fund, with a goal of ₦1 billion to help people pursue their dreams. This contribution comes from DREAMZ’s sales proceeds; it is not an extra charge to you.</p>
-      <p className="text-stone mt-2">Sales and deposits above remain business receipts. A 1% commitment is not a completed transfer: fund receipts and support paid out will be reported separately. No transfer total has been confirmed yet.</p>
+      <p className="text-stone mt-2">The bank inflows above are a working customer-attribution record. A 1% commitment is not a completed transfer: fund receipts and support paid out will be reported separately. No transfer total has been confirmed yet.</p>
       <a href="https://mydreamnetwork.dreamz-gc.com/dream-fund" className="inline-block mt-3 underline underline-offset-4 font-semibold">Explore the Dream Fund ↗</a>
     </div>
     {shareStatus && <p role="status" className="text-sm mt-3">{shareStatus}</p>}
