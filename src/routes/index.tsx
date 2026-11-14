@@ -87,37 +87,12 @@ function Home() {
         </div>
 
         <CampaignTracker data={campaign} />
-        <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-8 pb-12">
-          <Link
-            to="/dreams"
-            className="group relative block overflow-hidden border border-ink bg-ink px-5 py-7 sm:px-9 sm:py-9 text-ivory transition hover:border-gold"
-          >
-            <div className="absolute inset-x-0 top-0 h-1.5 rainbow-rule" aria-hidden="true" />
-            <div className="grid gap-7 lg:grid-cols-[1.1fr_.9fr] lg:items-end text-left">
-              <div>
-                <p className="overline-label !text-gold-soft">DREAMZ 200 · Dream Design Challenge</p>
-                <h2 className="font-editorial text-3xl sm:text-5xl mt-2">Design your dream. Let the best designs win.</h2>
-                <p className="mt-4 text-sm text-ivory/70 leading-relaxed max-w-2xl">
-                  Create a leather product, publish it with a unique Dream Code, validate real demand and compete on design quality — not popularity alone.
-                </p>
-              </div>
-              <div>
-                <p className="font-editorial text-5xl sm:text-6xl text-gold-soft">₦1,000,000</p>
-                <p className="text-sm uppercase tracking-btn mt-1">Total prize pool*</p>
-                <p className="mt-3 text-sm text-ivory/70">₦500k cash + ₦500k DREAMZ products · Top 5 · Plus paid Studio passes</p>
-              </div>
-            </div>
-            <div className="mt-6 grid gap-2 sm:grid-cols-3 text-[0.62rem] uppercase tracking-btn text-ivory/65">
-              <span>20% minimum production deposit</span>
-              <span>Dream Code tracking</span>
-              <span>Eligible GIGL COD/TOD</span>
-            </div>
-            <p className="mt-5 text-[0.6rem] text-ivory/45">
-              *Design/order offer is live. Prize challenge activates subject to required promotional approval and published rules.
-            </p>
-            <span className="nav-link inline-block mt-4 text-[0.68rem] uppercase tracking-btn text-gold-soft">See prizes, rules & market pulse →</span>
-          </Link>
-        </div>
+        <section className="mx-auto max-w-6xl px-5 sm:px-8 py-10">
+          <p className="overline-label">THE COMMUNITY ATELIER</p>
+          <h2 className="font-editorial text-4xl mt-3">Your story. Your design. Your dream pair.</h2>
+          <p className="mt-4 max-w-2xl">Choose your product and details, create your design brief, then upload your generated image to share your dream with the world.</p>
+          <Link to="/dreams" className="btn-lux btn-lux-outline mt-6">Explore community designs →</Link>
+        </section>
 
         {/* The Boot of Many Colours — principal hero product, shown whole. */}
         {hero && (
