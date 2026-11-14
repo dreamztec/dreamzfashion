@@ -369,6 +369,14 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
     invalidateRender();
   };
 
+  const choosePiece = (piece: string) => {
+    if (answers.piece === piece) return;
+    // Prevent Oxford facings / sole options from following the customer into
+    // a different product type such as a Derby, tote or leather jacket.
+    setAnswers((current) => ({ ...current, piece, construction: {} }));
+    invalidateRender();
+  };
+
   const chooseProjectMode = (mode: Answers["projectMode"], minPlan: string) => {
     if (!hasMinPlan(planId, minPlan)) {
       setNotice("Client and Family Modes are Studio features. Your free designs still work for yourself or someone else.");
@@ -877,7 +885,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                         <button
                           key={piece}
                           type="button"
-                          onClick={() => set("piece", piece)}
+                          onClick={() => choosePiece(piece)}
                           className={"overflow-hidden border text-left " + (answers.piece === piece ? "border-ink bg-ivory-deep" : "border-ink/10")}
                         >
                           <div className="aspect-square bg-ivory-deep overflow-hidden">
