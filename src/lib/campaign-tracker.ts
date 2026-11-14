@@ -12,7 +12,6 @@ export const CampaignSchema = z.object({
   entries: z.array(CampaignEntrySchema).max(1000),
 }).refine(v => new Set(v.entries.map(e => e.id)).size === v.entries.length, "Each project must have a unique reference");
 export type CampaignData = z.infer<typeof CampaignSchema> & { updatedAt: string };
-export const CAMPAIGN_TARGET_KOBO = 100_000_000_000;
 export const DREAMER_TARGET = 1_000_000;
 // Owner-confirmed receipts, 13 November 2026. No bank or customer identifiers belong here.
 export const INITIAL_CAMPAIGN: CampaignData = {
@@ -27,8 +26,6 @@ export function campaignTotals(data: Pick<CampaignData, "entries" | "dreamers">)
   const receivedKobo = data.entries.reduce((sum, entry) => sum + entry.receivedKobo, 0);
   return {
     receivedKobo,
-    remainingKobo: Math.max(0, CAMPAIGN_TARGET_KOBO - receivedKobo),
-    moneyPercent: receivedKobo / CAMPAIGN_TARGET_KOBO * 100,
     dreamersRemaining: Math.max(0, DREAMER_TARGET - data.dreamers),
     dreamerPercent: data.dreamers / DREAMER_TARGET * 100,
   };

@@ -25,6 +25,7 @@ import { Route as Dreamz5RouteImport } from './routes/dreamz-5'
 import { Route as EarnRouteImport } from './routes/earn'
 import { Route as FeedbackRouteImport } from './routes/feedback'
 import { Route as LookbookRouteImport } from './routes/lookbook'
+import { Route as OurProgressRouteImport } from './routes/our-progress'
 import { Route as PartnerWithDreamzRouteImport } from './routes/partner-with-dreamz'
 import { Route as PartnershipsRouteImport } from './routes/partnerships'
 import { Route as PoliciesRouteImport } from './routes/policies'
@@ -166,6 +167,11 @@ const FeedbackRoute = FeedbackRouteImport.update({
 const LookbookRoute = LookbookRouteImport.update({
   id: '/lookbook',
   path: '/lookbook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OurProgressRoute = OurProgressRouteImport.update({
+  id: '/our-progress',
+  path: '/our-progress',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PartnerWithDreamzRoute = PartnerWithDreamzRouteImport.update({
@@ -498,6 +504,7 @@ export interface FileRoutesByFullPath {
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
   '/lookbook': typeof LookbookRoute
+  '/our-progress': typeof OurProgressRoute
   '/partner-with-dreamz': typeof PartnerWithDreamzRoute
   '/partnerships': typeof PartnershipsRoute
   '/policies': typeof PoliciesRoute
@@ -577,6 +584,7 @@ export interface FileRoutesByTo {
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
   '/lookbook': typeof LookbookRoute
+  '/our-progress': typeof OurProgressRoute
   '/partner-with-dreamz': typeof PartnerWithDreamzRoute
   '/partnerships': typeof PartnershipsRoute
   '/policies': typeof PoliciesRoute
@@ -658,6 +666,7 @@ export interface FileRoutesById {
   '/earn': typeof EarnRoute
   '/feedback': typeof FeedbackRoute
   '/lookbook': typeof LookbookRoute
+  '/our-progress': typeof OurProgressRoute
   '/partner-with-dreamz': typeof PartnerWithDreamzRoute
   '/partnerships': typeof PartnershipsRoute
   '/policies': typeof PoliciesRoute
@@ -740,6 +749,7 @@ export interface FileRouteTypes {
     | '/earn'
     | '/feedback'
     | '/lookbook'
+    | '/our-progress'
     | '/partner-with-dreamz'
     | '/partnerships'
     | '/policies'
@@ -819,6 +829,7 @@ export interface FileRouteTypes {
     | '/earn'
     | '/feedback'
     | '/lookbook'
+    | '/our-progress'
     | '/partner-with-dreamz'
     | '/partnerships'
     | '/policies'
@@ -899,6 +910,7 @@ export interface FileRouteTypes {
     | '/earn'
     | '/feedback'
     | '/lookbook'
+    | '/our-progress'
     | '/partner-with-dreamz'
     | '/partnerships'
     | '/policies'
@@ -980,6 +992,7 @@ export interface RootRouteChildren {
   EarnRoute: typeof EarnRoute
   FeedbackRoute: typeof FeedbackRoute
   LookbookRoute: typeof LookbookRoute
+  OurProgressRoute: typeof OurProgressRoute
   PartnerWithDreamzRoute: typeof PartnerWithDreamzRoute
   PartnershipsRoute: typeof PartnershipsRoute
   PoliciesRoute: typeof PoliciesRoute
@@ -1141,6 +1154,13 @@ declare module '@tanstack/react-router' {
       path: '/lookbook'
       fullPath: '/lookbook'
       preLoaderRoute: typeof LookbookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/our-progress': {
+      id: '/our-progress'
+      path: '/our-progress'
+      fullPath: '/our-progress'
+      preLoaderRoute: typeof OurProgressRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/partner-with-dreamz': {
@@ -1655,6 +1675,7 @@ const rootRouteChildren: RootRouteChildren = {
   EarnRoute: EarnRoute,
   FeedbackRoute: FeedbackRoute,
   LookbookRoute: LookbookRoute,
+  OurProgressRoute: OurProgressRoute,
   PartnerWithDreamzRoute: PartnerWithDreamzRoute,
   PartnershipsRoute: PartnershipsRoute,
   PoliciesRoute: PoliciesRoute,
