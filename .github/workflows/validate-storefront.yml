@@ -41,5 +41,7 @@ jobs:
           tests/media-route.test.ts
           tests/passports.test.ts
           tests/campaign-tracker.test.ts
-      - run: npm run typecheck
+      # TanStack generates src/routeTree.gen.ts during Vite build.
+      # Newly added file routes need that generated type map before tsc.
       - run: npm run build
+      - run: npm run typecheck
