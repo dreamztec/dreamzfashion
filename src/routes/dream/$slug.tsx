@@ -8,6 +8,7 @@ import {
   toggleDesignLike,
 } from "@/server/designer.functions";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
+import { DreamDPGenerator } from "@/components/DreamDPGenerator";
 import { useAuth } from "@/lib/auth-client";
 import { SITE_URL } from "@/lib/config";
 import { CONTACT } from "@/lib/contact";
@@ -341,6 +342,13 @@ function DreamDesignPage() {
             Instagram, TikTok and YouTube do not provide a universal browser endpoint for pre-filled posts, so those buttons use the phone's native share sheet when available and fall back to copying the Dream link.
           </p>
         </div>
+        {generatedImageUrl && (
+          <DreamDPGenerator
+            productImageUrl={generatedImageUrl}
+            productName={data.design.title}
+            dreamUrl={directPath}
+          />
+        )}
       </section>
 
       <section className="mx-auto max-w-6xl px-5 sm:px-8 mt-12 grid gap-6 lg:grid-cols-[1fr_.8fr]">
