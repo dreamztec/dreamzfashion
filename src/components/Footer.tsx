@@ -135,6 +135,16 @@ export function Footer({
                 </Link>
               </li>
               <li>
+                <Link to="/returns" className="hover:text-ivory">
+                  Returns, Exchanges &amp; Refunds
+                </Link>
+              </li>
+              <li>
+                <Link to="/policies" className="hover:text-ivory">
+                  Delivery, Privacy &amp; Terms
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="hover:text-ivory">
                   Contact &amp; Client Care
                 </Link>
