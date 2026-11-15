@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { getSiteSettings } from "@/server/catalog.functions";
 import { BRAND } from "@/lib/config";
@@ -57,7 +57,7 @@ function Policies() {
         <ul className="grid gap-2 sm:grid-cols-2 text-sm">
           {[
             ["Delivery & Shipping", "delivery"],
-            ["Returns & Exchanges", "returns"],
+            ["Returns, Exchanges & Refunds", "returns"],
             ["Ordering & Confirmation", "payment"],
             ["Product Care", "care"],
             ["Made-to-Order & Bespoke", "bespoke"],
@@ -76,9 +76,10 @@ function Policies() {
 
       <Section id="delivery" title="Delivery & Shipping">
         <p>
-          Every order is delivered to your doorstep anywhere in Nigeria. Orders
-          placed on the site are confirmed once payment is verified, and
-          production or dispatch begins immediately afterwards.
+          We arrange delivery across Nigeria, subject to the agreed address and
+          courier availability. Orders are confirmed only after the product,
+          price, payment and delivery details are agreed. Ready-to-wear dispatch
+          and custom production follow the timelines confirmed for your order.
         </p>
         <p>
           Delivery timing and any delivery charge are confirmed with you before
@@ -94,23 +95,31 @@ function Policies() {
         </p>
       </Section>
 
-      <Section id="returns" title="Returns & Exchanges">
+      <Section id="returns" title="Returns, Exchanges & Refunds">
         <p>
-          Each piece is inspected before dispatch. If a ready-to-wear piece
-          arrives unworn-in-box with a manufacturing fault, we will exchange it
-          or make it right — contact us within 48 hours of delivery with your
-          order number and photographs.
+          We accept eligible change-of-mind return or exchange requests for
+          unworn, standard ready-to-wear products within <strong>7 calendar days</strong>
+          of delivery. For bespoke or personalised items, cancellation terms
+          depend on whether the approved production has started and any
+          documented costs already incurred.
         </p>
         <p>
-          Made-to-order, bespoke and personalized pieces are crafted to your
-          specification and are not returnable unless faulty. Where a fault is
-          ours, we repair or remake the piece.
+          If you receive a faulty, unsafe, wrong or materially misdescribed
+          item, your statutory consumer rights apply regardless of the
+          change-of-mind window. In particular, qualifying quality failures
+          may be claimed within three months after delivery under Nigerian
+          consumer law. Please tell us promptly if you see damage, but
+          <strong> 48 hours is not a deadline for reporting a defect</strong>.
         </p>
         <p>
-          To begin a return or exchange, message the client team on WhatsApp
-          with your order number — details are confirmed before anything is
-          sent back. Refunds, where approved, are processed to the original
-          payment method.
+          Our dedicated policy explains size changes, order cancellations,
+          bespoke deposits, return shipping, how to submit a claim and
+          the timing and method for approved refunds.
+        </p>
+        <p>
+          <Link to="/returns" className="font-semibold text-ink underline underline-offset-4">
+            Read the full Returns, Exchanges &amp; Refunds Policy →
+          </Link>
         </p>
       </Section>
 
@@ -130,6 +139,9 @@ function Policies() {
         <p>
           If anything about your order is unclear, message the client team
           before making payment and keep your order details for reference.
+          <Link to="/returns" className="ml-1 underline text-ink">
+            Please review the returns and refund terms before paying.
+          </Link>
         </p>
       </Section>
 
