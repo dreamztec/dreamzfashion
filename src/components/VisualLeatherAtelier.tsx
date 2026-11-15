@@ -32,6 +32,7 @@ import {
 } from "@/lib/visual-designer";
 import { designerPlanRank, getDesignerPlan } from "@/lib/designer-plans";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
+import { DreamDPGenerator } from "@/components/DreamDPGenerator";
 import { REFERENCE_LIMITS, precheckFile } from "@/lib/reference-upload";
 
 type AtelierResult = Extract<Awaited<ReturnType<typeof composeDreamToLeather>>, { ok: true }>;
@@ -1569,6 +1570,14 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <a href="https://mydreamnetwork.dreamz-gc.com/" target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-primary mt-4">Continue my dream in Dreams to Reality ↗</a>
                     <p className="mt-3 text-xs text-stone">Open the platform and paste your dream there. Accounts and saved progress are separate; we do not automatically send your story or customer details.</p>
                   </section>
+
+                  {generatedImageRefId && (
+                    <DreamDPGenerator
+                      productImageUrl={generatedImagePreview || "/api/design-references/" + generatedImageRefId}
+                      productName={answers.productName.trim() || answers.piece || "My Dream Design"}
+                      dreamUrl={published ? "/dream/" + published.publicSlug : undefined}
+                    />
+                  )}
 
                   {published && (
                     <SharePanel
