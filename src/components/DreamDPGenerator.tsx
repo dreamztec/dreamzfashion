@@ -164,12 +164,31 @@ export function DreamDPGenerator({ productImageUrl, productName, dreamUrl = "" }
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [cloudinaryReady, setCloudinaryReady] = useState(false);
+  const [publicConsent, setPublicConsent] = useState(false);
+  const [publicLink, setPublicLink] = useState("");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const photoObjectUrl = useRef<string | null>(null);
 
   useEffect(() => () => {
     if (photoObjectUrl.current) URL.revokeObjectURL(photoObjectUrl.current);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    fetch("/api/dream-dp", { cache: "no-store" })
+      .then(async (response) => response.ok ? response.json() as Promise<{ available?: boolean }> : { available: false })
+      .then((result) => { if (active) setCloudinaryReady(Boolean(result.available)); })
+      .catch(() => { if (active) setCloudinaryReady(false); });
+    return () => { active = false; };
+  }, [open]);
+
+  // Any new photograph, design or image format invalidates the previous public link.
+  useEffect(() => {
+    setPublicLink("");
+    setPublicConsent(false);
+  }, [photoUrl, format, displayName, productImageUrl, productName]);
 
   useEffect(() => {
     if (!open || !photoUrl || !productImageUrl || !canvasRef.current) {
@@ -259,6 +278,54 @@ export function DreamDPGenerator({ productImageUrl, productName, dreamUrl = "" }
       setNotice("The DP could not be exported. Please try again.");
     } finally {
       setBusy(false);
+    }
+  };
+
+  const publishPublicDP = async () => {
+    if (!ready || !consent || !publicConsent || busy || !cloudinaryReady) {
+      setNotice("Confirm the public-photo consent before publishing your DP.");
+      return;
+    }
+    setBusy(true);
+    setNotice("");
+    try {
+      const blob = await makeBlob();
+      const body = new FormData();
+      body.set("file", new File([blob], "dream-dp.png", { type: "image/png" }));
+      body.set("consent", "publish-public");
+      const response = await fetch("/api/dream-dp", { method: "POST", body });
+      const result = await response.json() as { ok?: boolean; shareUrl?: string; error?: string };
+      if (!response.ok || !result.ok || !result.shareUrl) {
+        throw new Error(result.error || "Your DP could not be published.");
+      }
+      setPublicLink(result.shareUrl);
+      setNotice("Your public Dream DP link is ready. Anyone with the link can view and share this image.");
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "The DP could not be published.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sharePublicDP = async () => {
+    if (!publicLink) return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "I Designed My Dream — DREAMZ",
+          text: "I designed my dream with DREAMZ.",
+          url: publicLink,
+        });
+        return;
+      } catch (error) {
+        if (error instanceof Error && error.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setNotice("Public DP link copied. Paste it into WhatsApp, Facebook or any social app.");
+    } catch {
+      setNotice("Open your published DP page and copy the URL from the browser.");
     }
   };
 
@@ -373,6 +440,46 @@ export function DreamDPGenerator({ productImageUrl, productName, dreamUrl = "" }
                 </button>
               )}
             </div>
+            {cloudinaryReady && (
+              <div className="border-t border-ink/15 pt-5 space-y-4">
+                <p className="text-sm font-medium">Publish a shareable link with your photo and design</p>
+                <p className="text-xs leading-relaxed text-stone">
+                  This optional step sends your completed DP to Cloudinary as a public image.
+                  It can appear in WhatsApp and other link previews, and anyone with the URL may keep a copy.
+                  You must sign in to publish. Downloading does not require an account.
+                </p>
+                {!publicLink ? (
+                  <>
+                    <label className="flex items-start gap-3 text-xs leading-relaxed">
+                      <input
+                        type="checkbox"
+                        checked={publicConsent}
+                        onChange={(event) => setPublicConsent(event.currentTarget.checked)}
+                        className="mt-1"
+                      />
+                      <span>I explicitly agree to publish this DP containing my photograph, name and product design publicly.</span>
+                    </label>
+                    <button
+                      type="button"
+                      disabled={!ready || !consent || !publicConsent || busy}
+                      onClick={() => void publishPublicDP()}
+                      className="btn-lux btn-lux-primary !py-2.5 disabled:opacity-40"
+                    >
+                      {busy ? "Publishing…" : "Publish My DP Link"}
+                    </button>
+                  </>
+                ) : (
+                  <div className="space-y-3">
+                    <a href={publicLink} target="_blank" rel="noopener noreferrer" className="text-xs underline break-all">
+                      {publicLink}
+                    </a>
+                    <button type="button" onClick={() => void sharePublicDP()} className="btn-lux btn-lux-primary !py-2.5">
+                      Share Public DP Link
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <p className="text-xs leading-relaxed text-stone">
               Your photograph is combined in your browser and is not automatically uploaded to DREAMZ or Cloudinary.
               Social apps that do not accept images from the browser will use your saved image instead.
