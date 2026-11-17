@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   DESIGNER_PLANS,
+  PUBLIC_DESIGNER_PLANS,
   designerPlanPriceLabel,
   getDesignerPlan,
   hasDesignerFeature,
@@ -27,9 +28,12 @@ describe("DREAMZ visual studio plans", () => {
     expect(getDesignerPlan("creator").designLimit).toBe(15);
     expect(getDesignerPlan("studio").designLimit).toBe(50);
     expect(getDesignerPlan("pro").designLimit).toBe(200);
-    expect(designerPlanPriceLabel(getDesignerPlan("creator"))).toContain("15,000");
-    expect(designerPlanPriceLabel(getDesignerPlan("studio"))).toContain("50,000");
+    expect(designerPlanPriceLabel(getDesignerPlan("creator"))).toContain("9,900");
+    expect(designerPlanPriceLabel(getDesignerPlan("studio"))).toContain("29,900");
     expect(designerPlanPriceLabel(getDesignerPlan("pro"))).toContain("100,000");
+    expect(PUBLIC_DESIGNER_PLANS.map(p => p.id)).toEqual(["free", "creator", "studio"]);
+    expect(getDesignerPlan("creator").durationDays).toBe(30);
+    expect(getDesignerPlan("studio").durationDays).toBe(30);
   });
 
   it("keeps earning independent from paid studio access", () => {
