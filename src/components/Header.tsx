@@ -6,26 +6,19 @@ import { useCart, useCartHydrated } from "@/store/cart";
 import { useAuth } from "@/lib/auth-client";
 
 const PRIMARY_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
-  { label: "Shop", to: "/shop" },
-  { label: "Royale", to: "/royale" },
-  { label: "Dream Studio", to: "/custom" },
-  { label: "Our Mission", to: "/our-progress" },
+  { label: "Shop DREAMZ", to: "/shop" },
+  { label: "Design Your Dream", to: "/custom" },
+  { label: "Our Story", to: "/about" },
+  { label: "Work with DREAMZ", to: "/partner-with-dreamz" },
 ];
 
 const MOBILE_NAV: Array<{ label: string; to: string; shopCategory?: boolean }> = [
-  { label: "Shop", to: "/shop" },
-  { label: "Essentials", to: "/shop/essentials", shopCategory: true },
-  { label: "Originals", to: "/shop/originals", shopCategory: true },
-  { label: "Royale", to: "/royale" },
-  { label: "Leather Wear", to: "/shop/leather-wear", shopCategory: true },
-  { label: "Accessories", to: "/shop/accessories", shopCategory: true },
-  { label: "Dream Studio", to: "/custom" },
-  { label: "Our Mission", to: "/our-progress" },
+  { label: "Shop DREAMZ", to: "/shop" },
+  { label: "Design Your Dream", to: "/custom" },
   { label: "Community Designs", to: "/dreams" },
-  { label: "Earn with DREAMZ", to: "/earn" },
-  { label: "Partner with DREAMZ", to: "/partner-with-dreamz" },
-  { label: "Sell DREAMZ", to: "/partnerships" },
-  { label: "Studio Plans", to: "/studio-plans" },
+  { label: "Refer & Earn", to: "/earn" },
+  { label: "Work with DREAMZ", to: "/partner-with-dreamz" },
+  { label: "About DREAMZ", to: "/about" },
 ];
 
 /** The /shop/$category search params that must be explicitly cleared. */
