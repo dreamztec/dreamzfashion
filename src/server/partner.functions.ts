@@ -20,7 +20,7 @@ import { getCurrentCustomer } from "./auth.server";
 const ApplySchema = z.object({
   sellingMode: z.enum(["digital", "physical", "both"]).default("digital"),
   earningType: z.enum(["scout", "creator"]).default("scout"),
-  partnerPlan: z.enum(["scout", "starter", "growth", "pro"]).default("scout"),
+  partnerPlan: z.literal("scout").default("scout"),
   physicalModel: z.enum(["undecided", "bulk", "credit", "commission"]).default("undecided"),
   introducerCode: z.string().max(24).optional().or(z.literal("")),
   displayName: z.string().min(2).max(120),
@@ -145,7 +145,7 @@ export const applyAsPartner = createServerFn({ method: "POST" })
     await db.insert(referrers).values({
       code,
       track,
-      // Every application sits in review. Paid plans start their 365-day term
+      // Every new application sits in review. Retired paid plans cannot be purchased
       // only after DREAMZ records the membership payment as paid/waived.
       customerId: customer?.id ?? null,
       status: "pending",

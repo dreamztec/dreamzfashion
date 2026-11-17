@@ -22,7 +22,7 @@ const COLUMNS: Array<{
       { label: "Bags", to: "/shop/bags", shop: true },
       { label: "Accessories", to: "/shop/accessories", shop: true },
       { label: "Dream Studio", to: "/custom" },
-      { label: "Studio Plans", to: "/studio-plans" },
+      { label: "Creator Studio Access", to: "/studio-plans" },
     ],
   },
   {
@@ -30,10 +30,10 @@ const COLUMNS: Array<{
     links: [
       { label: "About DREAMZ", to: "/about" },
       { label: "Our Mission", to: "/our-progress" },
-      { label: "Earn with DREAMZ — free", to: "/earn" },
-      { label: "Creator Programme", to: "/creators" },
-      { label: "Partner with DREAMZ — optional membership", to: "/partner-with-dreamz" },
-      { label: "Sell DREAMZ — retail stock", to: "/partnerships" },
+      { label: "Refer & Earn — free", to: "/earn" },
+      { label: "Creator & Influencer Collabs", to: "/creators" },
+      { label: "Work with DREAMZ", to: "/partner-with-dreamz" },
+      { label: "Stockist & Franchise Enquiries", to: "/partnerships" },
       { label: "Corporate Orders", to: "/corporate" },
       { label: "Anniversary Collection", to: "/dreamz-5" },
       { label: "Track Order", to: "/track-order" },

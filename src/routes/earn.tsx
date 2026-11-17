@@ -13,7 +13,7 @@ export const Route = createFileRoute("/earn")({
       {
         name: "description",
         content:
-          "Join DREAMZ for free, receive an approved code/link and earn commission on qualifying verified product sales. No paid membership is required.",
+          "Refer DREAMZ customers or apply as a creator for free. Track eligible verified product sales; selected creators can propose their own leather capsules separately.",
       },
     ],
   }),
@@ -114,19 +114,19 @@ function EarnPage() {
               <p className="overline-label mb-2">Need more business support?</p>
               <h2 className="font-editorial text-2xl">Partner with DREAMZ</h2>
               <p className="mt-3 text-sm text-stone">
-                Optional annual support plans provide tools, training and marketing
-                support. They do not buy commission rights or guarantee income.
+                Explore co-designed creator collections, approved retail partners,
+                private commissions and proposed branded retail locations. No fee is required to apply.
               </p>
               <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline mt-6">
-                See Partner Memberships
+                Explore Partnerships
               </Link>
             </div>
             <div className="border border-ink/10 p-7">
               <p className="overline-label mb-2">Own a retail business?</p>
               <h2 className="font-editorial text-2xl">Sell DREAMZ</h2>
               <p className="mt-3 text-sm text-stone">
-                Apply separately for bulk, approved credit or commission/consignment
-                stock. No paid Partner Membership is required.
+                Become a prepaid wholesale stockist or explore a branded display or boutique.
+                No paid membership is required. Credit and consignment are not automatic.
               </p>
               <Link to="/partnerships" className="btn-lux btn-lux-outline mt-6">
                 See Retail Models

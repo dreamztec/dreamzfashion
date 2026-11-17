@@ -2,126 +2,59 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { submitPartnershipEnquiry } from "@/server/enquiry.functions";
 import { getSiteSettings } from "@/server/catalog.functions";
-import { WhatsAppCTAButton, CallCTAButton } from "@/components/whatsapp";
+import { WhatsAppCTAButton } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
-import { CONTACT } from "@/lib/contact";
+
+const TRACKS = [
+  {
+    id: "stockist",
+    title: "Authorised Stockist",
+    investment: "From ₦250,000 opening stock",
+    summary: "For boutiques and stores buying approved DREAMZ products for resale.",
+    features: ["Prepaid wholesale merchandise, not a joining fee", "Proposed trade discount up to 15% only on margin-approved SKUs", "Approved catalogues, product education and reordering support", "You operate your own store and set your own operating budget"],
+    disclaimer: "SKU-specific wholesale prices and minimum order quantities are confirmed before payment. No automatic credit, consignment, territory or guaranteed retail profit.",
+  },
+  {
+    id: "display",
+    title: "DREAMZ Display Point",
+    investment: "₦3m indicative startup budget",
+    summary: "A proposed branded DREAMZ display inside an existing approved store.",
+    features: ["Illustrative allocation: ₦2m opening inventory", "₦750k provisional display/fit-out budget", "₦250k provisional branded onboarding and training", "Brand presentation standards, initial support and reorder planning"],
+    disclaimer: "A budget guide only. No fee is due through this page. Final costs, trademark use and operating rights require review and a signed contract.",
+  },
+  {
+    id: "boutique",
+    title: "DREAMZ Boutique Franchise",
+    investment: "₦12m indicative startup budget",
+    summary: "A proposed dedicated boutique for experienced retail operators.",
+    features: ["Illustrative allocation: ₦7m opening inventory", "₦3m provisional shop design and fit-out", "₦2m provisional licensed brand setup, operating manuals and training", "Potential phased launch and performance reviews"],
+    disclaimer: "Expression of interest only, not a franchise sale. DREAMZ must first complete legal/IP due diligence, operating manuals, location assessment and a negotiated agreement. No exclusivity, earnings or licensed rights are automatic.",
+  },
+];
 
 export const Route = createFileRoute("/partnerships")({
   loader: async () => {
     const settings = await getSiteSettings();
-    return {
-      whatsappNumber:
-        (settings.whatsappNumber as string) || process.env.DFK_WHATSAPP_NUMBER || "",
-    };
+    return { whatsappNumber: (settings.whatsappNumber as string) || process.env.DFK_WHATSAPP_NUMBER || "" };
   },
   head: () => ({
     meta: [
-      { title: `Sell DREAMZ — Retail Partnership Programme — ${BRAND.name}` },
-      {
-        name: "description",
-        content:
-          "SELL DREAMZ: bulk sales (20% discount), credit sales (10% discount) and commission sales (15% commission) partnerships for boutiques, footwear retailers, supermarkets and lifestyle stores.",
-      },
+      { title: `Sell DREAMZ — Stockists, Display Points & Boutique Enquiries — ${BRAND.name}` },
+      { name: "description", content: "Explore DREAMZ approved stockist inventory, proposed shop-in-shop display points and prospective boutique franchise licensing with clear indicative budgets and terms." },
     ],
   }),
-  component: PartnershipsPage,
+  component: RetailPage,
 });
 
-const TARGET_PARTNERS = [
-  "Boutiques",
-  "Fashion stores",
-  "Footwear retailers",
-  "Supermarkets",
-  "Salons",
-  "Gift shops",
-  "Lifestyle stores",
-  "Pharmacies where appropriate",
-  "Corporate retailers",
-];
+const BUSINESS_TYPES = ["Fashion Boutique", "Footwear Store", "Department Store", "Gift Shop", "Salon", "Lifestyle Store", "Online Retailer", "Corporate Retailer", "Other"];
+const PRODUCTS = ["Footwear", "Bags", "Leather Wear", "Accessories", "Complete Sets", "Mixed Selection"];
 
-const PARTNERSHIP_MODELS = [
-  {
-    id: "bulk" as const,
-    letter: "A",
-    name: "Bulk Sales Partner",
-    benefit: "20% discount",
-    summary:
-      "Your outlet purchases DREAMZ products in bulk at a 20% discount and resells through your store.",
-    terms: [
-      "Payment before delivery, unless otherwise approved.",
-      "Products are resold through the partner's outlet.",
-      "Products follow approved DREAMZ retail pricing rules.",
-      "A DREAMZ display shelf may be supplied.",
-      "The partner maintains stock records.",
-    ],
-  },
-  {
-    id: "credit" as const,
-    letter: "B",
-    name: "Credit Sales Partner",
-    benefit: "10% discount",
-    summary:
-      "An approved retailer receives products and display inventory under a credit arrangement at a 10% discount.",
-    terms: [
-      "An approved credit period applies.",
-      "Payment is due according to the agreed schedule.",
-      "Stock may be withdrawn for non-payment or breach.",
-      "The partner maintains proper stock records.",
-    ],
-  },
-  {
-    id: "commission" as const,
-    letter: "C",
-    name: "Commission Sales Partner",
-    benefit: "15% commission on verified sales",
-    summary:
-      "DREAMZ supplies approved products and display stock; the partner sells and earns a commission on verified sales.",
-    terms: [
-      "Unsold goods remain DREAMZ / DFK property.",
-      "DREAMZ retains ownership until the product is sold.",
-      "Sales are reconciled monthly.",
-      "Commission is paid on verified sales.",
-      "The partner remains accountable for consignment inventory.",
-    ],
-  },
-];
-
-const GENERAL_TERMS = [
-  "Display shelves supplied by DREAMZ remain company property.",
-  "Shelves are for approved DREAMZ merchandise only.",
-  "Shelves are returned when the partnership ends.",
-  "Partners record stock, shortages and damage.",
-  "DREAMZ may inspect company-owned consignment stock.",
-  "Either party may terminate with 7 days' written notice.",
-  "DREAMZ may terminate immediately for serious breach.",
-];
-
-const BUSINESS_TYPES = [
-  "Fashion Boutique",
-  "Footwear Store",
-  "Supermarket",
-  "Gift Shop",
-  "Salon",
-  "Lifestyle Store",
-  "Pharmacy",
-  "Corporate Retailer",
-  "Online Retailer",
-  "Other",
-];
-
-const PRODUCT_INTERESTS = [
-  "Footwear",
-  "Bags",
-  "Accessories",
-  "Complete Sets",
-  "Mixed Selection",
-];
-
-function PartnershipsPage() {
-  const { whatsappNumber } = Route.useLoaderData() as { whatsappNumber: string };
+function RetailPage() {
+  const { whatsappNumber } = Route.useLoaderData();
   const [submitted, setSubmitted] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [model, setModel] = useState("stockist");
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -129,277 +62,103 @@ function PartnershipsPage() {
     setError(null);
     const fd = new FormData(e.currentTarget);
     try {
-      await submitPartnershipEnquiry({
-        data: {
-          businessName: String(fd.get("businessName") ?? ""),
-          contactPerson: String(fd.get("contactPerson") ?? ""),
-          phone: String(fd.get("phone") ?? ""),
-          email: String(fd.get("email") ?? ""),
-          city: String(fd.get("city") ?? ""),
-          stateCountry: String(fd.get("stateCountry") ?? ""),
-          businessType: String(fd.get("businessType") ?? ""),
-          presence: String(fd.get("presence") ?? "store") as "store" | "online" | "both",
-          productInterest: String(fd.get("productInterest") ?? ""),
-          orderVolume: String(fd.get("orderVolume") ?? ""),
-          partnershipCategory: String(fd.get("partnershipCategory") ?? "undecided") as
-            | "bulk"
-            | "credit"
-            | "commission"
-            | "undecided",
-          message: String(fd.get("message") ?? ""),
-        },
-      });
+      await submitPartnershipEnquiry({ data: {
+        businessName: String(fd.get("businessName") || ""),
+        contactPerson: String(fd.get("contactPerson") || ""),
+        phone: String(fd.get("phone") || ""),
+        email: String(fd.get("email") || ""),
+        city: String(fd.get("city") || ""),
+        stateCountry: String(fd.get("stateCountry") || ""),
+        businessType: String(fd.get("businessType") || ""),
+        presence: String(fd.get("presence") || "store") as "store" | "online" | "both",
+        productInterest: String(fd.get("productInterest") || ""),
+        orderVolume: String(fd.get("orderVolume") || ""),
+        partnershipCategory: model === "stockist" ? "bulk" : "undecided",
+        message: `Requested model: ${model}. ${String(fd.get("message") || "")}`,
+      } });
       setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send your enquiry. Please try again.");
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Please try again or contact DREAMZ.");
+    } finally { setSaving(false); }
   };
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative h-[56svh] min-h-[400px] -mt-16 flex items-end overflow-hidden bg-ink">
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-20 rainbow-rule"
-          style={{ filter: "blur(90px)" }}
-        />
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8 pb-14 text-ivory">
-          <p className="overline-label !text-gold-soft mb-3">Retail Partnership Programme</p>
-          <h1 className="font-editorial text-5xl sm:text-7xl leading-tight">SELL DREAMZ</h1>
-          <p className="mt-4 max-w-xl text-ivory/85 leading-relaxed">
-            For boutiques, stores and other approved retailers that want to stock
-            or physically sell DREAMZ. Choose bulk purchase, approved credit or
-            commission/consignment. No paid Partner Membership is required.
-          </p>
-        </div>
+      <section className="bg-ink text-ivory px-5 sm:px-8 pt-32 pb-16 text-center">
+        <p className="overline-label !text-gold-soft mb-4">SELL DREAMZ</p>
+        <h1 className="font-editorial text-4xl sm:text-6xl">The right partnership for your space.</h1>
+        <p className="mt-5 mx-auto max-w-2xl text-ivory/80 leading-relaxed">
+          Start by reselling approved leather pieces. Grow into a branded display.
+          Qualified operators can explore a dedicated boutique under a separately negotiated licence.
+          No membership purchase is required to apply.
+        </p>
       </section>
-
-      {/* The three partnership models */}
-      <section className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-20">
-        <div className="text-center mb-12">
-          <p className="overline-label mb-3">The Models</p>
-          <h2 className="font-editorial text-3xl sm:text-4xl">Three ways to partner</h2>
-          <div className="rule-gold mx-auto mt-6" />
-        </div>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {PARTNERSHIP_MODELS.map((m) => (
-            <article key={m.id} id={`model-${m.id}`} className="border border-ink/15 bg-ivory p-7 flex flex-col">
-              <p className="overline-label mb-2">Category {m.letter}</p>
-              <h3 className="font-editorial text-2xl">{m.name}</h3>
-              <p className="mt-3 font-editorial text-xl text-gold-soft">{m.benefit}</p>
-              <p className="text-sm text-stone mt-3 leading-relaxed">{m.summary}</p>
-              <p className="mt-5 text-[0.68rem] uppercase tracking-btn text-stone">Terms</p>
-              <ul className="mt-2 space-y-2 text-sm flex-1">
-                {m.terms.map((t) => (
-                  <li key={t} className="flex gap-2">
-                    <span aria-hidden="true" className="text-gold">·</span>
-                    <span>{t}</span>
-                  </li>
-                ))}
+      <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16">
+        <div className="grid gap-5 lg:grid-cols-3">
+          {TRACKS.map((t) => (
+            <article key={t.id} className="border border-ink/15 p-7 flex flex-col">
+              <p className="overline-label">RETAIL OPPORTUNITY</p>
+              <h2 className="font-editorial text-3xl mt-2">{t.title}</h2>
+              <p className="font-editorial text-xl text-oxblood mt-3">{t.investment}</p>
+              <p className="text-sm text-stone mt-4">{t.summary}</p>
+              <ul className="text-sm mt-5 space-y-3 flex-1">
+                {t.features.map((item) => <li key={item} className="flex gap-2"><span className="text-oxblood">✓</span>{item}</li>)}
               </ul>
-              <a href="#apply" className="btn-lux btn-lux-outline mt-6 text-center">
-                Apply — Category {m.letter}
-              </a>
+              <p className="border-t border-ink/10 pt-4 mt-6 text-xs text-stone leading-relaxed">{t.disclaimer}</p>
+              <a href="#apply" onClick={() => setModel(t.id)} className="btn-lux btn-lux-outline text-center mt-6">Apply / enquire</a>
             </article>
           ))}
         </div>
+        <p className="text-xs text-stone mt-8 leading-relaxed">
+          Important: The stated budgets are indicative planning examples, not invoices, guaranteed returns or an offer of intellectual-property rights.
+          Prices depend on space, location, inventory, fit-out, tax and production economics.
+          Approved retail stock is sold with a written invoice and supply terms.
+        </p>
       </section>
-
-      <section className="border-y border-ink/10 bg-ivory-deep">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-12 text-center">
-          <p className="overline-label mb-3">Retail Relationship</p>
-          <h2 className="font-editorial text-3xl">No subscription required to Sell DREAMZ.</h2>
-          <p className="text-sm text-stone mt-4 max-w-2xl mx-auto leading-relaxed">
-            Retail approval is based on your business, location, stock model and
-            ability to represent the brand properly. Paid Partner Memberships are
-            optional business-support packages and are not a condition for bulk,
-            credit or commission/consignment consideration.
-          </p>
-          <div className="mt-7 flex flex-col sm:flex-row justify-center gap-3">
-            <a href="#apply" className="btn-lux btn-lux-primary">
-              Apply to Sell DREAMZ
-            </a>
-            <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline">
-              Optional Partner Memberships
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* General retail terms */}
-      <section className="bg-ivory-deep">
-        <div className="mx-auto max-w-4xl px-5 sm:px-8 py-16">
-          <p className="overline-label mb-3 text-center">Clear Partner Terms</p>
-          <h2 className="font-editorial text-3xl text-center mb-10">What every retail partner agrees to</h2>
-          <ul className="max-w-2xl mx-auto space-y-3 text-sm">
-            {GENERAL_TERMS.map((t) => (
-              <li key={t} className="flex gap-3 border-b border-ink/10 pb-3">
-                <span aria-hidden="true" className="text-gold">✓</span>
-                <span>{t}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-12">
-            <p className="overline-label mb-3 text-center">Who we partner with</p>
-            <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-stone">
-              {TARGET_PARTNERS.map((t) => (
-                <span key={t}>{t}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Application form */}
-      <section id="apply" className="mx-auto max-w-7xl px-5 sm:px-8 py-16 lg:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-20 items-start">
+      <section id="apply" className="border-y border-ink/10 bg-ivory-deep">
+        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-16 grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <p className="overline-label mb-3">Retail Enquiry</p>
-            <h2 className="font-editorial text-3xl sm:text-4xl leading-tight">
-              Already have a retail space?
-            </h2>
-            <div className="rule-gold mt-6 mb-6" />
-            <p className="text-stone leading-relaxed">
-              Use this form to apply directly for a DREAMZ retail relationship.
-              No paid membership is required. Credit and consignment remain subject
-              to DREAMZ approval, KYC, location review, stock controls and agreed terms.
+            <p className="overline-label mb-3">LET'S TALK BUSINESS</p>
+            <h2 className="font-editorial text-4xl">Tell us about your store and your vision.</h2>
+            <p className="text-stone leading-relaxed mt-5">
+              We evaluate customer reach, location, operating experience, product suitability and stock funding.
+              All applicants receive an individual review; sending this form does not reserve territory or create a franchise.
             </p>
-            <div className="mt-8 flex flex-col gap-3">
-              <WhatsAppCTAButton
-                message={`Hello ${BRAND.shortName}, I'd like to become a DREAMZ retail partner.`}
-                whatsappNumber={whatsappNumber}
-                label="Ask about SELL DREAMZ"
-              />
-              <CallCTAButton label={`Call ${CONTACT.phoneDisplay}`} />
+            <div className="mt-7">
+              <WhatsAppCTAButton message="Hello DREAMZ, I'd like to discuss a retail or licensed boutique partnership." whatsappNumber={whatsappNumber} label="Discuss on WhatsApp" />
             </div>
-            <p className="mt-6 text-xs text-stone leading-relaxed">
-              If you do not operate a retail business and simply want to refer
-              customers or create content, use{" "}
-              <Link to="/earn" className="underline hover:text-ink">Earn with DREAMZ</Link>{" "}
-              instead.
-            </p>
+            <p className="text-sm text-stone mt-6">For commission-only referrals or influencer co-designs, use <Link to="/creators" className="underline">Creator Collaborations</Link> or <Link to="/earn" className="underline">Refer & Earn</Link>.</p>
           </div>
-
-          <div>
-            {submitted ? (
-              <div className="border border-gold/40 bg-gold/5 px-8 py-12 text-center">
-                <p className="overline-label mb-3">Application received</p>
-                <h2 className="font-editorial text-3xl mb-4">Thank you.</h2>
-                <p className="text-stone leading-relaxed max-w-md mx-auto mb-6">
-                  Our partnerships team reviews every application personally and
-                  will reach out on the details you provided.
-                </p>
-                <WhatsAppCTAButton
-                  message={`Hello ${BRAND.shortName}, I have just submitted a SELL DREAMZ partnership application and would like to continue the conversation.`}
-                  whatsappNumber={whatsappNumber}
-                  label="Continue on WhatsApp"
-                />
+          {submitted ? (
+            <div role="status" className="border border-ink/15 bg-ivory p-8 self-start">
+              <h3 className="font-editorial text-3xl">Application received.</h3>
+              <p className="mt-4 text-sm text-stone leading-relaxed">Thank you. DREAMZ will review your details and contact you. No payment or licence has been authorised by submitting this form.</p>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="border border-ink/15 bg-ivory p-6 sm:p-8 grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="input-lux-label" htmlFor="pr-model">I want to explore *</label>
+                <select id="pr-model" className="input-lux" value={model} onChange={(e)=>setModel(e.target.value)} required>
+                  <option value="stockist">Authorised Stockist</option>
+                  <option value="display">DREAMZ Display Point</option>
+                  <option value="boutique">DREAMZ Boutique Licence / Franchise</option>
+                </select>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="border border-ink/15 p-6 sm:p-8 grid gap-4 sm:grid-cols-2 bg-white/40">
-                <h2 className="sm:col-span-2 font-editorial text-2xl">Partnership application</h2>
-                <div className="sm:col-span-2">
-                  <label className="input-lux-label" htmlFor="pb-category">Partnership Model *</label>
-                  <select id="pb-category" name="partnershipCategory" required defaultValue="undecided" className="input-lux">
-                    <option value="undecided">Not sure yet — advise me</option>
-                    <option value="bulk">Category A — Bulk Sales Partner (20% discount)</option>
-                    <option value="credit">Category B — Credit Sales Partner (10% discount)</option>
-                    <option value="commission">Category C — Commission Sales Partner (15% commission)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-name">Business Name *</label>
-                  <input id="pb-name" name="businessName" required className="input-lux" maxLength={140} />
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-person">Contact Person *</label>
-                  <input id="pb-person" name="contactPerson" required className="input-lux" maxLength={120} />
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-phone">Phone *</label>
-                  <input id="pb-phone" name="phone" type="tel" required className="input-lux" maxLength={24} />
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-email">Email *</label>
-                  <input id="pb-email" name="email" type="email" required className="input-lux" maxLength={140} />
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-city">City *</label>
-                  <input id="pb-city" name="city" required className="input-lux" maxLength={80} />
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-state">State/Country *</label>
-                  <input id="pb-state" name="stateCountry" required className="input-lux" maxLength={80} />
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-type">Business Type *</label>
-                  <select id="pb-type" name="businessType" required className="input-lux">
-                    {BUSINESS_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-presence">Existing Store / Online / Both *</label>
-                  <select id="pb-presence" name="presence" required className="input-lux">
-                    <option value="store">Existing Store</option>
-                    <option value="online">Online</option>
-                    <option value="both">Both</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-interest">Product Interest *</label>
-                  <select id="pb-interest" name="productInterest" required className="input-lux">
-                    {PRODUCT_INTERESTS.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="input-lux-label" htmlFor="pb-volume">Estimated Order Volume *</label>
-                  <input id="pb-volume" name="orderVolume" required className="input-lux" maxLength={80} placeholder="e.g. 10–20 pieces per month" />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="input-lux-label" htmlFor="pb-msg">Message</label>
-                  <textarea id="pb-msg" name="message" rows={4} className="input-lux" maxLength={1200} />
-                </div>
-                {error && (
-                  <p role="alert" className="sm:col-span-2 text-sm text-oxblood">{error}</p>
-                )}
-                <div className="sm:col-span-2">
-                  <button type="submit" disabled={saving} className="btn-lux btn-lux-primary w-full sm:w-auto">
-                    {saving ? "Sending…" : "Submit Application"}
-                  </button>
-                </div>
-              </form>
-            )}
-            <p className="mt-6 text-xs text-stone leading-relaxed">
-              Prefer to talk? Our client team answers on{" "}
-              <WhatsAppCTAButton message={`Hello ${BRAND.shortName}, I have a partnerships question.`} whatsappNumber={whatsappNumber} label="WhatsApp" className="!py-1 !px-2 !inline-flex" />
-              {" — or call "}
-              <a href={CONTACT.phoneHref} className="underline hover:text-ink">
-                {CONTACT.phoneDisplay}
-              </a>
-              {" or email "}
-              <a href={`mailto:${CONTACT.email}`} className="underline hover:text-ink break-all">
-                {CONTACT.email}
-              </a>
-              . We do not publish stockist locations until partnerships are confirmed.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-3xl px-5 sm:px-8 pb-24 text-center">
-        <p className="overline-label mb-4">Other ways to work with DREAMZ</p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <Link to="/earn" className="btn-lux btn-lux-outline">Earn with DREAMZ</Link>
-          <Link to="/partner-with-dreamz" className="btn-lux btn-lux-outline">Partner with DREAMZ</Link>
-          <Link to="/royale" className="btn-lux btn-lux-outline">Royale Private Client</Link>
+              <div><label className="input-lux-label" htmlFor="pr-business">Business Name *</label><input id="pr-business" className="input-lux" name="businessName" required maxLength={140}/></div>
+              <div><label className="input-lux-label" htmlFor="pr-contact">Contact Person *</label><input id="pr-contact" className="input-lux" name="contactPerson" required maxLength={120}/></div>
+              <div><label className="input-lux-label" htmlFor="pr-email">Email *</label><input id="pr-email" className="input-lux" name="email" required type="email" maxLength={140}/></div>
+              <div><label className="input-lux-label" htmlFor="pr-phone">Phone *</label><input id="pr-phone" className="input-lux" name="phone" required type="tel" maxLength={24}/></div>
+              <div><label className="input-lux-label" htmlFor="pr-city">City *</label><input id="pr-city" className="input-lux" name="city" required maxLength={80}/></div>
+              <div><label className="input-lux-label" htmlFor="pr-country">State / Country *</label><input id="pr-country" className="input-lux" name="stateCountry" required maxLength={80}/></div>
+              <div><label className="input-lux-label" htmlFor="pr-type">Business Type *</label><select id="pr-type" className="input-lux" name="businessType">{BUSINESS_TYPES.map(x=><option key={x} value={x}>{x}</option>)}</select></div>
+              <div><label className="input-lux-label" htmlFor="pr-presence">Current Presence *</label><select id="pr-presence" className="input-lux" name="presence"><option value="store">Physical Store</option><option value="online">Online</option><option value="both">Both</option></select></div>
+              <div><label className="input-lux-label" htmlFor="pr-product">Product Interest *</label><select id="pr-product" name="productInterest" className="input-lux">{PRODUCTS.map(x=><option key={x} value={x}>{x}</option>)}</select></div>
+              <div><label className="input-lux-label" htmlFor="pr-volume">Planned Opening Order / Budget *</label><input id="pr-volume" name="orderVolume" className="input-lux" required maxLength={80} placeholder="e.g. ₦500,000 stock or ₦3m location"/></div>
+              <div className="sm:col-span-2"><label className="input-lux-label" htmlFor="pr-message">Location, customers and questions</label><textarea id="pr-message" name="message" className="input-lux" rows={4} maxLength={1100}/></div>
+              {error && <p role="alert" className="sm:col-span-2 text-sm text-oxblood">{error}</p>}
+              <button disabled={saving} type="submit" className="btn-lux btn-lux-primary sm:col-span-2">{saving ? "Submitting…" : "Submit for review"}</button>
+            </form>
+          )}
         </div>
       </section>
     </div>

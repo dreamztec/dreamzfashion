@@ -1,264 +1,150 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, type FormEvent } from "react";
-import { applyAsPartner } from "@/server/partner.functions";
-import { PARTNER_PLANS, getPartnerPlan, partnerPlanPriceLabel, type PartnerPlanId, type SellingMode } from "@/lib/partner-plans";
 import { BRAND } from "@/lib/config";
-import { CONTACT, waLink } from "@/lib/contact";
-
-const PAID_PLANS = PARTNER_PLANS.filter((p) => p.feeKobo > 0);
+import { waLink } from "@/lib/contact";
 
 export const Route = createFileRoute("/partner-with-dreamz")({
   head: () => ({
     meta: [
-      { title: `Partner with DREAMZ — Business Support Membership — ${BRAND.name}` },
-      {
-        name: "description",
-        content:
-          "Optional annual DREAMZ business-support memberships for sellers who want additional sales tools, training, marketing support and strategy help.",
-      },
+      { title: `Work with DREAMZ — Creators, Stockists & Franchise Enquiries — ${BRAND.name}` },
+      { name: "description", content: "Create a signature leather collection, refer buyers, become a DREAMZ stockist, propose a branded location or explore corporate collaborations. Every track is explained clearly." },
     ],
   }),
-  component: PartnerWithDreamzPage,
+  component: WorkWithDreamz,
 });
 
-function PartnerWithDreamzPage() {
+const OPPORTUNITIES = [
+  {
+    eyebrow: "CREATOR COLLABORATION",
+    title: "Your story. Your leather collection.",
+    price: "Free to pitch",
+    summary: "For creators, influencers, artists and personalities with a distinctive story or audience.",
+    included: [
+      "Co-design a signature leather capsule with DREAMZ after concept approval",
+      "DREAMZ coordinates feasibility, quotations, production, fulfilment and customer care",
+      "Approved co-branded campaign page and trackable creator code",
+      "Referral earnings at the published creator rate on eligible attributed sales",
+      "Optional collection royalty, negotiated in a signed design-and-image licence",
+    ],
+    terms: "Suggested royalty starting point: 5% of net merchandise receipts for the approved collection, for an agreed term. A royalty is not automatic and is not automatically stacked with sales commission. Rates, IP, deliverables and marketing rights are agreed in writing before launch.",
+    link: "/creators",
+    cta: "Explore creator collaborations",
+  },
+  {
+    eyebrow: "RETAIL & RESELLING",
+    title: "Become an authorised stockist.",
+    price: "Opening stock from ₦250,000",
+    summary: "For boutiques, footwear shops, lifestyle stores and established online retailers.",
+    included: [
+      "Access to an approved wholesale assortment and product information",
+      "Illustrative trade pricing up to 15% below approved retail on eligible SKUs, subject to an agreed quotation",
+      "Digital sales assets, product care guidance and reorder support",
+      "The opening amount buys goods, not access to a commission or membership",
+      "Partners manage their own outlet, customers and local operating costs",
+    ],
+    terms: "Stock is normally prepaid. No automatic consignment, credit, exclusivity, guaranteed margins or guaranteed sales. Reseller arrangements require written approval, SKU-specific wholesale prices and a signed supply agreement.",
+    link: "/partnerships",
+    cta: "Apply to stock DREAMZ",
+  },
+  {
+    eyebrow: "BRANDED LOCATION · PROPOSAL",
+    title: "DREAMZ Display Point.",
+    price: "Illustrative setup budget: ₦3,000,000",
+    summary: "For an existing quality retail space seeking a branded DREAMZ display and managed reorder programme.",
+    included: [
+      "Illustrative budget: ₦2m opening inventory + ₦750k fit-out/display + ₦250k branding and training",
+      "Proposed approved shop-in-shop presentation and display guidance",
+      "Initial staff product orientation and replenishment planning",
+      "Brand presentation guidelines and periodic quality reviews",
+    ],
+    terms: "Figures are planning estimates, not a fee request. The brand licence, deliverables, supplier quotes and retail rights are not granted until due diligence and a signed agreement. No exclusive territory is offered automatically.",
+    link: "/partnerships",
+    cta: "Enquire about a display point",
+  },
+  {
+    eyebrow: "FRANCHISE EXPRESSION OF INTEREST",
+    title: "DREAMZ Boutique.",
+    price: "Illustrative launch budget: ₦12,000,000",
+    summary: "For experienced, properly capitalised operators who want to propose a dedicated DREAMZ retail boutique.",
+    included: [
+      "Illustrative budget: ₦7m opening stock + ₦3m fit-out + ₦2m brand setup, training and systems",
+      "Proposed licensed brand use, operating standards and approved merchandise",
+      "Potential staff onboarding, launch support and merchandising guidelines",
+      "A phased, performance-reviewed opening before any wider rollout",
+    ],
+    terms: "Not an offer to purchase a franchise. No franchise rights, intellectual-property licence, guaranteed return or exclusivity exist until trademark/legal checks, site review, operations documentation and a negotiated written agreement are complete. No franchise payment is collected through this page.",
+    link: "/partnerships",
+    cta: "Discuss boutique licensing",
+  },
+];
+
+function WorkWithDreamz() {
   return (
     <div>
-      <section className="mx-auto max-w-4xl px-5 sm:px-8 pt-32 pb-12 text-center">
-        <p className="overline-label mb-4">PARTNER WITH DREAMZ</p>
-        <h1 className="font-editorial text-4xl sm:text-6xl leading-tight">
-          Business support for people serious about selling DREAMZ.
+      <section className="bg-ink text-ivory px-5 sm:px-8 pt-32 pb-16 text-center">
+        <p className="overline-label !text-gold-soft mb-4">WORK WITH DREAMZ</p>
+        <h1 className="font-editorial text-4xl sm:text-6xl leading-tight max-w-5xl mx-auto">
+          Create it. Share it. Sell it. Build with us.
         </h1>
-        <p className="text-stone mt-7 leading-relaxed max-w-2xl mx-auto">
-          These memberships are optional. You do not need a paid plan to earn
-          commission or to apply as a retail seller. A plan pays for added
-          tools, training, marketing support and access — not the right to earn.
+        <p className="max-w-2xl mx-auto mt-6 text-ivory/80 leading-relaxed">
+          DREAMZ brings design development, leather production and fulfilment.
+          Partners bring creativity, audiences, customers, retail expertise or locations.
+          Choose the partnership that matches what you actually contribute.
         </p>
+        <div className="flex gap-3 flex-wrap justify-center mt-8">
+          <Link to="/creators" className="btn-lux btn-lux-primary">Co-create a collection</Link>
+          <Link to="/partnerships" className="btn-lux btn-lux-outline !text-ivory">Retail & franchise enquiries</Link>
+        </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 sm:px-8 pb-16">
-        <div className="grid gap-5 md:grid-cols-3">
-          {PAID_PLANS.map((plan) => (
-            <article key={plan.id} className="border border-ink/15 p-7 flex flex-col">
-              <p className="overline-label mb-2">{plan.name}</p>
-              <p className="font-editorial text-3xl">{partnerPlanPriceLabel(plan)}</p>
-              <p className="mt-3 text-sm text-stone leading-relaxed">{plan.summary}</p>
-              <ul className="mt-5 space-y-2 text-sm flex-1">
-                {plan.benefits.map((benefit) => (
-                  <li key={benefit} className="flex gap-2">
-                    <span className="text-gold">·</span>
-                    <span>{benefit}</span>
-                  </li>
-                ))}
+      <section className="mx-auto max-w-6xl px-5 sm:px-8 py-16">
+        <div className="grid gap-6 md:grid-cols-2">
+          {OPPORTUNITIES.map((offer) => (
+            <article key={offer.title} className="border border-ink/15 p-7 sm:p-9 flex flex-col">
+              <p className="overline-label">{offer.eyebrow}</p>
+              <h2 className="font-editorial text-3xl mt-3">{offer.title}</h2>
+              <p className="font-editorial text-xl mt-3 text-oxblood">{offer.price}</p>
+              <p className="text-sm text-stone mt-4 leading-relaxed">{offer.summary}</p>
+              <h3 className="text-xs uppercase tracking-btn mt-7">What you receive</h3>
+              <ul className="mt-4 text-sm space-y-3 flex-1">
+                {offer.included.map((item) => <li className="flex gap-2" key={item}><span className="text-oxblood">✓</span><span>{item}</span></li>)}
               </ul>
-              <a href="#apply" className="btn-lux btn-lux-outline mt-6 text-center">
-                Apply for {plan.name}
-              </a>
+              <p className="mt-6 pt-5 border-t border-ink/10 text-xs text-stone leading-relaxed">{offer.terms}</p>
+              <Link to={offer.link as "/creators"} className="btn-lux btn-lux-primary mt-7 text-center">{offer.cta}</Link>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="bg-ivory-deep">
+      <section className="bg-ivory-deep border-y border-ink/10">
         <div className="mx-auto max-w-5xl px-5 sm:px-8 py-14">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="border border-ink/10 bg-ivory p-7">
-              <p className="overline-label mb-2">Included</p>
-              <h2 className="font-editorial text-2xl">What membership is for</h2>
-              <ul className="mt-4 space-y-2 text-sm text-stone">
-                <li>• Sales tools and approved campaign resources.</li>
-                <li>• Training and business-support sessions.</li>
-                <li>• Marketing and co-branded support according to plan.</li>
-                <li>• Priority support and selected activation opportunities.</li>
-              </ul>
-            </div>
-            <div className="border border-ink/10 bg-ivory p-7">
-              <p className="overline-label mb-2">Not included</p>
-              <h2 className="font-editorial text-2xl">What membership does not buy</h2>
-              <ul className="mt-4 space-y-2 text-sm text-stone">
-                <li>• No guaranteed income or sales.</li>
-                <li>• No automatic credit or consignment stock.</li>
-                <li>• No exclusive territory unless separately contracted.</li>
-                <li>• No recruitment/downline commission.</li>
-              </ul>
-            </div>
-          </div>
-          <p className="mt-8 text-xs text-stone text-center max-w-2xl mx-auto leading-relaxed">
-            Need a major distribution, sponsorship or co-branded arrangement?
-            Those are strategic partnerships and are handled by custom proposal,
-            not by a public subscription tier.
+          <p className="overline-label mb-3">PRIVATE & INSTITUTIONAL</p>
+          <h2 className="font-editorial text-3xl sm:text-4xl">For private patrons, corporations and cultural partners.</h2>
+          <p className="mt-4 text-stone max-w-3xl leading-relaxed">
+            Commission a private leather collection, executive gift programme or approved co-branded capsule.
+            You receive a dedicated brief, product concept, transparent quotation, milestone-based production
+            and a named contact. This is a product or commercial collaboration, not a promise of investment returns.
           </p>
+          <div className="flex gap-3 flex-wrap mt-7">
+            <Link to="/corporate" className="btn-lux btn-lux-primary">Corporate commissions</Link>
+            <Link to="/royale" className="btn-lux btn-lux-outline">Private Royale service</Link>
+            <a href={waLink("Hello DREAMZ, I would like to discuss a private collection, sponsorship or strategic leather collaboration.")} target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-outline">Request a private proposal</a>
+          </div>
         </div>
       </section>
 
-      <section id="apply" className="mx-auto max-w-3xl px-5 sm:px-8 py-16">
-        <MembershipApplication />
-      </section>
-
-      <section className="border-t border-ink/10">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8 py-14 grid gap-5 md:grid-cols-2">
-          <div className="border border-ink/10 p-7">
-            <p className="overline-label mb-2">Just want to earn?</p>
-            <h2 className="font-editorial text-2xl">Earn with DREAMZ is free</h2>
-            <p className="mt-3 text-sm text-stone">
-              Apply for a code/link without buying a membership.
-            </p>
-            <Link to="/earn" className="btn-lux btn-lux-outline mt-6">Earn with DREAMZ</Link>
-          </div>
-          <div className="border border-ink/10 p-7">
-            <p className="overline-label mb-2">Want stock for a store?</p>
-            <h2 className="font-editorial text-2xl">Sell DREAMZ</h2>
-            <p className="mt-3 text-sm text-stone">
-              Retail stock models are a separate commercial relationship.
-            </p>
-            <Link to="/partnerships" className="btn-lux btn-lux-outline mt-6">See Retail Models</Link>
-          </div>
+      <section className="mx-auto max-w-4xl px-5 sm:px-8 py-16">
+        <h2 className="font-editorial text-3xl">One transaction. One agreed commercial model.</h2>
+        <p className="mt-4 text-stone leading-relaxed">
+          Referral commissions, design royalties, wholesale discounts and franchise arrangements are distinct.
+          They do not stack automatically. No paid membership is required to refer or apply.
+          All commissions are based on qualifying verified sales, not recruiting members.
+          No public pricing implies a guaranteed return. Existing signed partner agreements remain in force on their original terms.
+        </p>
+        <div className="flex gap-3 flex-wrap mt-7">
+          <Link to="/earn" className="btn-lux btn-lux-outline">Just want to refer? Start free</Link>
+          <Link to="/studio-plans" className="btn-lux btn-lux-outline">Design Studio access</Link>
         </div>
       </section>
     </div>
-  );
-}
-
-function MembershipApplication() {
-  const [planId, setPlanId] = useState<PartnerPlanId>("starter");
-  const [sellingMode, setSellingMode] = useState<SellingMode>("digital");
-  const [agreed, setAgreed] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState<Awaited<ReturnType<typeof applyAsPartner>> | null>(null);
-  const plan = useMemo(() => getPartnerPlan(planId), [planId]);
-
-  const submit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!agreed) {
-      setError("Please confirm you understand the membership terms.");
-      return;
-    }
-    setBusy(true);
-    setError("");
-    const fd = new FormData(e.currentTarget);
-    try {
-      const res = await applyAsPartner({
-        data: {
-          sellingMode,
-          earningType: "scout",
-          partnerPlan: ["scout", "starter", "growth", "pro"].includes(planId) ? planId as "scout" | "starter" | "growth" | "pro" : "starter",
-          physicalModel: "undecided",
-          introducerCode: String(fd.get("introducerCode") || ""),
-          displayName: String(fd.get("displayName") || ""),
-          email: String(fd.get("email") || ""),
-          phone: String(fd.get("phone") || ""),
-          socialProfile: String(fd.get("socialProfile") || ""),
-          storeName: "",
-          businessName: String(fd.get("businessName") || ""),
-          audience: String(fd.get("audience") || ""),
-          message: String(fd.get("message") || ""),
-          agreedTerms: true,
-        },
-      });
-      setResult(res);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send your application.");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  if (result) {
-    const msg = [
-      `Hello ${BRAND.shortName}, I submitted a Partner with DREAMZ membership application.`,
-      result.applicationCode ? `Application code: ${result.applicationCode}` : "",
-      `Plan: ${result.planName}`,
-      `Annual value: ₦${(result.feeKobo / 100).toLocaleString("en-NG")}`,
-      "Please confirm approval and the current payment instructions.",
-    ].filter(Boolean).join("\n");
-    return (
-      <div className="border border-ink/15 px-8 py-12 text-center">
-        <p className="text-forest text-3xl mb-4">✓</p>
-        <h2 className="font-editorial text-3xl">Membership application received</h2>
-        <p className="mt-3 text-sm text-stone">
-          Do not make payment until DREAMZ confirms the application and current payment instructions.
-        </p>
-        <a href={waLink(msg)} target="_blank" rel="noopener noreferrer" className="btn-lux btn-lux-primary mt-7">
-          Continue on WhatsApp
-        </a>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={submit} className="border border-ink/10 px-6 sm:px-10 py-10">
-      <p className="overline-label mb-3 text-center">Optional Annual Membership</p>
-      <h2 className="font-editorial text-3xl text-center">Apply to Partner with DREAMZ</h2>
-
-      <div className="grid gap-5 sm:grid-cols-2 mt-8">
-        <div className="sm:col-span-2">
-          <label className="input-lux-label" htmlFor="membership-plan">Plan</label>
-          <select id="membership-plan" className="input-lux" value={planId} onChange={(e) => setPlanId(e.target.value as PartnerPlanId)}>
-            {PAID_PLANS.map((p) => (
-              <option key={p.id} value={p.id}>{p.name} — {partnerPlanPriceLabel(p)}</option>
-            ))}
-          </select>
-          <p className="mt-2 text-xs text-stone">{plan.summary}</p>
-        </div>
-
-        <div className="sm:col-span-2">
-          <label className="input-lux-label" htmlFor="membership-mode">How do you currently plan to sell?</label>
-          <select id="membership-mode" className="input-lux" value={sellingMode} onChange={(e) => setSellingMode(e.target.value as SellingMode)}>
-            <option value="digital">Digital / referral sales</option>
-            <option value="physical">Physical retail</option>
-            <option value="both">Both digital and physical</option>
-          </select>
-        </div>
-
-        <div>
-          <label htmlFor="member-name" className="input-lux-label">Full name</label>
-          <input id="member-name" name="displayName" required minLength={2} className="input-lux" />
-        </div>
-        <div>
-          <label htmlFor="member-email" className="input-lux-label">Email</label>
-          <input id="member-email" name="email" type="email" required className="input-lux" />
-        </div>
-        <div>
-          <label htmlFor="member-phone" className="input-lux-label">Phone</label>
-          <input id="member-phone" name="phone" type="tel" required className="input-lux" placeholder="0803 000 0000" />
-        </div>
-        <div>
-          <label htmlFor="member-business" className="input-lux-label">Business / brand name (optional)</label>
-          <input id="member-business" name="businessName" className="input-lux" />
-        </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="member-social" className="input-lux-label">Social profile / website (optional)</label>
-          <input id="member-social" name="socialProfile" className="input-lux" />
-        </div>
-        <div className="sm:col-span-2">
-          <label htmlFor="member-audience" className="input-lux-label">What do you want the membership to help you achieve?</label>
-          <textarea id="member-audience" name="audience" rows={3} className="input-lux" />
-        </div>
-        <div>
-          <label htmlFor="member-introducer" className="input-lux-label">Introducer code (optional)</label>
-          <input id="member-introducer" name="introducerCode" className="input-lux" />
-        </div>
-        <div>
-          <label htmlFor="member-message" className="input-lux-label">Anything else</label>
-          <input id="member-message" name="message" className="input-lux" />
-        </div>
-      </div>
-
-      <label className="mt-6 flex items-start gap-2.5 text-xs text-stone leading-relaxed">
-        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5" />
-        <span>
-          I understand this fee pays for business-support benefits only. It does
-          not guarantee income, buy commission rights, automatically grant stock
-          or credit, or create any recruitment/downline entitlement.
-        </span>
-      </label>
-
-      {error && <p role="alert" className="mt-4 text-sm text-oxblood">{error}</p>}
-      <button type="submit" disabled={busy} className="btn-lux btn-lux-primary w-full mt-6">
-        {busy ? "Sending…" : `Apply for ${plan.name}`}
-      </button>
-      <p className="mt-4 text-center text-xs text-stone">Questions? WhatsApp {CONTACT.phoneDisplay}</p>
-    </form>
   );
 }
