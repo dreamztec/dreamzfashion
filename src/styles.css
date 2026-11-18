@@ -51,7 +51,7 @@ body {
 
 .font-editorial {
   font-family: var(--font-serif);
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -0.01em;
 }
 
@@ -70,9 +70,10 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 1rem 2.25rem;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
+  font-weight: 650;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.105em;
   border: 1px solid transparent;
   transition: all 220ms ease;
   cursor: pointer;
