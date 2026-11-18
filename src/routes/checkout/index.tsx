@@ -486,7 +486,7 @@ function Checkout() {
           {!paymentOnline && preview && (
             <div className="mt-8 border border-gold/50 bg-gold/5 px-5 py-4 text-sm leading-relaxed" role="note">
               <p className="font-medium">
-                {pricing?.hasQuoteLines ? "Your cart includes a custom design to be quoted" : "Online payment isn't connected yet"}
+                {pricing?.hasQuoteLines ? "Your cart includes a custom design to be quoted" : "Online checkout is temporarily unavailable"}
               </p>
               <p className="text-stone mt-1">
                 Send your order request and nothing is charged. You get an order
