@@ -364,7 +364,8 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     const siteUrl = process.env.SITE_URL || process.env.URL || "http://localhost:3000";
     try {
       const init = await provider!.initialize({
-        email: data.email,
+        // A genuine email was already enforced for payable orders above.
+        email: data.email!.trim(),
         amountKobo: paymentPlan === "deposit" ? depositKobo : total,
         reference: reference!,
         callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(orderNumber)}`,
