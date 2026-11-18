@@ -622,7 +622,7 @@ export const adminSaveProductImages = createServerFn({ method: "POST" })
 // ── Orders ───────────────────────────────────────────────────────────
 
 export const adminListOrders = createServerFn({ method: "GET" }).handler(async () => {
-  requireAdmin();
+  await requireAdminRole(["owner", "sales", "operations"]);
   const rows = await db.select().from(orders).orderBy(desc(orders.createdAt)).limit(200);
   const items = await db.select().from(orderItems);
   const paymentRows = await db.select().from(payments);

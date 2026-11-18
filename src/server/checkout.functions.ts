@@ -565,6 +565,11 @@ export const initializeBalancePayment = createServerFn({ method: "POST" })
       throw new Error("Nothing outstanding on this order");
     }
 
+    // Manual orders may have been registered without an email. Do not create
+    // a pending gateway ledger attempt until a real payer email is available.
+    if (!order.email) {
+      throw new Error("This order has no email for the payment receipt. Contact DREAMZ to add a verified email or settle your balance offline.");
+    }
     const reference = `PSKB-${order.orderNumber}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     await db.insert(payments).values({
       orderId: order.id,
@@ -576,14 +581,22 @@ export const initializeBalancePayment = createServerFn({ method: "POST" })
     });
 
     const siteUrl = process.env.SITE_URL || "http://localhost:3000";
-    const init = await provider.initialize({
-      email: order.email || `${order.orderNumber}@dreamzfk.order`,
-      amountKobo: outstanding,
-      reference,
-      callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(order.orderNumber)}`,
-      metadata: { order_number: order.orderNumber, payment_plan: "balance" },
-    });
-
+    let init;
+    try {
+      init = await provider.initialize({
+        email: order.email,
+        amountKobo: outstanding,
+        reference,
+        callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(order.orderNumber)}`,
+        metadata: { order_number: order.orderNumber, payment_plan: "balance" },
+      });
+    } catch {
+      await db.update(payments).set({ status: "failed", updatedAt: new Date() }).where(eq(payments.reference, reference));
+      throw new Error("Could not open a secure Paystack payment page. You have not been charged by this attempt. Please try again.");
+    }
+    // The callback verifier uses the current order reference; without
+    // updating it, a manually paid deposit cannot be completed online.
+    await db.update(orders).set({ paymentReference: reference, updatedAt: new Date() }).where(eq(orders.id, order.id));
     return { fullyPaid: false as const, authorizationUrl: init.authorizationUrl, reference };
   });
 
@@ -645,6 +658,7 @@ export const trackOrder = createServerFn({ method: "POST" })
         customerName: order.customerName,
         status: order.status,
         paymentStatus: order.paymentStatus,
+        paymentMethod: order.paymentMethod,
         paymentPlan: order.paymentPlan,
         depositKobo: order.depositKobo,
         balanceKobo: order.balanceKobo,

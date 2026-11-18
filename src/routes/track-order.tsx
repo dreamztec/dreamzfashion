@@ -74,7 +74,7 @@ function TrackOrder() {
         <p className="overline-label mb-3">Client Care</p>
         <h1 className="font-editorial text-4xl sm:text-5xl">Track Your Order</h1>
         <p className="text-stone mt-4 max-w-md mx-auto leading-relaxed">
-          Enter your order number and the phone number or email used at checkout.
+          Enter your DREAMZ order number and the phone number or email used when placing it — online, in-store or through WhatsApp.
         </p>
       </div>
 
@@ -149,6 +149,18 @@ function TrackOrder() {
                     {PAYMENT_STATUS_LABELS[order.paymentStatus] ?? order.paymentStatus}
                   </span>
                 </p>
+                {order.paymentMethod && (
+                  <p className="text-xs text-stone mt-1">
+                    Method: {({
+                      cash: "Cash (confirmed by DREAMZ)",
+                      bank_transfer: "Bank transfer (confirmed by DREAMZ)",
+                      pos: "POS (confirmed by DREAMZ)",
+                      external_payment: "External payment (confirmed by DREAMZ)",
+                      paystack: "Paystack",
+                      card: "Card via Paystack",
+                    } as Record<string, string>)[order.paymentMethod] ?? order.paymentMethod.replaceAll("_", " ")}
+                  </p>
+                )}
                 {order.latestUpdate && (
                   <p className="text-xs text-stone mt-1">Latest update: {order.latestUpdate}</p>
                 )}
@@ -164,7 +176,7 @@ function TrackOrder() {
             )}
 
             {/* Timeline */}
-            {!cancelled && order.paymentStatus !== "requested" && (
+            {!cancelled && (
               <ol className="mb-10" aria-label="Order progress">
                 {TRACKING_FLOW.map((status, i) => {
                   const reached = currentIndex >= i;
