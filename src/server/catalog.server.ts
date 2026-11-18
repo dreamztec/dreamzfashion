@@ -96,9 +96,12 @@ async function attachMedia(rows: Product[]): Promise<ProductWithMedia[]> {
   }));
 }
 
-/** Public shop surfaces show only finished merchandise: real image + real price. */
+/** Show approved, priced merchandise even before approved product photography is available.
+ * ProductMedia renders the truthful "Image coming soon" placeholder.
+ * Draft, unpriced and checkout-blocked items stay off the shoppable catalogue.
+ */
 function isPublicMerchandise(p: ProductWithMedia): boolean {
-  return p.price > 0 && p.checkoutReady && p.images.length > 0;
+  return p.price > 0 && p.checkoutReady;
 }
 
 /** A published product is purchasable only when fully approved for checkout. */
