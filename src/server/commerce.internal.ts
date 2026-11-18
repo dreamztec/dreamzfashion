@@ -81,6 +81,10 @@ export async function confirmOrderPaid(
     .set({
       paidKobo: newPaidKobo,
       balanceKobo: Math.max(0, order.total - newPaidKobo),
+      // Cash deposits on originally unpaid offline orders become proper
+      // deposit-plan orders, so the customer can see and pay the balance.
+      paymentPlan: !fullyPaid ? "deposit" : order.paymentPlan,
+      depositKobo: !fullyPaid && order.paymentPlan !== "deposit" ? newPaidKobo : order.depositKobo,
       paymentStatus: nextPaymentStatus,
       paymentMethod: channel,
       status: nextStatus,
