@@ -3,6 +3,7 @@ import { db } from "../../../../db/index";
 import { orderEvents, orders, payments } from "../../../../db/schema";
 import { eq, sql } from "drizzle-orm";
 import { confirmOrderPaid } from "../../../server/commerce.internal";
+import { verifyPaystackWebhookSignature } from "../../../server/paystack-webhook-auth.server";
 
 /**
  * Paystack webhook — server-to-server payment confirmation.
@@ -24,29 +25,27 @@ export const Route = createFileRoute("/api/webhooks/paystack")({
     handlers: {
       POST: async ({ request }) => {
         const secret = process.env.PAYSTACK_SECRET_KEY;
-        if (!secret) {
+        const webhookSigningSecret = process.env.PAYSTACK_WEBHOOK_SECRET;
+        if (!secret && !webhookSigningSecret) {
           return Response.json({ error: "Payment service inactive" }, { status: 503 });
         }
 
+        // Read the exact bytes Paystack signed before parsing or normalising.
         const rawBody = await request.text();
-        const signature = request.headers.get("x-paystack-signature");
-
-        if (!signature) {
-          return Response.json({ error: "Missing signature" }, { status: 401 });
-        }
-
-        // HMAC SHA512 verification (constant-time comparison)
-        const { createHmac, timingSafeEqual } = await import("node:crypto");
-        const expected = createHmac("sha512", secret).update(rawBody).digest("hex");
-        const a = Buffer.from(signature, "utf8");
-        const b = Buffer.from(expected, "utf8");
-        if (a.length !== b.length || !timingSafeEqual(a, b)) {
+        const authenticated = verifyPaystackWebhookSignature({
+          rawBody,
+          newSignature: request.headers.get("paystack-signature"),
+          legacySignature: request.headers.get("x-paystack-signature"),
+          webhookSecret: webhookSigningSecret,
+          legacySecretKey: secret,
+        });
+        if (!authenticated) {
           return Response.json({ error: "Invalid signature" }, { status: 401 });
         }
 
         let event: {
           event: string;
-          data?: { reference?: string; amount?: number; id?: number | string };
+          data?: { reference?: string; amount?: number; currency?: string; id?: number | string };
         };
         try {
           event = JSON.parse(rawBody);
@@ -68,7 +67,9 @@ export const Route = createFileRoute("/api/webhooks/paystack")({
           if (payment && payment.status !== "success") {
             // Amount must match the expected charge exactly (kobo).
             const amountOk =
-              !!event.data.amount && event.data.amount === payment.amountKobo;
+              event.data.amount === payment.amountKobo &&
+              event.data.currency === "NGN" &&
+              payment.currency === "NGN";
             if (amountOk) {
               if (payment.kind === "quote_milestone") {
                 // Corporate quote milestone: claim the ledger row atomically
@@ -107,7 +108,7 @@ export const Route = createFileRoute("/api/webhooks/paystack")({
                 await db.insert(orderEvents).values({
                   orderId: payment.orderId,
                   status: "payment_amount_mismatch",
-                  note: `Webhook amount ${event.data.amount ?? "unknown"} did not match the expected charge ${payment.amountKobo}. Nothing was marked paid.`,
+                  note: `Webhook payment value (${event.data.amount ?? "unknown"} ${event.data.currency ?? "unknown"}) did not match the expected NGN charge ${payment.amountKobo}. Nothing was marked paid.`,
                 });
               }
             }
