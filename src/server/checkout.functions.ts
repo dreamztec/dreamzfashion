@@ -565,6 +565,11 @@ export const initializeBalancePayment = createServerFn({ method: "POST" })
       throw new Error("Nothing outstanding on this order");
     }
 
+    // Manual orders may have been registered without an email. Do not create
+    // a pending gateway ledger attempt until a real payer email is available.
+    if (!order.email) {
+      throw new Error("This order has no email for the payment receipt. Contact DREAMZ to add a verified email or settle your balance offline.");
+    }
     const reference = `PSKB-${order.orderNumber}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
     await db.insert(payments).values({
       orderId: order.id,
@@ -576,10 +581,6 @@ export const initializeBalancePayment = createServerFn({ method: "POST" })
     });
 
     const siteUrl = process.env.SITE_URL || "http://localhost:3000";
-    // A real email is necessary for Paystack receipts on manual and online deposits.
-    if (!order.email) {
-      throw new Error("This order has no email for the payment receipt. Contact DREAMZ to add a verified email or settle your balance offline.");
-    }
     let init;
     try {
       init = await provider.initialize({
