@@ -80,6 +80,7 @@ export async function confirmOrderPaid(
     .update(orders)
     .set({
       paidKobo: newPaidKobo,
+      balanceKobo: Math.max(0, order.total - newPaidKobo),
       paymentStatus: nextPaymentStatus,
       paymentMethod: channel,
       status: nextStatus,
