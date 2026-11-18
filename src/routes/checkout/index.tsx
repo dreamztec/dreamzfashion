@@ -352,11 +352,14 @@ function Checkout() {
               />
             </div>
             <div>
-              <label htmlFor="email" className="input-lux-label">Email (for your receipt)</label>
+              <label htmlFor="email" className="input-lux-label">
+                {paymentOnline ? "Email (required for Paystack receipt)" : "Email (optional, for order updates)"}
+              </label>
               <input
                 id="email"
                 name="email"
                 type="email"
+                required={paymentOnline}
                 autoComplete="email"
                 className="input-lux"
                 placeholder="you@example.com"
@@ -534,10 +537,14 @@ function Checkout() {
             </p>
           )}
           {paymentOnline && (
-            <p className="mt-4 text-center text-xs text-stone">
-              Card, bank transfer and USSD are handled by Paystack — card
-              details never touch our servers.
-            </p>
+            <div className="mt-4 text-center text-xs text-stone space-y-2">
+              <p>Card, bank transfer and USSD are handled by Paystack — card details never touch our servers.</p>
+              <p>Check the merchant name and amount on Paystack before approving the payment.</p>
+              <p>
+                By proceeding, you acknowledge our{" "}
+                <Link to="/returns" className="underline underline-offset-2 hover:text-ink">returns and refund policy</Link>.
+              </p>
+            </div>
           )}
         </form>
 

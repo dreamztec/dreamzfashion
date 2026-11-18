@@ -203,6 +203,11 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     // The explicit owner-controlled kill switch is enforced on the server,
     // not just by hiding the Paystack button in the browser.
     const isRequest = data.mode === "request" || !paymentAvailable() || !provider || priced.hasQuoteLines;
+    // Paystack requires a genuine customer email for payment receipts. Do not
+    // substitute an invented mailbox when real money is being collected.
+    if (!isRequest && total > 0 && !data.email?.trim()) {
+      throw new Error("Enter your email address to receive a Paystack payment receipt.");
+    }
     const fullyCovered = !isRequest && total === 0;
 
     // ── Deposit plan (server-decided) ─────────────────────────────────
