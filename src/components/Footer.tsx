@@ -22,7 +22,7 @@ const COLUMNS: Array<{
       { label: "Bags", to: "/shop/bags", shop: true },
       { label: "Accessories", to: "/shop/accessories", shop: true },
       { label: "Dream Studio", to: "/custom" },
-      { label: "Creator Studio Access", to: "/studio-plans" },
+      { label: "Free Dream Studio", to: "/custom" },
     ],
   },
   {
