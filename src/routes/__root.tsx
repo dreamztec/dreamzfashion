@@ -68,10 +68,10 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: BRAND.name },
       { property: "og:url", content: SITE_URL },
-      { property: "og:image", content: SITE_URL + "/img/products/vision-leather-ensemble-campaign.jpg" },
+      { property: "og:image", content: SITE_URL + "/img/dfk-logo.jpg" },
       { property: "og:image:alt", content: "DREAMZ Fashion leather collection" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:image", content: SITE_URL + "/img/products/vision-leather-ensemble-campaign.jpg" },
+      { name: "twitter:image", content: SITE_URL + "/img/dfk-logo.jpg" },
     ],
     links: [
       { rel: "icon", href: "/favicon.ico" },
