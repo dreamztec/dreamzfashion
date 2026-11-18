@@ -151,9 +151,29 @@ async function priceLine(item: CartLineInput): Promise<PricedLine> {
     };
   }
 
-  // Quote-only guard: unpriced or unapproved products are never sold online.
+  // Published products without approved checkout pricing can still be
+  // submitted as *unpaid quote requests*. They must never reach Paystack
+  // until a real price is approved by DREAMZ.
   if (p.price <= 0 || !p.checkoutReady) {
-    throw new PricingError(`${p.name} is priced after review — please request a quote instead.`);
+    const { size, singlePart } = splitVariantLabel(item.variantLabel);
+    const resolvedMessage = await resolveMessage(item, p);
+    return {
+      productId: p.id,
+      sku: p.sku,
+      productName: p.name,
+      variantLabel: item.variantLabel ?? null,
+      size: singlePart ? (/^\\d/.test(size ?? "") ? size : null) : size,
+      purchaseOption: item.purchaseOption,
+      customization: item.customization ?? null,
+      designId: null,
+      imageUrl: p.image,
+      unitPrice: 0,
+      unitCostKobo: p.internalCostKobo,
+      quantity: item.quantity,
+      quoteRequired: true,
+      messageSnapshot: resolvedMessage?.snapshot ?? null,
+      messageChargeKobo: resolvedMessage?.chargeKobo ?? null,
+    };
   }
   let unitPrice = p.price;
   if (item.purchaseOption === "complete_package") {

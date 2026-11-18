@@ -242,29 +242,12 @@ function Checkout() {
     );
   }
 
-  if (!paymentOnline) {
-    return (
-      <div className="mx-auto max-w-xl px-5 pt-36 pb-28 text-center">
-        <p className="overline-label mb-3">Secure Checkout</p>
-        <h1 className="font-editorial text-4xl sm:text-5xl">Online payment is unavailable right now</h1>
-        <p className="mt-5 text-stone leading-relaxed">
-          Your cart is saved. We cannot accept a secure payment for this order at the moment,
-          so we have not charged you. Please try again shortly. Custom or unpriced pieces
-          require an approved quotation before payment.
-        </p>
-        <div className="mt-8 flex gap-3 flex-wrap justify-center">
-          <Link to="/shop" search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }} className="btn-lux btn-lux-outline">Continue Shopping</Link>
-          <Link to="/custom" search={{design:undefined,t:undefined,start:undefined,brief:undefined}} className="btn-lux btn-lux-primary">Request a Custom Design</Link>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-6xl px-5 sm:px-8 pt-32 pb-24">
       <div className="text-center mb-12">
-        <p className="overline-label mb-3">{paymentOnline ? "Secure Checkout" : "Order Request"}</p>
-        <h1 className="font-editorial text-4xl sm:text-5xl">Almost Yours</h1>
+        <p className="overline-label mb-3">{paymentOnline ? "Secure Checkout with Paystack" : "Order Request"}</p>
+        <h1 className="font-editorial text-4xl sm:text-5xl">{pricing ? "Almost Yours" : "Review Your Cart"}</h1>
+        {preview && !preview.ok && <p role="alert" className="mt-5 text-sm text-oxblood max-w-2xl mx-auto">{preview.error} Your cart has not been charged. Correct the item or contact DREAMZ for help.</p>}
       </div>
 
       <div className="grid gap-14 lg:grid-cols-[1.2fr_1fr]">
@@ -429,26 +412,28 @@ function Checkout() {
           {!paymentOnline && preview && (
             <div className="mt-8 border border-gold/50 bg-gold/5 px-5 py-4 text-sm leading-relaxed" role="note">
               <p className="font-medium">
-                {pricing?.hasQuoteLines ? "Your cart includes a custom design to be quoted" : "Online checkout is temporarily unavailable"}
+                {pricing?.hasQuoteLines ? "A product in your cart needs a confirmed quotation" : "Paystack is not accepting online checkout for this order yet"}
               </p>
               <p className="text-stone mt-1">
-                Send your order request and nothing is charged. You get an order
-                reference straight away; the DREAMZ team confirms details and
-                sends you a secure payment link. We never ask for card details here.
+                {pricing?.hasQuoteLines
+                  ? "Complete your details to submit an unpaid quotation request. DREAMZ will confirm a final price before sending any secure payment link."
+                  : "You can send an unpaid order request instead. DREAMZ will confirm availability and send an official secure payment link when ready. Never send card details by chat."}
               </p>
             </div>
           )}
 
           <button
             type="submit"
-            disabled={submitting || !pricing || pricing.total === null}
+            disabled={submitting || !pricing || pricing.total === null || !!pricing.partnerCodeError}
             className="btn-lux btn-lux-primary w-full mt-8"
           >
             {submitting
               ? paymentOnline
                 ? "Connecting to Paystack…"
                 : "Sending your request…"
-              : !pricing || pricing.total === null
+              : !pricing
+                ? "Review the cart issue above"
+                : pricing.total === null
                 ? "Select your state to continue"
                 : paymentOnline
                   ? payDeposit && canDeposit
@@ -564,7 +549,7 @@ function Checkout() {
             )}
             <div className="flex justify-between border-t border-ink/10 pt-3 mt-3">
               <dt className="uppercase tracking-btn text-xs self-center">
-                {pricing?.hasQuoteLines ? "Total before quote" : "Total"}
+                {pricing?.hasQuoteLines ? "Partial estimate (not payable)" : "Total"}
               </dt>
               <dd className="font-editorial text-2xl">
                 {pricing && pricing.total !== null ? formatNaira(pricing.total) : "—"}

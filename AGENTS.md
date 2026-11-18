@@ -65,8 +65,11 @@ but intentionally not built yet.
   lifestyle/editorial). Images go through `img()` / `imgSrcSet()` at
   640/960/1280/1600 via the Netlify Image CDN.
 - **Quote-only products** — `price = 0` or `checkout_ready = false` means the
-  storefront shows "Request a quote" and the server REJECTS the line at
-  checkout. Never invent prices.
+  storefront shows "Request a quote". Published quote-only items can be submitted
+  as UNPAID order/quotation requests; the checkout server MUST block charging
+  them until each line is explicitly priced and approved. Never invent prices.
+  The Paystack button must appear only when every item is checkout-ready.
+  If Paystack session initialization fails, preserve an unpaid order reference.
 - **Deposits** — orders may use `paymentPlan: 'full' | 'deposit'`. Deposit
   amounts are computed server-side from the `deposits` settings key (disabled
   by default; per-product `deposit_eligible` flag). `confirmOrderPaid`

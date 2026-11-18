@@ -362,29 +362,46 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     }
 
     const siteUrl = process.env.SITE_URL || process.env.URL || "http://localhost:3000";
-    const init = await provider!.initialize({
-      email: data.email || `${orderNumber}@dreamzfk.order`,
-      amountKobo: paymentPlan === "deposit" ? depositKobo : total,
-      reference: reference!,
-      callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(orderNumber)}`,
-      metadata: {
-        order_number: orderNumber,
-        phone: data.phone,
-        payment_plan: paymentPlan,
-        ...(paymentPlan === "deposit" ? { deposit_kobo: depositKobo, balance_kobo: balanceKobo } : {}),
-      },
-    });
-
-    return {
-      orderNumber,
-      requested: false,
-      duplicate: false,
-      authorizationUrl: init.authorizationUrl,
-      reference,
-      paymentPlan,
-      depositKobo,
-      balanceKobo,
-    };
+    try {
+      const init = await provider!.initialize({
+        // A genuine email was already enforced for payable orders above.
+        email: data.email!.trim(),
+        amountKobo: paymentPlan === "deposit" ? depositKobo : total,
+        reference: reference!,
+        callbackUrl: `${siteUrl}/checkout/callback?orderNumber=${encodeURIComponent(orderNumber)}`,
+        metadata: {
+          order_number: orderNumber,
+          phone: data.phone,
+          payment_plan: paymentPlan,
+          ...(paymentPlan === "deposit" ? { deposit_kobo: depositKobo, balance_kobo: balanceKobo } : {}),
+        },
+      });
+      return {
+        orderNumber,
+        requested: false,
+        duplicate: false,
+        authorizationUrl: init.authorizationUrl,
+        reference,
+        paymentPlan,
+        depositKobo,
+        balanceKobo,
+      };
+    } catch {
+      // Gateway initialization is NOT a charge. Keep the submitted order
+      // available and unpaid rather than strand it in pending_payment.
+      await db.update(payments)
+        .set({ status: "failed", updatedAt: new Date() })
+        .where(eq(payments.reference, reference!));
+      await db.update(orders)
+        .set({ paymentStatus: "requested", paymentReference: null, updatedAt: new Date() })
+        .where(eq(orders.id, order.id));
+      await db.insert(orderEvents).values({
+        orderId: order.id,
+        status: "payment_setup_failed",
+        note: "Secure payment session could not be opened. Order remains unpaid and can be resumed from order tracking.",
+      });
+      return { orderNumber, requested: true, duplicate: false, orderUrl: `/order/${orderNumber}`, reason: "payment_setup_failed" };
+    }
   });
 
 /**
