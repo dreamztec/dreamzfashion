@@ -74,12 +74,12 @@ function Home() {
               </Link>
             </div>
             <div className="mt-7 grid gap-2 sm:grid-cols-3 max-w-3xl mx-auto text-[0.66rem] uppercase tracking-btn text-ivory/70">
-              <span>3 saved designs free</span>
+              <span>30 saved designs free</span>
               <span>Visual leather & component samples</span>
               <span>Production timing agreed before payment</span>
             </div>
             <p className="mt-5 text-[0.66rem] text-ivory/55">
-              The final price, deposit, production time and delivery date are confirmed on WhatsApp before work begins.
+              Ready-to-wear pieces can be purchased securely online. Custom designs are quoted and approved before production.
             </p>
           </div>
         </div>
@@ -143,18 +143,18 @@ function Home() {
               <p className="overline-label mb-3">DREAMZ Open Atelier</p>
               <h2 className="font-editorial text-3xl sm:text-5xl">Five minutes from idea to shareable design.</h2>
               <p className="mt-4 text-sm text-stone leading-relaxed max-w-xl">
-                Start from blank forms, leather and component illustrations, then choose the colours and construction details that matter to your own design. Your first three saved designs are free, and your Dreamer page is created automatically.
+                Choose a leather piece, shape, colour and construction, then create and share a personal design. Your first 30 saved designs are free; your Dreamer page brings your work together.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link to="/custom" search={{ design: undefined, t: undefined, start: "1", brief: undefined }} className="btn-lux btn-lux-primary">
                   Start Designing
                 </Link>
-                <Link to="/studio-plans" className="btn-lux btn-lux-outline">
-                  Creator Studio Plans
+                <Link to="/shop" search={SHOP_SEARCH} className="btn-lux btn-lux-outline">
+                  Explore Our Leather Designs
                 </Link>
               </div>
               <p className="mt-4 text-xs text-stone">
-                The first 200 profile holders are marked as Founding Dreamers. Paid Studio access expands tools and capacity; it never buys votes or guarantees earnings.
+                Design, save and share your leather concept with no Studio subscription. Selected community designs may be considered for a co-created DREAMZ collection under separate terms.
               </p>
             </div>
             <ol className="grid gap-3 sm:grid-cols-2">

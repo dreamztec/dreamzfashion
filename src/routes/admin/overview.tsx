@@ -87,6 +87,13 @@ function AdminOverview() {
         ))}
       </div>
 
+      <p className="text-sm text-stone mb-4">
+        Site visits and traffic trends can be reviewed from the{" "}
+        <a href="https://app.netlify.com/projects/dreamzfashion" target="_blank" rel="noopener noreferrer" className="underline font-semibold text-ink">
+          DREAMZ Netlify project dashboard
+        </a>.
+        The shop dashboard records orders, enquiries and conversion; anonymous visitors are not treated as identified leads without consent.
+      </p>
       <p className="text-xs text-stone mb-12 max-w-2xl">
         Contribution = paid revenue minus recorded product costs. It is
         labelled <em>incomplete</em> while any sold item lacks a recorded
@@ -134,6 +141,8 @@ function AdminOverview() {
               ["Add a product", "/admin/products"],
               ["Manage the media library", "/admin/media"],
               ["Review partnership enquiries", "/admin/partnerships"],
+              ["Review Studio design activity", "/admin/studio"],
+              ["Review shared community designs", "/admin/dream-tracker"],
               ["Update order status", "/admin/orders"],
               ["Edit homepage & contact details", "/admin/settings"],
               ["Review bespoke requests", "/admin/bespoke"],

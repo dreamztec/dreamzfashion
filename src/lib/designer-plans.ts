@@ -1,7 +1,7 @@
 /**
- * DREAMZ Creator Studio pricing — access passes, NOT recurring subscriptions.
- * Legacy Pro Studio remains readable for existing users, not open to new sales.
- * Upgrades require admin confirmation; no payment integration is implied.
+ * All new DREAMZ Studio users receive the free Dreamer plan.
+ * Legacy paid plans remain readable ONLY for historical, already-approved access.
+ * The website does not sell, renew or request paid Studio subscriptions.
  */
 export type DesignerPlanId = "free" | "creator" | "studio" | "pro";
 export type DesignerFeature = "public_profile" | "share_links" | "advanced_materials" | "high_res_share" | "analytics" | "private_designs" | "client_mode" | "family_mode" | "client_approval" | "collections" | "priority_render";
@@ -11,10 +11,10 @@ export type DesignerPlan = {
 };
 export const DESIGNER_PLANS: DesignerPlan[] = [
   {
-    id: "free", name: "Dreamer", priceKobo: 0, designLimit: 3, durationDays: null,
-    summary: "Start free. Create your first three saved DREAMZ leather concepts and share your vision.",
-    features: ["public_profile","share_links","private_designs"],
-    benefits: ["3 saved design projects","Dreamer profile and share links","Material, colour and construction choices","Reference image uploads","Public or private designs","Request a production quote separately"],
+    id: "free", name: "Dreamer", priceKobo: 0, designLimit: 30, durationDays: null,
+    summary: "Free for everyone. Design, save, publish and share up to 30 leather concepts with no paid Studio plan.",
+    features: ["public_profile","share_links","advanced_materials","high_res_share","analytics","private_designs","client_mode","family_mode","client_approval","collections"],
+    benefits: ["30 free saved design projects","Dreamer profile and public sharing","Leather and construction tools","Reference image uploads","Private client and family design projects","Production review available separately"],
   },
   {
     id: "creator", name: "Creator Plus", priceKobo: 990_000, designLimit: 15, durationDays: 30,
@@ -35,7 +35,7 @@ export const DESIGNER_PLANS: DesignerPlan[] = [
     benefits: ["Existing contracted access remains subject to original terms."],
   },
 ];
-export const PUBLIC_DESIGNER_PLANS = DESIGNER_PLANS.filter(p=>p.id!=="pro");
+export const PUBLIC_DESIGNER_PLANS = DESIGNER_PLANS.filter(p=>p.id==="free");
 export const PAID_DESIGNER_PLANS = PUBLIC_DESIGNER_PLANS.filter(p=>p.priceKobo>0);
 export function getDesignerPlan(id: string | null | undefined): DesignerPlan {
   return DESIGNER_PLANS.find(p=>p.id===id) ?? DESIGNER_PLANS[0];

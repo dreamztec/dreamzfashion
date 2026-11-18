@@ -11,7 +11,7 @@ import { useCart, useCartHydrated } from "@/store/cart";
 import { deliveryReasonLabel } from "@/lib/delivery";
 import { formatNaira, NIGERIAN_STATES } from "@/lib/format";
 import { BRAND } from "@/lib/config";
-import { WhatsAppCTAButton, GENERAL_INQUIRY, whatsappLink } from "@/components/whatsapp";
+import { WhatsAppCTAButton, GENERAL_INQUIRY } from "@/components/whatsapp";
 import { CONTACT } from "@/lib/contact";
 
 export const Route = createFileRoute("/checkout/")({
@@ -175,30 +175,6 @@ function Checkout() {
   const paymentOnline = !whatsappOnly && Boolean(preview?.paymentAvailable) && !pricing?.hasQuoteLines;
   const canDeposit = paymentOnline && depositEligible.eligible;
 
-  const cartSubtotal = items.reduce(
-    (sum, item) => sum + (item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity,
-    0,
-  );
-  const whatsappOrderMessage = [
-    `Hello ${BRAND.shortName}, I want to order these pieces:`,
-    ...items.map((item) =>
-      [
-        `• ${item.name}${item.variantLabel ? ` — ${item.variantLabel}` : ""} × ${item.quantity}`,
-        item.purchaseOption === "complete_package" ? "  Package: Complete Package" : "",
-        item.designId ? `  Saved DREAMZ design: ${item.designId}` : "",
-        ...Object.entries(item.customization ?? {}).map(([key, value]) => `  ${key}: ${value}`),
-        item.message?.text ? `  Personal message: ${item.message.text}` : "",
-        item.quoteRequired ? "  Price: Please quote" : "",
-      ].filter(Boolean).join("\n"),
-    ),
-    items.some((item) => item.quoteRequired)
-      ? "Listed item prices are indicative; some pieces require a custom quote."
-      : `Indicative item subtotal: ${formatNaira(cartSubtotal)} (delivery not included)`,
-    partnerCode ? `Partner / referral code: ${partnerCode}` : "",
-    "Please confirm final prices, sizing, availability, delivery fees and how to pay. Do not start production until I approve the quote.",
-  ]
-    .filter(Boolean)
-    .join("\n");
 
   const submit = async (form: HTMLFormElement, mode: "pay" | "request") => {
     if (submitting) return; // duplicate-submit guard (the server is idempotent too)
@@ -231,27 +207,8 @@ function Checkout() {
         return;
       }
 
-      // Until online payment is configured, preserve the real DREAMZ order
-      // first (including partner/referral attribution), then hand the customer
-      // to WhatsApp with the order number and server-priced total prefilled.
-      if (result.requested) {
-        const customerName = String(formData.get("name") || "").trim();
-        const totalLabel = pricing?.total != null ? formatNaira(pricing.total) : "to be confirmed";
-        const message = [
-          `Hello DREAMZ, I have submitted order ${result.orderNumber} and I want to arrange payment.`,
-          customerName ? `Name: ${customerName}` : "",
-          `Order total: ${totalLabel}`,
-          partnerCode ? `Partner code: ${partnerCode}` : "",
-          "Please confirm the payment details and next step for my order.",
-        ].filter(Boolean).join("\n");
-        const href = whatsappLink(message, whatsappNumber);
-        if (href) {
-          clear();
-          window.location.href = href;
-          return;
-        }
-      }
-
+      // A quote/request is recorded in the customer account; never divert
+      // an online buyer into WhatsApp or collect card details by message.
       clear();
       window.location.href = result.orderUrl ?? `/order/${result.orderNumber}`;
     } catch (err) {
@@ -288,34 +245,17 @@ function Checkout() {
   if (!paymentOnline) {
     return (
       <div className="mx-auto max-w-xl px-5 pt-36 pb-28 text-center">
-        <p className="overline-label mb-3">Order with DREAMZ</p>
-        <h1 className="font-editorial text-4xl sm:text-5xl">Complete Your Order on WhatsApp</h1>
+        <p className="overline-label mb-3">Secure Checkout</p>
+        <h1 className="font-editorial text-4xl sm:text-5xl">Online payment is unavailable right now</h1>
         <p className="mt-5 text-stone leading-relaxed">
-          Your cart is saved. Send it to the DREAMZ client team and we will confirm
-          availability, delivery and your order details directly with you.
+          Your cart is saved. We cannot accept a secure payment for this order at the moment,
+          so we have not charged you. Please try again shortly. Custom or unpriced pieces
+          require an approved quotation before payment.
         </p>
-        <div className="mt-7 border border-ink/10 bg-ivory-deep p-5 text-left">
-          {items.map((item) => (
-            <div key={item.id} className="flex justify-between gap-4 py-2 text-sm border-b border-ink/5 last:border-0">
-              <span>{item.name} × {item.quantity}</span>
-              <span>{item.quoteRequired ? "Quote required" : formatNaira((item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity)}</span>
-            </div>
-          ))}
-          <div className="flex justify-between gap-4 pt-4 font-medium">
-            <span>{items.some((item) => item.quoteRequired) ? "Final quote" : "Indicative item subtotal"}</span>
-            <span>{items.some((item) => item.quoteRequired) ? "Confirmed on WhatsApp" : formatNaira(cartSubtotal)}</span>
-          </div>
+        <div className="mt-8 flex gap-3 flex-wrap justify-center">
+          <Link to="/shop" search={{ q: undefined, tier: undefined, min: undefined, max: undefined, size: undefined, colour: undefined, availability: undefined, sort: undefined }} className="btn-lux btn-lux-outline">Continue Shopping</Link>
+          <Link to="/custom" search={{design:undefined,t:undefined,start:undefined,brief:undefined}} className="btn-lux btn-lux-primary">Request a Custom Design</Link>
         </div>
-        <div className="mt-7">
-          <WhatsAppCTAButton
-            message={whatsappOrderMessage}
-            whatsappNumber={whatsappNumber}
-            label="Buy on WhatsApp"
-          />
-        </div>
-        <p className="mt-4 text-xs text-stone">
-          Your cart stays saved until you agree on the final quote with DREAMZ. Delivery, availability and payment details are confirmed in chat. Never share your PIN, OTP or banking password.
-        </p>
       </div>
     );
   }

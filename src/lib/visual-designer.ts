@@ -246,8 +246,8 @@ export function constructionVisual(label: string | null | undefined): VisualOpti
 export const PROJECT_MODES = [
   { id:"self", label:"For myself", note:"Create around your own dream and style.", minPlan:"free" as DesignerPlanId },
   { id:"gift", label:"For someone else", note:"Design for any gender, style or size — not just your own.", minPlan:"free" as DesignerPlanId },
-  { id:"client", label:"For a client", note:"Create and organise a private design for a client.", minPlan:"studio" as DesignerPlanId },
-  { id:"family", label:"For my family", note:"Build coordinated designs for a family project.", minPlan:"studio" as DesignerPlanId },
+  { id:"client", label:"For a client", note:"Create and organise a private design for a client.", minPlan:"free" as DesignerPlanId },
+  { id:"family", label:"For my family", note:"Build coordinated designs for a family project.", minPlan:"free" as DesignerPlanId },
 ];
 
 export function visualForPiece(piece: string | null | undefined): VisualPiece | null {

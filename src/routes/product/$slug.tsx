@@ -4,7 +4,6 @@ import { getProduct, getRelated } from "@/server/catalog.functions";
 import type { ProductWithMedia } from "@/server/catalog.server";
 import { ProductGrid } from "@/components/ProductCard";
 import { ImageComingSoon } from "@/components/brand";
-import { ProductWhatsAppCTA, WhatsAppCTAButton } from "@/components/whatsapp";
 import { useCart } from "@/store/cart";
 import { formatNaira, normalizeTier, TIER_LABELS } from "@/lib/format";
 import { displayFit, img } from "@/lib/img";
@@ -406,14 +405,9 @@ function ProductPage() {
                 <Link to="/custom" className="btn-lux btn-lux-primary flex-1">
                   Start a Design Brief
                 </Link>
-                <WhatsAppCTAButton
-                  message={`Hello ${BRAND.shortName}, I'd like a quote for ${product.name} (${product.sku}).`}
-                  whatsappNumber={
-                    CONTACT.whatsappNumber
-                  }
-                  label="Ask on WhatsApp"
-                  className="flex-1"
-                />
+                <Link to="/contact" className="btn-lux btn-lux-outline flex-1 text-center">
+                  Ask About This Piece
+                </Link>
               </div>
             </div>
           ) : packagePrice ? (
@@ -624,24 +618,9 @@ function ProductPage() {
                 </Link>
               </>
             ) : !quoteOnly ? (
-              <>
-                <WhatsAppCTAButton
-                  message={`Hello ${BRAND.shortName}, please notify me when ${product.name} (${product.sku}) is available again.`}
-                  whatsappNumber={
-                    CONTACT.whatsappNumber
-                  }
-                  label={info.altCta?.label ?? "Notify Me"}
-                  className="flex-1"
-                />
-                <WhatsAppCTAButton
-                  message={`Hello ${BRAND.shortName}, I'd like to ask about ${product.name} (${product.sku}).`}
-                  whatsappNumber={
-                    CONTACT.whatsappNumber
-                  }
-                  label="Ask on WhatsApp"
-                  className="flex-1"
-                />
-              </>
+              <Link to="/contact" className="btn-lux btn-lux-outline flex-1 text-center">
+                {info.state === "sold_out" || info.state === "out_of_stock" ? "Ask About Restocking" : "Enquire About This Piece"}
+              </Link>
             ) : null}
           </div>
           {product.customizable ? (
@@ -661,15 +640,7 @@ function ProductPage() {
               Commission This Piece
             </Link>
           )}
-          {!quoteOnly && (
-            <div className="mt-3">
-              <ProductWhatsAppCTA
-                product={product}
-                whatsappNumber={CONTACT.whatsappNumber}
-                customizable={product.customizable}
-              />
-            </div>
-          )}
+
           <button
             type="button"
             onClick={copyShareLink}

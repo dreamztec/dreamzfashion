@@ -2,7 +2,6 @@ import { Link, createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { getCustomDesign } from "@/server/designs.functions";
-import { WhatsAppCTAButton } from "@/components/whatsapp";
 import { BRAND } from "@/lib/config";
 
 /**
@@ -87,7 +86,7 @@ function Custom() {
         <p className="mt-4 max-w-2xl mx-auto text-stone leading-relaxed">
           Start with clean, labelled technical diagrams, choose your leather and colours,
           and watch your sketch update instantly. Generate your finished design image
-          from your specifications, even without a reference photo. Your first three saved designs are free.
+          from your specifications, even without a reference photo. Create and share up to 30 saved design projects for free. No Studio subscription is required.
         </p>
       </div>
 
@@ -110,17 +109,15 @@ function Custom() {
             </p>
             <p className="mt-3 text-xs text-stone">
               The coloured line drawing is a Studio guide, not the final product image.
-              Final materials, measurements, quote, deposit and production timing are
-              confirmed by DREAMZ on WhatsApp before work begins.
+              Final materials, measurements, quotations and production timelines are reviewed by DREAMZ before payment. Ready-to-wear items have secure online checkout.
             </p>
             <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
               <button type="button" onClick={() => setAtelierOpen(true)} className="btn-lux btn-lux-primary">
                 Open the Visual Studio
               </button>
-              <WhatsAppCTAButton
-                message={`Hello ${BRAND.shortName}, I'd like to design my own leather piece.`}
-                label="Talk to a Designer"
-              />
+              <Link to="/shop" search={{q:undefined,tier:undefined,min:undefined,max:undefined,size:undefined,colour:undefined,availability:undefined,sort:undefined}} className="btn-lux btn-lux-outline">
+                Explore Our Designs
+              </Link>
             </div>
           </div>
         ) : (
@@ -142,7 +139,7 @@ function Custom() {
             {[
               ["01", "Design visually", "Choose a clearly labelled leather product, material, colour and construction — no reference image needed."],
               ["02", "Generate and share", "Copy the image prompt, generate your finished design with an AI tool, then upload it to your own Dream page."],
-              ["03", "Order on WhatsApp", "Request a production quote, agree your size and lead time, then pay a confirmed deposit to begin."],
+              ["03", "Make it real", "Submit your design for a production review. Approve the quote, then pay securely when your order is ready."],
             ].map(([n, title, body]) => (
               <li key={n} className="border border-ink/10 px-6 py-8">
                 <p className="font-editorial text-2xl text-gold mb-3">{n}</p>
@@ -154,9 +151,12 @@ function Custom() {
         </div>
 
         <div className="text-center mt-16">
-          <Link to="/royale" className="btn-lux btn-lux-outline">
-            Prefer a full private commission? Visit Royale
-          </Link>
+          <p className="text-stone max-w-2xl mx-auto mb-5">At DREAMZ, we believe the right leather piece should carry your identity and your ambition. Design your vision, share it with the community and, where feasible, co-create a product we can craft for you.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link to="/shop" search={{q:undefined,tier:undefined,min:undefined,max:undefined,size:undefined,colour:undefined,availability:undefined,sort:undefined}} className="btn-lux btn-lux-primary">Explore Ready-to-Wear Designs</Link>
+            <Link to="/dreams" className="btn-lux btn-lux-outline">See Community Designs</Link>
+            <Link to="/creators" className="btn-lux btn-lux-outline">Co-Create With DREAMZ</Link>
+          </div>
         </div>
       </div>
     </div>

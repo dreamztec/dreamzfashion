@@ -1,151 +1,87 @@
 /**
- * The three customer-facing DREAMZ collections and the automatic
- * classification SUGGESTION engine.
+ * DREAMZ merchandising category suggestions.
  *
- * Collections (customer-facing):
- *   essentials — ready-to-wear / accessible
- *   originals  — distinctive DREAMZ house designs
- *   royale     — premium design & customization service (quote-first)
+ * User-approved price guide:
+ *   slides / mules / sandals / easy wear: below ₦50k Essentials
+ *   other shoes and footwear: below ₦100k Essentials
+ *   bags / leather clothing: below ₦100k Essentials
+ *   small leather goods (belts, wallets, purses, cuffs): below ₦50k Essentials
+ *   products at or above their boundary: Originals
+ *   custom unpriced commissions: Royale (quote-only)
  *
- * The automatic rules are SUGGESTIONS ONLY. The admin's manually selected
- * collection always overrides them. Ambiguous data (exactly 3 colours,
- * exactly ₦50,000, missing colour data) is NEVER guessed — it is flagged
- * "Needs Category Confirmation" for the admin review queue.
+ * These classify the retail range, not quality: product cost and materials
+ * remain individually approved by DREAMZ. The administrator's locked choice
+ * is never overwritten by an automated suggestion.
  */
 
 export type Collection = "essentials" | "originals" | "royale";
-
 export const COLLECTIONS: Collection[] = ["essentials", "originals", "royale"];
-
 export const COLLECTION_LABELS: Record<Collection, string> = {
   essentials: "DREAMZ Essentials",
   originals: "DREAMZ Originals",
   royale: "DREAMZ Royale",
 };
-
-/** The ₦50,000 band boundary used by the automatic suggestion rules (kobo). */
 export const COLLECTION_PRICE_BAND_KOBO = 5_000_000;
+export const FOOTWEAR_PRICE_BAND_KOBO = 10_000_000;
+
+const EASY_WEAR = new Set(["slide","slides","sandal","sandals","mule","mules","easy wear","slippers","half shoes"]);
 
 export type CollectionInput = {
-  /** Number of colours on the design (missing/null = unknown). */
-  colorsCount: number | null;
-  /** Public product price in kobo (0 or null = quote-only / unpriced). */
+  colorsCount: number | null; // legacy admin input; colour count never sets quality tier
   priceKobo: number | null;
+  categorySlug?: string | null;
+  subcategory?: string | null;
 };
 
 export type CollectionSuggestion = {
-  /** Automatic suggestion, or null when the data cannot be classified. */
   suggestion: Collection | null;
-  /** True when the rules are ambiguous and the admin must decide. */
   needsConfirmation: boolean;
-  /** Human-readable explanation for the admin queue. */
   reason: string | null;
 };
 
-/**
- * Automatic collection suggestion — never destructive, never a guess.
- *
- * - Essentials: ≤ 2 colours AND price below ₦50,000
- * - Originals:  > 3 colours AND price above ₦50,000
- * - Royale:     no public price (quote-only)
- * - Anything else: ambiguous → Needs Category Confirmation
- */
 export function suggestCollection(input: CollectionInput): CollectionSuggestion {
-  const { colorsCount, priceKobo } = input;
-  const coloursKnown = typeof colorsCount === "number" && colorsCount >= 0;
-  const priced = typeof priceKobo === "number" && priceKobo > 0;
-
-  // Quote-only / unpriced pieces belong to the Royale design service.
-  if (!priced) {
-    return {
-      suggestion: "royale",
-      needsConfirmation: false,
-      reason: "No public price — treated as the Royale design service.",
-    };
+  const {priceKobo} = input;
+  if (priceKobo === null || priceKobo === 0) {
+    return {suggestion:"royale",needsConfirmation:false,reason:"Unpriced custom commission — quote-first Royale workflow."};
   }
-
-  if (!coloursKnown) {
-    return {
-      suggestion: null,
-      needsConfirmation: true,
-      reason: "Colour data is missing, so the collection rules cannot be applied.",
-    };
+  if (priceKobo < 0 || !Number.isFinite(priceKobo)) {
+    return {suggestion:null,needsConfirmation:true,reason:"Invalid product price."};
   }
-
-  const belowBand = priceKobo < COLLECTION_PRICE_BAND_KOBO;
-  const aboveBand = priceKobo > COLLECTION_PRICE_BAND_KOBO;
-
-  if (colorsCount <= 2 && belowBand) {
-    return { suggestion: "essentials", needsConfirmation: false, reason: null };
+  const category=(input.categorySlug??"").toLowerCase().trim();
+  if (!["footwear","accessories","bags","leather-wear"].includes(category)) {
+    return {suggestion:null,needsConfirmation:true,reason:"Confirm the product category before assigning Essentials or Originals."};
   }
-  if (colorsCount > 3 && aboveBand) {
-    return { suggestion: "originals", needsConfirmation: false, reason: null };
-  }
-
-  // Ambiguous combinations — do not guess.
-  if (colorsCount === 3 && priceKobo === COLLECTION_PRICE_BAND_KOBO) {
-    return {
-      suggestion: null,
-      needsConfirmation: true,
-      reason: "Exactly 3 colours at exactly ₦50,000 — both rules are inconclusive.",
-    };
-  }
-  if (colorsCount === 3) {
-    return {
-      suggestion: null,
-      needsConfirmation: true,
-      reason: "Exactly 3 colours sits between the Essentials (≤2) and Originals (>3) colour rules.",
-    };
-  }
-  if (priceKobo === COLLECTION_PRICE_BAND_KOBO) {
-    return {
-      suggestion: null,
-      needsConfirmation: true,
-      reason: "Priced at exactly ₦50,000 — neither below nor above the band boundary.",
-    };
-  }
-  return {
-    suggestion: null,
-    needsConfirmation: true,
-    reason: `Colour/price mix (${colorsCount} colours, ${
-      priceKobo / 100
-    } ₦) does not clearly match Essentials or Originals.`,
-  };
+  const subcategory=(input.subcategory??"").toLowerCase().trim();
+  const band = category === "accessories" || (category === "footwear" && EASY_WEAR.has(subcategory))
+    ? COLLECTION_PRICE_BAND_KOBO
+    : FOOTWEAR_PRICE_BAND_KOBO;
+  return {suggestion:priceKobo<band?"essentials":"originals",needsConfirmation:false,reason:null};
 }
 
-/**
- * Legacy tier values found in stored data → customer-facing collection.
- * "signature" was the old face of Originals; "bespoke" was the old face of
- * Royale. Only exact legacy names are remapped — anything unknown stays
- * untouched and lands in the review queue.
- */
 export function collectionFromLegacyTier(raw: string | null | undefined): Collection | null {
-  const value = (raw ?? "").toLowerCase();
-  if (value === "essentials") return "essentials";
-  if (value === "signature" || value === "originals") return "originals";
-  if (value === "bespoke" || value === "royale") return "royale";
+  const value=(raw??"").toLowerCase().trim();
+  if (value==="essentials") return "essentials";
+  if (value==="signature"||value==="originals") return "originals";
+  if (value==="bespoke"||value==="royale") return "royale";
   return null;
 }
 
-/** Does a stored row's collection clearly match what the rules suggest? */
 export function needsCategoryConfirmation(args: {
   storedTier: string | null | undefined;
   colorsCount: number | null;
   priceKobo: number | null;
-}): { needs: boolean; reason: string | null } {
-  const stored = collectionFromLegacyTier(args.storedTier);
-  if (!stored) {
-    return { needs: true, reason: "No recognisable collection is set on this product." };
+  categorySlug?: string | null;
+  subcategory?: string | null;
+}): {needs:boolean;reason:string|null} {
+  const stored=collectionFromLegacyTier(args.storedTier);
+  if (!stored) return {needs:true,reason:"No recognised Essentials, Originals or Royale category on this product."};
+  // Royale is a service classification; admin's premium bespoke selection wins
+  // regardless of quoted product value. Never demote a bespoke commission.
+  if (stored==="royale") return {needs:false,reason:null};
+  const s=suggestCollection(args);
+  if (s.needsConfirmation) return {needs:true,reason:s.reason};
+  if (s.suggestion && s.suggestion!==stored) {
+    return {needs:true,reason:`Stored collection (${COLLECTION_LABELS[stored]}) differs from the suggested ${COLLECTION_LABELS[s.suggestion]} price band.`};
   }
-  const s = suggestCollection({ colorsCount: args.colorsCount, priceKobo: args.priceKobo });
-  if (s.needsConfirmation) {
-    return { needs: true, reason: s.reason };
-  }
-  if (s.suggestion && s.suggestion !== stored) {
-    return {
-      needs: true,
-      reason: `Stored collection (${COLLECTION_LABELS[stored]}) differs from the automatic suggestion (${COLLECTION_LABELS[s.suggestion]}).`,
-    };
-  }
-  return { needs: false, reason: null };
+  return {needs:false,reason:null};
 }
