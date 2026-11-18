@@ -55,7 +55,7 @@ class PaystackProvider implements PaymentProvider {
 
   private headers() {
     return {
-      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY?.trim() ?? ""}`,
       "Content-Type": "application/json",
     };
   }
@@ -67,11 +67,11 @@ class PaystackProvider implements PaymentProvider {
       signal: AbortSignal.timeout(12_000),
       body: JSON.stringify({
         email: input.email,
-        amount: input.amountKobo,
+        amount: String(input.amountKobo),
         reference: input.reference,
         callback_url: input.callbackUrl,
         currency: "NGN",
-        metadata: input.metadata,
+        metadata: JSON.stringify(input.metadata),
       }),
     });
     const body = (await res.json()) as {
