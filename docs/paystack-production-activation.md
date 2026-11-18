@@ -10,12 +10,20 @@ Return route: https://dreamzfashion.dreamz-gc.com/checkout/callback
 - PAYSTACK_SECRET_KEY — **secret**, Functions/Runtime, never in source code
 - PAYSTACK_PUBLIC_KEY — optional for hosted redirect flow; not used by the current app
 - PAYSTACK_WEBHOOK_SECRET — recommended whsec_ secret from Paystack Developers > API Configuration, Functions/Runtime
-- ONLINE_PAYMENTS_ENABLED — explicit false kill switch; change to true **only when all checks below are complete**
+- ONLINE_PAYMENTS_ENABLED — production value true at the owner's explicit request on 18 November 2026. Change to false and redeploy immediately if payment initiation/verification malfunctions.
 - SITE_URL — canonical HTTPS storefront URL
 
 Netlify site ID: 691e9c77-3613-4dd6-b18a-2ace117c6933
 
-## Before turning payments on
+## Current release status
+
+- Production Paystack secret/public credentials were configured in Netlify before activation.
+- This release enables the storefront checkout gate and retains backend amount, currency and signature checks.
+- Merchant legal identity, Paystack live approval, webhook registration/delivery and settlement were NOT independently verified by the GitHub or Netlify tooling.
+- Do not claim a transaction was received until a legitimate purchase is verified at Paystack and the order shows paid.
+- Rotate any secret key previously shared through chat, then replace its Netlify production secret.
+
+## Live payment verification
 
 1. Rotate any live Paystack API secret ever pasted into a chat or shared outside a secure secret manager. Replace it directly in Netlify; do not commit it, expose it to clients or send it by chat.
 2. In Paystack, check the merchant business profile and settlement account. Fashion sales must settle to the legitimate DREAMZ Fashion merchant, not an unrelated HELP A DREAM initiative.
