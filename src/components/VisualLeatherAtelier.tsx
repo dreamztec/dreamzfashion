@@ -171,6 +171,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
   const [referencePreviews, setReferencePreviews] = useState<Array<{ id: string; name: string; url: string }>>([]);
   const [busy, setBusy] = useState(false);
   const [uploadBusy, setUploadBusy] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState(false);
   const [hasCopiedPrompt, setHasCopiedPrompt] = useState(false);
@@ -705,6 +706,37 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       setNotice(error instanceof Error ? error.message : "The generated design image could not be uploaded.");
     } finally {
       setUploadBusy(false);
+    }
+  };
+
+  const generateWithDreamzAi = async () => {
+    if (!result?.renderPrompt || aiBusy) return;
+    if (!user) {
+      stashForSignIn();
+      setNotice("Sign in to generate a complimentary DREAMZ image preview. Your selected design will be preserved.");
+      return;
+    }
+    setAiBusy(true);
+    setNotice(null);
+    try {
+      const response = await fetch("/api/ai-dream-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: result.renderPrompt }),
+      });
+      if (!response.ok) {
+        const detail = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(detail.error || "Image generation is temporarily unavailable.");
+      }
+      const blob = await response.blob();
+      const extension = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : "jpg";
+      const file = new File([blob], "dreamz-ai-preview." + extension, { type: blob.type || "image/png", lastModified: Date.now() });
+      setHasCopiedPrompt(true);
+      await handleGeneratedImageUpload(file);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "We could not generate an image. Use the prompt below with an external image tool.");
+    } finally {
+      setAiBusy(false);
     }
   };
 
@@ -1413,9 +1445,22 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                     <p className="overline-label !text-gold">Turn the AI image into your Dream page</p>
                     <h3 className="font-editorial text-2xl mt-2">Generate → return → upload → name → publish</h3>
                     <p className="mt-2 text-sm text-stone">
-                      Choose an AI tool below. DREAMZ copies your exact locked prompt and opens the tool in a new tab, while this Studio keeps your completed design safely saved. Generate and save the image, then return here and upload it.
+                      Generate an original concept image here using DREAMZ AI, or copy your locked brief into another image tool. Your actual product will only be made after a separate production review and confirmed quotation.
                     </p>
-                    <div className="dreamz-spectrum-border mt-5 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    <div className="mt-5 border border-forest/25 bg-ivory p-5">
+                      <p className="font-editorial text-2xl">DREAMZ AI Preview</p>
+                      <p className="text-sm text-stone mt-2">Two complimentary 1K concept previews per signed-in account daily, subject to service availability. Only your design prompt is sent to the image model — private reference photos are not included.</p>
+                      <button
+                        type="button"
+                        disabled={aiBusy || uploadBusy}
+                        onClick={() => void generateWithDreamzAi()}
+                        className="btn-lux btn-lux-primary mt-4"
+                      >
+                        {aiBusy ? "Generating preview…" : "Generate My Dream Preview"}
+                      </button>
+                    </div>
+                    <p className="text-xs text-stone mt-5">Or use an image tool you already know:</p>
+                    <div className="dreamz-spectrum-border mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                       {AI_VISUAL_TOOLS.map((tool) => (
                         <button
                           key={tool.name}
@@ -1428,7 +1473,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       ))}
                     </div>
                     <p className="mt-3 text-[0.64rem] text-stone">
-                      Each button copies your prompt and opens the provider website; your device may offer its installed app. Paste the prompt there and choose image generation. Sign-in, credits or fees may apply. DREAMZ does not generate the image inside this Studio.
+                      Each button copies your prompt and opens the provider website; your device may offer its installed app. Paste the prompt there and choose image generation. Sign-in, credits or fees may apply. If DREAMZ AI is unavailable, you can still create an image using the tool of your choice.
                     </p>
                     {!hasCopiedPrompt && !generatedImageRefId ? (
                       <p className="mt-4 border border-ink/10 bg-ivory px-4 py-3 text-xs text-stone">Copy the Full AI Prompt above first.</p>
@@ -1542,7 +1587,7 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
                       onClick={stashForSignIn}
                       className="nav-link inline-block mt-4 text-xs"
                     >
-                      Sign in to save your 3 free designs →
+                      Sign in to save and publish your free designs →
                     </Link>
                   )}
 
