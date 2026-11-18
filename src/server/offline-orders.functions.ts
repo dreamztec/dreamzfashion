@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createHash } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../../db/index";
 import { orderEvents, orderItems, orders, payments } from "../../db/schema";
 import { generateOrderNumber, isValidNigerianPhone } from "@/lib/format";
@@ -94,7 +94,7 @@ export const adminCreateOfflineOrder = createServerFn({ method: "POST" })
         timeline,
         adminNotes: `Source: ${sourceLabel}${data.adminNote ? ` | ${data.adminNote}` : ""}`,
         marketingConsent: false,
-      }).returning({ id: orders.id });
+      }).returning();
       orderId = created.id;
     } catch (err) {
       // Concurrent identical requests can race on unique clientRequestId.
