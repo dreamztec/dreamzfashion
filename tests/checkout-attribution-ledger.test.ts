@@ -132,9 +132,12 @@ describe("server pricing", () => {
     expect(res.delivery).toMatchObject({ feeKobo: 0, reason: "complete_package" });
   });
 
-  it("rejects quote-only products, invalid quantities and missing products", async () => {
+  it("routes published quote-only products to unpaid quotations while rejecting invalid quantities and unavailable products", async () => {
     const { priceOrder } = await import("../src/server/order-pricing.server");
-    await expect(priceOrder({ items: [{ productId: quoteOnlyId, purchaseOption: "product_only", quantity: 1 }], buyer })).rejects.toThrow(/quote/i);
+    const quote = await priceOrder({ items: [{ productId: quoteOnlyId, purchaseOption: "product_only", quantity: 1 }], state: "Lagos", buyer });
+    expect(quote.hasQuoteLines).toBe(true);
+    expect(quote.lines[0]).toMatchObject({ quoteRequired: true, unitPrice: 0 });
+    expect(quote.total).not.toBeNull();
     await expect(priceOrder({ items: [{ productId: pricedId, purchaseOption: "product_only", quantity: 0 }], buyer })).rejects.toThrow(/Quantities/);
     await expect(priceOrder({ items: [{ productId: pricedId, purchaseOption: "product_only", quantity: 11 }], buyer })).rejects.toThrow(/Quantities/);
     await expect(priceOrder({ items: [{ productId: 999_999, purchaseOption: "product_only", quantity: 1 }], buyer })).rejects.toThrow(/no longer available/);
