@@ -623,9 +623,9 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
 
       if (!response.ok) {
         if (response.reason === "limit") {
-          setNotice("You've used all " + response.limit + " designs on " + response.plan.name + ". Upgrade to create more.");
+          setNotice("You've used all " + response.limit + " designs on " + response.plan.name + ". Contact DREAMZ if you need more room for your projects.");
         } else if (response.reason === "upgrade") {
-          setNotice("This project mode requires Studio or Pro Studio.");
+          setNotice("This project mode is currently unavailable; please contact DREAMZ.");
         } else if (response.reason === "signin") {
           stashForSignIn();
           setNotice("Please sign in to save this design.");
@@ -809,19 +809,19 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
           <p className="text-xs text-stone mt-1">
             {user
               ? plan.name + " · " + ("remaining" in (designerState || {}) ? (designerState as any).remaining : plan.designLimit) + " design slots remaining"
-              : "3 saved designs free after sign-in"}
+              : "30 saved designs free after sign-in"}
           </p>
           </div>
         </div>
-        <Link to="/studio-plans" className="nav-link text-[0.68rem] uppercase tracking-btn">
-          Plans & features →
+        <Link to="/shop" search={{q:undefined,tier:undefined,min:undefined,max:undefined,size:undefined,colour:undefined,availability:undefined,sort:undefined}} className="nav-link text-[0.68rem] uppercase tracking-btn">
+          Explore DREAMZ Pieces →
         </Link>
       </div>
 
       <div className="mb-6 border border-gold/40 bg-ink px-4 py-4 text-center text-ivory sm:px-6">
-        <p className="text-[0.62rem] uppercase tracking-[0.2em] text-gold-soft">DREAMZ 7-Day Build Promise</p>
-        <p className="font-editorial text-xl sm:text-2xl mt-1">Design in about 5 minutes · Production + delivery in 7 days</p>
-        <p className="mt-1 text-[0.66rem] text-ivory/70">The 7-day timeline starts after the design, measurements and order are confirmed.</p>
+        <p className="text-[0.62rem] uppercase tracking-[0.2em] text-gold-soft">DREAMZ DESIGN & CRAFT</p>
+        <p className="font-editorial text-xl sm:text-2xl mt-1">Design in about 5 minutes · Make it real with our artisans</p>
+        <p className="mt-1 text-[0.66rem] text-ivory/70">Production and delivery times are confirmed only after your specification and quote are reviewed.</p>
       </div>
 
       {notice && (
