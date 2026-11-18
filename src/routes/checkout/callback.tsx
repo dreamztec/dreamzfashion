@@ -190,12 +190,13 @@ function PaymentCallback() {
       {state === "failed" && (
         <>
           <p className="text-oxblood text-4xl mb-6" aria-hidden="true">✕</p>
-          <h1 className="font-editorial text-3xl mb-4">Payment not completed</h1>
+          <h1 className="font-editorial text-3xl mb-4">Payment not yet verified</h1>
           <p className="text-stone mb-8 max-w-md mx-auto leading-relaxed">
             Your order <strong>{orderNumber}</strong> is saved, but we could not
-            confirm the payment. You have not been charged for an incomplete
-            payment. You can retry the payment, return to your cart, or chat
-            with us and we will sort it out.
+            verify the payment with Paystack yet. If your bank shows a debit,
+            do not pay again until you have checked your order status or
+            contacted DREAMZ with the payment reference. Otherwise, you may
+            return to checkout to try again.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
