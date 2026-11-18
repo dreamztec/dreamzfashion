@@ -627,8 +627,6 @@ export function VisualLeatherAtelier({ briefId }: { briefId?: number }) {
       if (!response.ok) {
         if (response.reason === "limit") {
           setNotice("You've used all " + response.limit + " designs on " + response.plan.name + ". Contact DREAMZ if you need more room for your projects.");
-        } else if (response.reason === "upgrade") {
-          setNotice("This project mode is currently unavailable; please contact DREAMZ.");
         } else if (response.reason === "signin") {
           stashForSignIn();
           setNotice("Please sign in to save this design.");
