@@ -1,14 +1,11 @@
 import { useEffect } from "react";
 import { Link } from "@tanstack/react-router";
 import { useCart } from "@/store/cart";
-import { useSiteSettings } from "@/store/settings";
 import { formatNaira } from "@/lib/format";
 import { ProductMedia } from "@/components/brand";
-import { BRAND } from "@/lib/config";
 
 export function CartDrawer() {
   const { items, isOpen, close, remove, setQuantity, subtotal } = useCart();
-  const whatsappNumber = useSiteSettings((s) => s.whatsappNumber);
   const total = subtotal();
 
   useEffect(() => {
@@ -27,20 +24,6 @@ export function CartDrawer() {
 
   if (!isOpen) return null;
 
-  const cartLines = items
-    .map((item) => `• ${item.name}${item.variantLabel ? ` — ${item.variantLabel}` : ""} × ${item.quantity}`)
-    .join("\n");
-  const whatsappText = encodeURIComponent(
-    [
-      `Hello ${BRAND.shortName}, I want to order these pieces:`,
-      cartLines,
-      `Cart subtotal: ${formatNaira(total)}`,
-      "Please confirm availability, delivery and the next step for my order.",
-    ].join("\n"),
-  );
-  const whatsappHref = whatsappNumber
-    ? `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${whatsappText}`
-    : `https://wa.me/2349038560517?text=${whatsappText}`;
 
   return (
     <div className="fixed inset-0 z-[80]" role="dialog" aria-modal="true" aria-label="Shopping cart">
@@ -161,19 +144,16 @@ export function CartDrawer() {
                 </span>
                 <span className="font-editorial text-xl">{formatNaira(total)}</span>
               </div>
-              <p className="text-xs text-stone">
-                Continue with DREAMZ on WhatsApp to confirm availability, delivery
-                and your order details.
+              <p className="text-sm text-stone">
+                Review your order, see the delivery total and pay securely through Paystack.
               </p>
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                to="/checkout"
                 onClick={close}
                 className="btn-lux btn-lux-primary w-full text-center"
               >
-                Contact DREAMZ on WhatsApp
-              </a>
+                Secure Checkout
+              </Link>
             </div>
           </>
         )}
