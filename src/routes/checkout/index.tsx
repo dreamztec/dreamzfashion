@@ -175,10 +175,6 @@ function Checkout() {
   const paymentOnline = !whatsappOnly && Boolean(preview?.paymentAvailable) && !pricing?.hasQuoteLines;
   const canDeposit = paymentOnline && depositEligible.eligible;
 
-  const cartSubtotal = items.reduce(
-    (sum, item) => sum + (item.unitPrice + (item.message?.chargeKobo ?? 0)) * item.quantity,
-    0,
-  );
 
   const submit = async (form: HTMLFormElement, mode: "pay" | "request") => {
     if (submitting) return; // duplicate-submit guard (the server is idempotent too)
