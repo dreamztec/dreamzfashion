@@ -200,7 +200,9 @@ export const initializeCheckout = createServerFn({ method: "POST" })
     const provider = getPaymentProvider("paystack");
     // Unpaid order request: payment unavailable, customer chose it, or a
     // custom design still needs the house's quote.
-    const isRequest = data.mode === "request" || !provider || priced.hasQuoteLines;
+    // The explicit owner-controlled kill switch is enforced on the server,
+    // not just by hiding the Paystack button in the browser.
+    const isRequest = data.mode === "request" || !paymentAvailable() || !provider || priced.hasQuoteLines;
     const fullyCovered = !isRequest && total === 0;
 
     // ── Deposit plan (server-decided) ─────────────────────────────────
