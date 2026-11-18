@@ -145,7 +145,7 @@ export function CartDrawer() {
                 <span className="font-editorial text-xl">{formatNaira(total)}</span>
               </div>
               <p className="text-sm text-stone">
-                Review your order, see the delivery total and pay securely through Paystack.
+                Review your order and delivery. Pay securely with Paystack for priced items, or request a quotation for custom pieces.
               </p>
               <Link
                 to="/checkout"
