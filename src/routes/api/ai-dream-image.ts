@@ -55,7 +55,10 @@ export const Route = createFileRoute("/api/ai-dream-image")({
             contents:
               "Generate ONE realistic product-only concept rendering based on the following LOCKED DREAMZ customer specifications. Preserve the specified product type, construction, material, primary/secondary colours and personalisation. Do not add brand logos, buckles, straps, ornaments, soles, straps or other product features that are not in the selections. If ambiguous, keep neutral standard construction. Studio background, complete product visible, no text, no people. This is an illustrative preview, not a product photograph or approved manufacturing specification.\n\n" +
               prompt,
-            config: { imageConfig: { aspectRatio: "1:1", imageSize: "1K" } },
+            config: {
+              responseModalities: ["TEXT", "IMAGE"],
+              imageConfig: { aspectRatio: "1:1", imageSize: "1K" },
+            },
           });
           const parts = result.candidates?.[0]?.content?.parts ?? [];
           const part = parts.find((p) => p.inlineData?.data);
