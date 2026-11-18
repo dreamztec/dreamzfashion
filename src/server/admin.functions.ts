@@ -247,6 +247,8 @@ export const adminReadiness = createServerFn({ method: "GET" }).handler(async ()
       tier: products.tier,
       price: products.price,
       colors: products.colors,
+      categorySlug: products.categorySlug,
+      subcategory: products.subcategory,
       status: products.status,
       checkoutReady: products.checkoutReady,
       collectionLocked: products.collectionLocked,
@@ -272,6 +274,8 @@ export const adminReadiness = createServerFn({ method: "GET" }).handler(async ()
         storedTier: p.tier,
         colorsCount: (p.colors ?? []).length || null,
         priceKobo: p.price,
+        categorySlug: p.categorySlug,
+        subcategory: p.subcategory,
       });
       if (!p.collectionLocked && review.needs) needsConfirmationCount += 1;
     }
