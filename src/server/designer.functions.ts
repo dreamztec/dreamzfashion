@@ -370,9 +370,6 @@ export const saveDesignerDesign = createServerFn({ method: "POST" })
     const planId = effectivePlan(profile);
     const plan = getDesignerPlan(planId);
 
-    if ((data.projectMode === "client" || data.projectMode === "family") && !["studio", "pro"].includes(planId)) {
-      return { ok: false as const, reason: "upgrade" as const, requiredPlan: "studio" as const };
-    }
 
     if (data.id) {
       const [existing] = await db
