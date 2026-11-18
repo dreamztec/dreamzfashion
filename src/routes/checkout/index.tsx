@@ -352,11 +352,14 @@ function Checkout() {
               />
             </div>
             <div>
-              <label htmlFor="email" className="input-lux-label">Email (for your receipt)</label>
+              <label htmlFor="email" className="input-lux-label">
+                {paymentOnline ? "Email (required for Paystack receipt)" : "Email (optional, for order updates)"}
+              </label>
               <input
                 id="email"
                 name="email"
                 type="email"
+                required={paymentOnline}
                 autoComplete="email"
                 className="input-lux"
                 placeholder="you@example.com"
