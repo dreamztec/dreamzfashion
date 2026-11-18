@@ -35,6 +35,7 @@ jobs:
           tests/format.test.ts
           tests/auth-server.test.ts
           tests/paystack-webhook.test.ts
+          tests/paystack-webhook-auth.test.ts
           tests/task-engine.test.ts
           tests/identity-session.test.ts
           tests/auth-errors.test.ts
