@@ -166,6 +166,10 @@ export const adminRecordOfflinePayment = createServerFn({ method: "POST" })
       if (prior.orderId === order.id && prior.status === "success") {
         return { ok: true, alreadyRecorded: true, orderNumber, trackingUrl: `/track-order?order=${encodeURIComponent(orderNumber)}` };
       }
+      if (prior.orderId === order.id && prior.status === "initialized") {
+        await confirmOrderPaid(order.id, reference, data.method, "verify");
+        return { ok: true, alreadyRecorded: true, orderNumber, trackingUrl: `/track-order?order=${encodeURIComponent(orderNumber)}` };
+      }
       throw new Error("This payment reference has already been entered. Do not record it twice.");
     }
 
