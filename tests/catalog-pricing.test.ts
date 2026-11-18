@@ -177,22 +177,21 @@ describe("Collection classification rules", () => {
     ).toBe("DREAMZ Originals");
   });
 
-  it("no longer generates 'Essentials Pro' — ambiguity goes to the review queue", async () => {
+  it("classifies Essentials and Originals by the approved price thresholds, not colour count", async () => {
     const { suggestCollection, needsCategoryConfirmation } = await import("../src/lib/collection");
-    // Exactly 3 colours: never guessed.
-    const trio = suggestCollection({ colorsCount: 3, priceKobo: 2_000_000 });
-    expect(trio.suggestion).toBeNull();
-    expect(trio.needsConfirmation).toBe(true);
-    // Stored value conflicts with the suggestion: flagged for confirmation.
+    const slide = suggestCollection({ categorySlug:"footwear", subcategory:"Slides", colorsCount:3, priceKobo:4_999_999 });
+    expect(slide.suggestion).toBe("essentials");
+    expect(slide.needsConfirmation).toBe(false);
+    const missingCategory = suggestCollection({ colorsCount:3, priceKobo:2_000_000 });
+    expect(missingCategory.needsConfirmation).toBe(true);
     const conflict = needsCategoryConfirmation({
-      storedTier: "essentials",
-      colorsCount: 5,
-      priceKobo: 9_000_000,
+      storedTier: "essentials", categorySlug:"footwear", subcategory:"Oxfords",
+      colorsCount: 5, priceKobo: 12_000_000,
     });
     expect(conflict.needs).toBe(true);
-    // Clear-cut Originals product: not flagged.
-    expect(
-      needsCategoryConfirmation({ storedTier: "originals", colorsCount: 5, priceKobo: 9_000_000 }).needs,
-    ).toBe(false);
+    expect(needsCategoryConfirmation({
+      storedTier:"originals", categorySlug:"footwear", subcategory:"Oxfords",
+      colorsCount:5, priceKobo:12_000_000,
+    }).needs).toBe(false);
   });
 });
