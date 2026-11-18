@@ -42,7 +42,14 @@ export interface PaymentProvider {
 class PaystackProvider implements PaymentProvider {
   readonly id = "paystack";
   readonly label = "Paystack";
-  readonly configured = !!process.env.PAYSTACK_SECRET_KEY;
+  // Never present a live payment button with an empty, test-only, or malformed key.
+  // Preview/development can still use Paystack test keys safely.
+  readonly configured = (() => {
+    const key = process.env.PAYSTACK_SECRET_KEY?.trim() || "";
+    const valid = /^sk_(live|test)_[a-zA-Z0-9]+$/.test(key);
+    const production = process.env.CONTEXT === "production" || process.env.NODE_ENV === "production";
+    return valid && (!production || key.startsWith("sk_live_"));
+  })();
 
   private baseUrl = "https://api.paystack.co";
 
@@ -57,6 +64,7 @@ class PaystackProvider implements PaymentProvider {
     const res = await fetch(`${this.baseUrl}/transaction/initialize`, {
       method: "POST",
       headers: this.headers(),
+      signal: AbortSignal.timeout(12_000),
       body: JSON.stringify({
         email: input.email,
         amount: input.amountKobo,
@@ -71,10 +79,16 @@ class PaystackProvider implements PaymentProvider {
       message?: string;
       data?: { authorization_url: string; reference: string };
     };
-    if (!body.status || !body.data) {
-      throw new Error(body.message || "Payment could not be initialized");
+    if (!res.ok || !body.status || !body.data?.authorization_url || body.data.reference !== input.reference) {
+      throw new Error(body.message || "Paystack could not create a secure checkout session");
     }
-    return { authorizationUrl: body.data.authorization_url, reference: body.data.reference };
+    // Redirect ONLY to Paystack's HTTPS hosted checkout, never to an
+    // untrusted URL returned from a compromised or misconfigured provider.
+    const destination = new URL(body.data.authorization_url);
+    if (destination.protocol !== "https:" || !["checkout.paystack.com", "standard.paystack.co"].includes(destination.hostname)) {
+      throw new Error("Paystack returned an unrecognised checkout destination");
+    }
+    return { authorizationUrl: destination.toString(), reference: body.data.reference };
   }
 
   async verify(reference: string): Promise<VerifyPaymentResult> {
