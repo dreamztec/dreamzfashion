@@ -30,7 +30,7 @@ import {
   recommendedMaterials,
   visualForPiece,
 } from "@/lib/visual-designer";
-import { designerPlanRank, getDesignerPlan } from "@/lib/designer-plans";
+import { getDesignerPlan } from "@/lib/designer-plans";
 import { DesignConceptPreview } from "@/components/DesignConceptPreview";
 import { DreamDPGenerator } from "@/components/DreamDPGenerator";
 import { REFERENCE_LIMITS, precheckFile } from "@/lib/reference-upload";
@@ -109,7 +109,9 @@ type DesignerState = Awaited<ReturnType<typeof getMyDesignerState>>;
 
 function hasMinPlan(current: string, required: string | undefined) {
   if (!required) return true;
-  return designerPlanRank(current) >= designerPlanRank(required);
+  // The Studio is now free for everyone; old plan ranks remain for historical accounts.
+  void current; void required;
+  return true;
 }
 
 function optionImageUrl(url: string | undefined) {
