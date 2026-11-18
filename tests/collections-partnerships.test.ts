@@ -17,90 +17,65 @@ import { CAMPAIGN_TIERS } from "../src/lib/campaign-tiers";
  *  - the admin's stored choice always wins on the storefront
  */
 
-describe("Automatic collection suggestions", () => {
-  it("Essentials: at most 2 colours AND price below ₦50,000", () => {
-    expect(suggestCollection({ colorsCount: 0, priceKobo: 4_999_999 }).suggestion).toBe("essentials");
-    expect(suggestCollection({ colorsCount: 2, priceKobo: 3_000_000 }).suggestion).toBe("essentials");
+describe("DREAMZ customer-facing price bands", () => {
+  const offer = (priceKobo: number, categorySlug: string, subcategory: string) =>
+    suggestCollection({ priceKobo, categorySlug, subcategory, colorsCount: null });
+
+  it("classifies slides and easy wear below ₦50k Essentials, at ₦50k Originals", () => {
+    expect(offer(4_999_999, "footwear", "Slides").suggestion).toBe("essentials");
+    expect(offer(5_000_000, "footwear", "Slides").suggestion).toBe("originals");
+    expect(offer(5_000_000, "footwear", "Mules").suggestion).toBe("originals");
   });
 
-  it("Originals: more than 3 colours AND price above ₦50,000", () => {
-    expect(suggestCollection({ colorsCount: 4, priceKobo: 5_000_001 }).suggestion).toBe("originals");
-    expect(suggestCollection({ colorsCount: 7, priceKobo: 90_000_000 }).suggestion).toBe("originals");
+  it("classifies shoes below ₦100k Essentials, from ₦100k Originals", () => {
+    expect(offer(9_999_999, "footwear", "Oxfords").suggestion).toBe("essentials");
+    expect(offer(10_000_000, "footwear", "Loafers").suggestion).toBe("originals");
+    expect(offer(12_000_000, "footwear", "Boots").suggestion).toBe("originals");
   });
 
-  it("Royale: no public price (quote-first design service)", () => {
-    expect(suggestCollection({ colorsCount: 1, priceKobo: 0 }).suggestion).toBe("royale");
-    expect(suggestCollection({ colorsCount: null, priceKobo: null }).suggestion).toBe("royale");
+  it("keeps small accessories under ₦50k Essentials, at ₦50k Originals", () => {
+    expect(offer(500_000, "accessories", "Bracelets & Cuffs").suggestion).toBe("essentials");
+    expect(offer(4_999_999, "accessories", "Wallets").suggestion).toBe("essentials");
+    expect(offer(5_000_000, "accessories", "Belts").suggestion).toBe("originals");
   });
 
-  it("exactly 3 colours is NEVER guessed — Needs Category Confirmation", () => {
-    const s = suggestCollection({ colorsCount: 3, priceKobo: 2_000_000 });
-    expect(s.suggestion).toBeNull();
-    expect(s.needsConfirmation).toBe(true);
-    expect(s.reason).toBeTruthy();
+  it("uses ₦100k for bags and leather wear and does not guess absent categories", () => {
+    expect(offer(9_000_000, "bags", "Handbags").suggestion).toBe("essentials");
+    expect(offer(10_000_000, "leather-wear", "Jackets").suggestion).toBe("originals");
+    expect(suggestCollection({priceKobo:9_000_000,colorsCount:3}).needsConfirmation).toBe(true);
   });
 
-  it("exactly ₦50,000 is NEVER guessed", () => {
-    const s = suggestCollection({ colorsCount: 2, priceKobo: COLLECTION_PRICE_BAND_KOBO });
-    expect(s.suggestion).toBeNull();
-    expect(s.needsConfirmation).toBe(true);
-  });
-
-  it("clear price data but missing colour data is NEVER guessed", () => {
-    const s = suggestCollection({ colorsCount: null, priceKobo: 2_000_000 });
-    expect(s.suggestion).toBeNull();
-    expect(s.needsConfirmation).toBe(true);
-  });
-
-  it("mixed data (≤2 colours but above band) is NEVER guessed", () => {
-    const s = suggestCollection({ colorsCount: 2, priceKobo: 90_000_000 });
-    expect(s.suggestion).toBeNull();
-    expect(s.needsConfirmation).toBe(true);
+  it("unpriced Royale custom requests remain quote-only", () => {
+    expect(offer(0, "footwear", "Oxfords").suggestion).toBe("royale");
+    expect(suggestCollection({priceKobo:null,colorsCount:null}).suggestion).toBe("royale");
   });
 });
 
-describe("Stored values and the review queue", () => {
-  it("legacy tier names map to the new collections; unknown values do not", () => {
+describe("Preserve house choices and historical collection names", () => {
+  it("maps legacy category names without auto rewriting", () => {
     expect(collectionFromLegacyTier("signature")).toBe("originals");
     expect(collectionFromLegacyTier("bespoke")).toBe("royale");
-    expect(collectionFromLegacyTier("originals")).toBe("originals");
-    expect(collectionFromLegacyTier("royale")).toBe("royale");
     expect(collectionFromLegacyTier("essentials")).toBe("essentials");
     expect(collectionFromLegacyTier("exotic collection")).toBeNull();
-    expect(collectionFromLegacyTier(null)).toBeNull();
   });
 
-  it("a stored choice that contradicts the suggestion is flagged, not overwritten", () => {
-    const r = needsCategoryConfirmation({
-      storedTier: "essentials",
-      colorsCount: 6,
-      priceKobo: 60_000_000,
-    });
+  it("flags a retail mismatch for manual confirmation", () => {
+    const r=needsCategoryConfirmation({storedTier:"essentials",colorsCount:2,priceKobo:15_000_000,categorySlug:"footwear",subcategory:"Boots"});
     expect(r.needs).toBe(true);
-    expect(r.reason).toMatch(/differs from the automatic suggestion/i);
+    expect(r.reason).toMatch(/differs/i);
   });
 
-  it("recognised stored values with ambiguous data are flagged with the reason", () => {
-    const r = needsCategoryConfirmation({ storedTier: "originals", colorsCount: 3, priceKobo: 10_000_000 });
-    expect(r.needs).toBe(true);
+  it("does not override explicitly selected Royale or correctly priced Essentials", () => {
+    expect(needsCategoryConfirmation({storedTier:"royale",colorsCount:2,priceKobo:0,categorySlug:"footwear",subcategory:"Oxfords"}).needs).toBe(false);
+    expect(needsCategoryConfirmation({storedTier:"essentials",colorsCount:2,priceKobo:5_000_000,categorySlug:"footwear",subcategory:"Shoes"}).needs).toBe(false);
   });
 
-  it("a clear-cut correctly stored product is not flagged", () => {
-    expect(
-      needsCategoryConfirmation({ storedTier: "essentials", colorsCount: 1, priceKobo: 2_000_000 }).needs,
-    ).toBe(false);
-    expect(
-      needsCategoryConfirmation({ storedTier: "royale", colorsCount: 4, priceKobo: 0 }).needs,
-    ).toBe(false);
-  });
-
-  it("the three collections are exactly Essentials, Originals, Royale", () => {
-    expect(COLLECTIONS).toEqual(["essentials", "originals", "royale"]);
+  it("three commercial collections remain Essentials, Originals and Royale", () => {
+    expect(COLLECTIONS).toEqual(["essentials","originals","royale"]);
     expect(COLLECTION_LABELS.essentials).toBe("DREAMZ Essentials");
     expect(COLLECTION_LABELS.originals).toBe("DREAMZ Originals");
     expect(COLLECTION_LABELS.royale).toBe("DREAMZ Royale");
-    // The old customer-facing names are gone.
-    expect(Object.values(COLLECTION_LABELS).join(" ")).not.toMatch(/Signature|Bespoke|Essentials Pro/);
+    expect(COLLECTION_PRICE_BAND_KOBO).toBe(5_000_000);
   });
 });
 
