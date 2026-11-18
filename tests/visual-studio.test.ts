@@ -23,15 +23,15 @@ import { studioIllustration } from "../src/lib/studio-illustrations";
 import { dreamContestScore, isDreamPrizeEligible } from "../src/lib/dream-contest";
 
 describe("DREAMZ visual studio plans", () => {
-  it("keeps the first three designs free and prices paid creation tiers correctly", () => {
-    expect(getDesignerPlan("free").designLimit).toBe(3);
+  it("keeps design and client tools free while honoring already existing legacy plans", () => {
+    expect(getDesignerPlan("free").designLimit).toBe(30);
     expect(getDesignerPlan("creator").designLimit).toBe(15);
     expect(getDesignerPlan("studio").designLimit).toBe(50);
     expect(getDesignerPlan("pro").designLimit).toBe(200);
     expect(designerPlanPriceLabel(getDesignerPlan("creator"))).toContain("9,900");
     expect(designerPlanPriceLabel(getDesignerPlan("studio"))).toContain("29,900");
     expect(designerPlanPriceLabel(getDesignerPlan("pro"))).toContain("100,000");
-    expect(PUBLIC_DESIGNER_PLANS.map(p => p.id)).toEqual(["free", "creator", "studio"]);
+    expect(PUBLIC_DESIGNER_PLANS.map(p => p.id)).toEqual(["free"]);
     expect(getDesignerPlan("creator").durationDays).toBe(30);
     expect(getDesignerPlan("studio").durationDays).toBe(30);
   });
@@ -44,12 +44,12 @@ describe("DREAMZ visual studio plans", () => {
     expect(hasDesignerFeature("free", "share_links")).toBe(true);
   });
 
-  it("gates professional client/family workflow to Studio while self/gift stay free", () => {
+  it("lets everyone design for themselves, a gift, a client or family for free", () => {
     const byId = Object.fromEntries(PROJECT_MODES.map((mode) => [mode.id, mode]));
     expect(byId.self.minPlan).toBe("free");
     expect(byId.gift.minPlan).toBe("free");
-    expect(byId.client.minPlan).toBe("studio");
-    expect(byId.family.minPlan).toBe("studio");
+    expect(byId.client.minPlan).toBe("free");
+    expect(byId.family.minPlan).toBe("free");
   });
 });
 
