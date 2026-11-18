@@ -74,7 +74,7 @@ function Home() {
               </Link>
             </div>
             <div className="mt-7 grid gap-2 sm:grid-cols-3 max-w-3xl mx-auto text-[0.66rem] uppercase tracking-btn text-ivory/70">
-              <span>3 saved designs free</span>
+              <span>30 saved designs free</span>
               <span>Visual leather & component samples</span>
               <span>Production timing agreed before payment</span>
             </div>
