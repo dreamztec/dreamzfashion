@@ -4,6 +4,7 @@ import { adminListOrders, adminUpdateOrder, adminExportOrdersCsv, adminRecordRef
 import { adminCall } from "@/lib/admin-client";
 import { formatNaira, parseNairaToKobo, NIGERIAN_STATES, ORDER_STATUS_LABELS } from "@/lib/format";
 import { adminCreateOfflineOrder, adminRecordOfflinePayment } from "@/server/offline-orders.functions";
+import { adminGetSharedOrderProgress, adminUpdateSharedOrderProgress } from "@/server/shared-tracking.functions";
 export const Route = createFileRoute("/admin/orders")({
   component: AdminOrders,
 });
@@ -34,6 +35,7 @@ function AdminOrders() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showOfflineForm, setShowOfflineForm] = useState(false);
   const [paymentOrder, setPaymentOrder] = useState<string | null>(null);
+  const [progressOrder, setProgressOrder] = useState<string | null>(null);
   const canRecordPayment = typeof window !== "undefined" && sessionStorage.getItem("dfk-admin-role") === "owner";
   const [error, setError] = useState<string | null>(null);
 
@@ -174,6 +176,11 @@ function AdminOrders() {
                         Unpaid order request — confirm details and send the customer a payment link. Nothing is charged until payment is verified.
                       </p>
                     )}
+                    {o.orderNumber === "DFK-BRA-261112-VIII" && (
+                      <button type="button" onClick={() => setProgressOrder(progressOrder === o.orderNumber ? null : o.orderNumber)} className="mt-3 ml-2 border border-gold/60 px-3 py-2 text-xs hover:border-gold">
+                        {progressOrder === o.orderNumber ? "Close progress" : "Update VIII production progress"}
+                      </button>
+                    )}
                     {canRecordPayment && o.paymentStatus !== "paid" && o.paymentStatus !== "refunded" && o.status !== "cancelled" && (
                       <button type="button" onClick={() => setPaymentOrder(paymentOrder === o.orderNumber ? null : o.orderNumber)} className="mt-3 border border-forest/40 text-forest px-3 py-2 text-xs hover:border-forest">
                         {paymentOrder === o.orderNumber ? "Close payment form" : "Record confirmed cash / transfer / POS payment"}
@@ -242,6 +249,11 @@ function AdminOrders() {
                     </div>
                   </div>
 
+                  {progressOrder === o.orderNumber && (
+                    <div className="lg:col-span-2">
+                      <SharedProgressEditor orderNumber={o.orderNumber} onUpdated={async () => { await load(); }} />
+                    </div>
+                  )}
                   {paymentOrder === o.orderNumber && canRecordPayment && (
                     <div className="lg:col-span-2">
                       <ManualPaymentForm
@@ -473,6 +485,66 @@ function ManualPaymentForm({ orderNumber, outstandingKobo, onRecorded }: { order
       </label>
       {error && <p role="alert" className="sm:col-span-2 text-sm text-oxblood">{error}</p>}
       <div className="sm:col-span-2"><button type="submit" disabled={busy || outstandingKobo<=0} className="btn-lux btn-lux-primary">{busy ? "Recording…" : "Record Verified Offline Payment"}</button></div>
+    </form>
+  );
+}
+
+function SharedProgressEditor({orderNumber,onUpdated}:{orderNumber:string;onUpdated:()=>Promise<void>}){
+  const [loaded,setLoaded]=useState(false);
+  const [busy,setBusy]=useState(false);
+  const [percent,setPercent]=useState(47);
+  const [due,setDue]=useState("2026-11-26");
+  const [note,setNote]=useState("");
+  const [status,setStatus]=useState("");
+
+  useEffect(()=>{
+    let active=true;
+    adminCall(adminGetSharedOrderProgress,{orderNumber})
+      .then(result=>{
+        if(!active)return;
+        setPercent(result.progressPercent);
+        setDue(result.deliveryDate);
+        setNote(result.publicNote);
+        setLoaded(true);
+      })
+      .catch((err:unknown)=>{if(active)setStatus(err instanceof Error?err.message:"Could not load progress details.");});
+    return()=>{active=false;};
+  },[orderNumber]);
+
+  const save=async(e:FormEvent<HTMLFormElement>)=>{
+    e.preventDefault();
+    setBusy(true);
+    setStatus("");
+    try{
+      await adminCall(adminUpdateSharedOrderProgress,{
+        orderNumber,progressPercent:percent,deliveryDate:due,publicNote:note,
+      });
+      setStatus("Tracking progress updated. The customer will see the new details the next time they open the private link.");
+      await onUpdated();
+    }catch(err){
+      setStatus(err instanceof Error?err.message:"Could not update customer progress.");
+    }finally{setBusy(false);}
+  };
+
+  return (
+    <form onSubmit={save} className="p-5 border border-gold/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="sm:col-span-2">
+        <h3 className="font-editorial text-2xl">The VIII White Series — Customer Progress</h3>
+        <p className="text-xs text-stone mt-1">This updates the private tracking page. Confirm actual work completed before changing the percentage.</p>
+      </div>
+      <div><label className="input-lux-label" htmlFor="bra-progress">Production progress (%)</label>
+        <input className="input-lux" type="number" id="bra-progress" min="0" max="100" step="1" value={percent} onChange={e=>setPercent(Number(e.target.value))} disabled={!loaded} required/>
+      </div>
+      <div><label className="input-lux-label" htmlFor="bra-due">Delivery date</label>
+        <input className="input-lux" type="date" id="bra-due" value={due} onChange={e=>setDue(e.target.value)} disabled={!loaded} required/>
+      </div>
+      <div className="sm:col-span-2"><label className="input-lux-label" htmlFor="bra-note">Customer-visible update</label>
+        <textarea className="input-lux" id="bra-note" rows={3} maxLength={300} value={note} onChange={e=>setNote(e.target.value)} disabled={!loaded}/>
+      </div>
+      {status && <p role="status" className="text-sm text-stone sm:col-span-2">{status}</p>}
+      <div className="sm:col-span-2">
+        <button className="btn-lux btn-lux-primary" type="submit" disabled={!loaded||busy}>{busy?"Updating…":"Save Customer Progress"}</button>
+      </div>
     </form>
   );
 }
