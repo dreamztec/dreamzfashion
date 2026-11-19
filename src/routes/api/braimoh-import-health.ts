@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { eq } from "drizzle-orm";
-import { db } from "../../../../db/index";
-import { orderItems, orders, payments, settings } from "../../../../db/schema";
+import { db } from "../../../db/index";
+import { orderItems, orders, payments, settings } from "../../../db/schema";
 
 /** Temporary existence-only check. Never serves order details or any token. */
 export const Route = createFileRoute("/api/braimoh-import-health")({
