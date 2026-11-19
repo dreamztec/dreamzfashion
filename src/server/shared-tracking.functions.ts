@@ -105,3 +105,21 @@ export const adminUpdateSharedOrderProgress = createServerFn({ method:"POST" })
     }).where(eq(settings.key,key));
     return {ok:true};
   });
+
+/** Metadata only: no token or private payment data is returned to staff. */
+export const adminGetSharedOrderProgress = createServerFn({ method: "POST" })
+  .inputValidator(z.object({
+    orderNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{8,40}$/),
+  }))
+  .handler(async ({data}) => {
+    await requireAdminRole(["owner","operations"]);
+    const [row] = await db.select({value: settings.value}).from(settings)
+      .where(eq(settings.key,`shared_order:${data.orderNumber}`)).limit(1);
+    if (!row) throw new Error("No private tracking record exists for this order.");
+    const meta = (row.value??{}) as ShareSettings;
+    return {
+      progressPercent: Math.max(0,Math.min(100,Math.round(meta.progressPercent??0))),
+      deliveryDate: meta.deliveryDate??"",
+      publicNote: meta.publicNote??"",
+    };
+  });
