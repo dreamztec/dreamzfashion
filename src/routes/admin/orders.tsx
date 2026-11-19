@@ -176,7 +176,7 @@ function AdminOrders() {
                         Unpaid order request — confirm details and send the customer a payment link. Nothing is charged until payment is verified.
                       </p>
                     )}
-                    {["DFK-BRA-261112-VIII","DFK-VF-261110-01"].includes(o.orderNumber) && (
+                    {["DFK-BRA-261112-VIII","DFK-VF-261110-01","DFK-SAID-161126"].includes(o.orderNumber) && (
                       <button type="button" onClick={() => setProgressOrder(progressOrder === o.orderNumber ? null : o.orderNumber)} className="mt-3 ml-2 border border-gold/60 px-3 py-2 text-xs hover:border-gold">
                         {progressOrder === o.orderNumber ? "Close progress" : "Update customer production progress"}
                       </button>
@@ -552,6 +552,23 @@ function SharedProgressEditor({orderNumber,onUpdated}:{orderNumber:string;onUpda
             ["VF-02","Zip Sneaker"],
             ["VF-03","Slingback Clog"],
             ["VF-04","Carry Purse"],
+          ].map(([code,label])=>(
+            <div className="mt-3" key={code}>
+              <label className="input-lux-label" htmlFor={`progress-${code}`}>{label}</label>
+              <input id={`progress-${code}`} className="input-lux"
+                value={itemStatuses[code]??""} maxLength={120} disabled={!loaded}
+                onChange={e=>setItemStatuses(old=>({...old,[code]:e.target.value}))}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      {orderNumber === "DFK-SAID-161126" && (
+        <div className="sm:col-span-2 border-t border-ink/10 pt-4">
+          <p className="overline-label mb-3">Mr Said's two samples</p>
+          {[
+            ["SAID-01","01 Black Classic Cardholder"],
+            ["SAID-06","06 Black Minimal Reusable A5 Cover"],
           ].map(([code,label])=>(
             <div className="mt-3" key={code}>
               <label className="input-lux-label" htmlFor={`progress-${code}`}>{label}</label>
