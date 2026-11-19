@@ -78,6 +78,17 @@
   [headers.values]
     X-Robots-Tag = "noindex, nofollow, noarchive"
 
+
+# Shared customer tracking links contain a private access token.
+# Never cache HTML or leak the URL token in outbound referrer headers.
+[[headers]]
+  for = "/track/*"
+  [headers.values]
+    Cache-Control = "private, no-store"
+    Netlify-CDN-Cache-Control = "no-store"
+    Referrer-Policy = "no-referrer"
+    X-Robots-Tag = "noindex, nofollow, noarchive"
+
 [[headers]]
   for = "/checkout/*"
   [headers.values]
