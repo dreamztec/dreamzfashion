@@ -64,7 +64,7 @@ function PrivateOrderTracking(){
           <section className="border border-ink/10 p-6 sm:p-10">
             <div className="flex gap-4 flex-wrap justify-between items-start">
               <div>
-                <p className="overline-label mb-2">THE VIII WHITE SERIES</p>
+                <p className="overline-label mb-2">{order.collection}</p>
                 <h2 className="font-editorial text-3xl sm:text-4xl">{order.name}</h2>
                 <p className="mt-3 text-xs text-stone uppercase tracking-wide">Tracking code: <strong className="text-ink">{order.orderNumber}</strong></p>
               </div>
@@ -88,9 +88,9 @@ function PrivateOrderTracking(){
               <div className="bg-ivory-deep p-5">
                 <p className="overline-label">Expected delivery</p>
                 <p className="font-editorial text-2xl mt-2">
-                  {order.deliveryDate ? new Date(`${order.deliveryDate}T12:00:00`).toLocaleDateString("en-NG",{day:"numeric",month:"long",year:"numeric"}) : "To be confirmed"}
+                  {order.deliveryDate ? new Date(`${order.deliveryDate}T12:00:00`).toLocaleDateString("en-NG",{day:"numeric",month:"long",year:"numeric"}) : (order.deliveryLabel ?? "To be confirmed")}
                 </p>
-                <p className="mt-2 text-xs text-stone">Scheduled delivery date, subject to final dispatch confirmation.</p>
+                <p className="mt-2 text-xs text-stone">{order.deliveryDate ? "Scheduled delivery date, subject to final dispatch confirmation." : "Awaiting review and the next agreed delivery plan."}</p>
               </div>
               <div className="bg-ivory-deep p-5">
                 <p className="overline-label">Payment recorded</p>
@@ -105,17 +105,25 @@ function PrivateOrderTracking(){
 
           <section className="border border-ink/10 p-6 sm:p-10 mt-5">
             <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
-              <h2 className="font-editorial text-3xl">Your Eight Selected Designs</h2>
-              <span className="text-xs text-stone">{order.items.length} pairs</span>
+              <h2 className="font-editorial text-3xl">Your Collection</h2>
+              <span className="text-xs text-stone">{order.items.length} {order.items.length === 1 ? "item" : "items"}</span>
             </div>
             <ol className="divide-y divide-ink/10">
               {order.items.map((item,i)=>(
                 <li key={item.sku??i} className="py-4 flex items-start justify-between gap-4 text-sm">
                   <div className="flex gap-3">
                     <span className="text-stone font-medium text-xs pt-1">{String(i+1).padStart(2,"0")}</span>
-                    <div><p className="font-medium">{item.name}</p><p className="text-xs text-stone mt-1">Quantity: {item.quantity} pair</p></div>
+                    <div>
+                      <p className="font-medium">{item.name}</p>
+                      <p className="text-xs text-stone mt-1">Quantity: {item.quantity} {item.name.toLowerCase().includes("purse") ? "piece" : "pair"}{item.quantity === 1 ? "" : "s"}</p>
+                      {item.sku && order.itemStatuses[item.sku] && (
+                        <p className={`text-xs mt-2 ${order.itemStatuses[item.sku].toLowerCase().startsWith("delivered") ? "text-forest" : "text-stone"}`}>
+                          {order.itemStatuses[item.sku]}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <span className="tabular-nums whitespace-nowrap">{formatNaira(item.priceKobo*item.quantity)}</span>
+                  <span className="tabular-nums whitespace-nowrap">{item.priceKobo > 0 ? formatNaira(item.priceKobo*item.quantity) : "Included in collection"}</span>
                 </li>
               ))}
             </ol>
@@ -125,7 +133,7 @@ function PrivateOrderTracking(){
               <div className="flex justify-between"><span>Balance remaining</span><strong>{formatNaira(order.balanceKobo)}</strong></div>
             </div>
             <p className="mt-5 text-xs text-stone leading-relaxed">
-              The recorded deposit reflects funds received, not the amount requested on an earlier proforma.
+              Payments shown are the amounts recorded by DREAMZ. Prices for individually commissioned pieces are included in the full collection quotation when no separate unit price was agreed.
               Any remaining payment should be completed using a verified DREAMZ payment link or confirmed account instructions.
               Never share your card PIN or OTP.
             </p>

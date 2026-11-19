@@ -176,9 +176,9 @@ function AdminOrders() {
                         Unpaid order request — confirm details and send the customer a payment link. Nothing is charged until payment is verified.
                       </p>
                     )}
-                    {o.orderNumber === "DFK-BRA-261112-VIII" && (
+                    {["DFK-BRA-261112-VIII","DFK-VF-261110-01"].includes(o.orderNumber) && (
                       <button type="button" onClick={() => setProgressOrder(progressOrder === o.orderNumber ? null : o.orderNumber)} className="mt-3 ml-2 border border-gold/60 px-3 py-2 text-xs hover:border-gold">
-                        {progressOrder === o.orderNumber ? "Close progress" : "Update VIII production progress"}
+                        {progressOrder === o.orderNumber ? "Close progress" : "Update customer production progress"}
                       </button>
                     )}
                     {canRecordPayment && o.paymentStatus !== "paid" && o.paymentStatus !== "refunded" && o.status !== "cancelled" && (
@@ -492,8 +492,9 @@ function ManualPaymentForm({ orderNumber, outstandingKobo, onRecorded }: { order
 function SharedProgressEditor({orderNumber,onUpdated}:{orderNumber:string;onUpdated:()=>Promise<void>}){
   const [loaded,setLoaded]=useState(false);
   const [busy,setBusy]=useState(false);
-  const [percent,setPercent]=useState(47);
-  const [due,setDue]=useState("2026-11-26");
+  const [percent,setPercent]=useState(0);
+  const [due,setDue]=useState("");
+  const [itemStatuses,setItemStatuses]=useState<Record<string,string>>({});
   const [note,setNote]=useState("");
   const [status,setStatus]=useState("");
 
@@ -505,6 +506,7 @@ function SharedProgressEditor({orderNumber,onUpdated}:{orderNumber:string;onUpda
         setPercent(result.progressPercent);
         setDue(result.deliveryDate);
         setNote(result.publicNote);
+        setItemStatuses(result.itemStatuses ?? {});
         setLoaded(true);
       })
       .catch((err:unknown)=>{if(active)setStatus(err instanceof Error?err.message:"Could not load progress details.");});
@@ -517,7 +519,7 @@ function SharedProgressEditor({orderNumber,onUpdated}:{orderNumber:string;onUpda
     setStatus("");
     try{
       await adminCall(adminUpdateSharedOrderProgress,{
-        orderNumber,progressPercent:percent,deliveryDate:due,publicNote:note,
+        orderNumber,progressPercent:percent,deliveryDate:due,publicNote:note,itemStatuses,
       });
       setStatus("Tracking progress updated. The customer will see the new details the next time they open the private link.");
       await onUpdated();
@@ -529,18 +531,38 @@ function SharedProgressEditor({orderNumber,onUpdated}:{orderNumber:string;onUpda
   return (
     <form onSubmit={save} className="p-5 border border-gold/40 grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="sm:col-span-2">
-        <h3 className="font-editorial text-2xl">The VIII White Series — Customer Progress</h3>
+        <h3 className="font-editorial text-2xl">Customer Progress · {orderNumber}</h3>
         <p className="text-xs text-stone mt-1">This updates the private tracking page. Confirm actual work completed before changing the percentage.</p>
       </div>
       <div><label className="input-lux-label" htmlFor="bra-progress">Production progress (%)</label>
         <input className="input-lux" type="number" id="bra-progress" min="0" max="100" step="1" value={percent} onChange={e=>setPercent(Number(e.target.value))} disabled={!loaded} required/>
       </div>
       <div><label className="input-lux-label" htmlFor="bra-due">Delivery date</label>
-        <input className="input-lux" type="date" id="bra-due" value={due} onChange={e=>setDue(e.target.value)} disabled={!loaded} required/>
+        <input className="input-lux" type="date" id="bra-due" value={due} onChange={e=>setDue(e.target.value)} disabled={!loaded}/>
+        <p className="text-xs text-stone mt-1">Leave blank until a new date is agreed with the customer.</p>
       </div>
       <div className="sm:col-span-2"><label className="input-lux-label" htmlFor="bra-note">Customer-visible update</label>
         <textarea className="input-lux" id="bra-note" rows={3} maxLength={300} value={note} onChange={e=>setNote(e.target.value)} disabled={!loaded}/>
       </div>
+      {orderNumber === "DFK-VF-261110-01" && (
+        <div className="sm:col-span-2 border-t border-ink/10 pt-4">
+          <p className="overline-label mb-3">Vanity Flex item milestones</p>
+          {[
+            ["VF-01","Oxford"],
+            ["VF-02","Zip Sneaker"],
+            ["VF-03","Slingback Clog"],
+            ["VF-04","Carry Purse"],
+          ].map(([code,label])=>(
+            <div className="mt-3" key={code}>
+              <label className="input-lux-label" htmlFor={`progress-${code}`}>{label}</label>
+              <input id={`progress-${code}`} className="input-lux"
+                value={itemStatuses[code]??""} maxLength={120} disabled={!loaded}
+                onChange={e=>setItemStatuses(old=>({...old,[code]:e.target.value}))}
+              />
+            </div>
+          ))}
+        </div>
+      )}
       {status && <p role="status" className="text-sm text-stone sm:col-span-2">{status}</p>}
       <div className="sm:col-span-2">
         <button className="btn-lux btn-lux-primary" type="submit" disabled={!loaded||busy}>{busy?"Updating…":"Save Customer Progress"}</button>
