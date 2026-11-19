@@ -23,9 +23,9 @@ VALUES (
   27999200, 'NGN', 'deposit_paid', 'OFF-GTB-BRA-VIII-121126', 'bank_transfer',
   'production',
   '[
-    {"status":"order_received","at":"2026-11-12T12:00:00+01:00","note":"VIII White Series proforma issued; historical order registered in DREAMZ tracking."},
-    {"status":"deposit_received","at":"2026-11-12T12:00:00+01:00","note":"GTBank customer deposit of NGN 139,992 received on 12 November 2026. Original proforma requested NGN 139,996."},
-    {"status":"production","at":"2026-11-19T09:00:00+01:00","note":"Production progress reported by DREAMZ: 47%. Scheduled delivery 26 November 2026."}
+    {"status":"order_received","at":"2026-11-12","note":"VIII White Series proforma issued; historical order registered in DREAMZ tracking."},
+    {"status":"deposit_received","at":"2026-11-12","note":"GTBank customer deposit of NGN 139,992 received on 12 November 2026. Original proforma requested NGN 139,996."},
+    {"status":"production","at":"2026-11-19","note":"Production progress reported by DREAMZ: 47%. Scheduled delivery 26 November 2026."}
   ]'::jsonb,
   'Historical offline order. Source: DFK-QPI-20261111-BRA-01; GTBank deposit review. Amount paid = NGN 139,992; original quoted deposit = NGN 139,996 (NGN 4 discrepancy). No customer phone or delivery address on file. Progress 47% stated by the owner.',
   false,
