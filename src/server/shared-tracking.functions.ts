@@ -14,6 +14,9 @@ const SharedOrderSchema = z.object({
 
 type ShareSettings = {
   tokenHash?: string;
+  collection?: string;
+  itemStatuses?: Record<string,string>;
+  deliveryLabel?: string;
   progressPercent?: number;
   deliveryDate?: string;
   publicNote?: string;
@@ -63,7 +66,7 @@ export const getSharedOrder = createServerFn({ method: "POST" })
       order: {
         orderNumber: order.orderNumber,
         name: order.customerName,
-        collection: "The VIII White Series",
+        collection: meta.collection ?? "The VIII White Series",
         status: order.status,
         paymentStatus: order.paymentStatus,
         paymentMethod: order.paymentMethod,
@@ -72,6 +75,8 @@ export const getSharedOrder = createServerFn({ method: "POST" })
         balanceKobo: Math.max(0, order.total - (order.paidKobo ?? 0)),
         progressPercent,
         deliveryDate: meta.deliveryDate ?? null,
+        deliveryLabel: meta.deliveryLabel ?? null,
+        itemStatuses: meta.itemStatuses ?? {},
         note: meta.publicNote ?? "",
         progressUpdatedAt: meta.updatedAt ?? null,
         items: items.map(i=>({ name:i.productName,sku:i.sku,quantity:i.quantity,priceKobo:i.unitPrice })),
@@ -88,8 +93,9 @@ export const adminUpdateSharedOrderProgress = createServerFn({ method:"POST" })
   .inputValidator(z.object({
     orderNumber: z.string().trim().toUpperCase().regex(/^[A-Z0-9-]{8,40}$/),
     progressPercent: z.number().int().min(0).max(100),
-    deliveryDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    deliveryDate: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal("")]),
     publicNote: z.string().trim().max(300),
+    itemStatuses: z.record(z.string(), z.string().trim().max(120)).optional(),
   }))
   .handler(async ({ data }) => {
     await requireAdminRole(["owner","operations"]);
@@ -100,7 +106,12 @@ export const adminUpdateSharedOrderProgress = createServerFn({ method:"POST" })
     if (!value.tokenHash) throw new Error("The tracking token is missing.");
     const updatedAt=new Date().toISOString();
     await db.update(settings).set({
-      value: {...value,progressPercent:data.progressPercent,deliveryDate:data.deliveryDate,publicNote:data.publicNote,updatedAt},
+      value: {
+        ...value, progressPercent:data.progressPercent,
+        deliveryDate:data.deliveryDate || null, publicNote:data.publicNote,
+        ...(data.itemStatuses ? {itemStatuses: data.itemStatuses} : {}),
+        updatedAt
+      },
       updatedAt:new Date()
     }).where(eq(settings.key,key));
     return {ok:true};
@@ -121,5 +132,6 @@ export const adminGetSharedOrderProgress = createServerFn({ method: "POST" })
       progressPercent: Math.max(0,Math.min(100,Math.round(meta.progressPercent??0))),
       deliveryDate: meta.deliveryDate??"",
       publicNote: meta.publicNote??"",
+      itemStatuses: meta.itemStatuses??{},
     };
   });
