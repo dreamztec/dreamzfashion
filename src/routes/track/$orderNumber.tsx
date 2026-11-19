@@ -115,7 +115,7 @@ function PrivateOrderTracking(){
                     <span className="text-stone font-medium text-xs pt-1">{String(i+1).padStart(2,"0")}</span>
                     <div>
                       <p className="font-medium">{item.name}</p>
-                      <p className="text-xs text-stone mt-1">Quantity: {item.quantity} {item.name.toLowerCase().includes("purse") ? "piece" : "pair"}{item.quantity === 1 ? "" : "s"}</p>
+                      <p className="text-xs text-stone mt-1">Quantity: {item.quantity} {/(oxford|sneaker|clog|shoe|loafer|slide|derby|boot|mule|sandal)/i.test(item.name) ? "pair" : "piece"}{item.quantity === 1 ? "" : "s"}</p>
                       {item.sku && order.itemStatuses[item.sku] && (
                         <p className={`text-xs mt-2 ${order.itemStatuses[item.sku].toLowerCase().startsWith("delivered") ? "text-forest" : "text-stone"}`}>
                           {order.itemStatuses[item.sku]}
