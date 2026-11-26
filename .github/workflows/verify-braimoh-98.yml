@@ -1,0 +1,18 @@
+name: Verify Braimoh 98% private tracking
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/verify-braimoh-98.yml"
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm live Braimoh progress update without exposing data
+        shell: bash
+        run: |
+          set -euo pipefail
+          result="$(curl --fail --silent --show-error --max-time 20 -H 'Cache-Control: no-cache' 'https://dreamzfashion.dreamz-gc.com/api/braimoh-progress-health')"
+          printf '%s\n' "$result" | jq '{ready}'
+          printf '%s\n' "$result" | jq -e '.ready == true'
